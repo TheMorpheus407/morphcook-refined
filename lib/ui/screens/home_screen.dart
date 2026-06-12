@@ -103,9 +103,11 @@ class _HomeScreenState extends State<HomeScreen> {
                 itemBuilder: (context, i) {
                   final dish = gridDishes[i];
                   final recipe = _best[dish.id]!;
+                  // The card sells the dish; the variant that opens is the
+                  // profile's business (badge hints at it).
                   return PolaroidCard(
                     stripe: _hex(dish.stripe),
-                    title: recipe.title.of(lang),
+                    title: dish.name.of(lang),
                     caption: dish.caption.of(lang),
                     badge: state.profile.showVariantTags &&
                             recipe.variant.diet != 'classic'
@@ -178,7 +180,7 @@ class _HomeScreenState extends State<HomeScreen> {
               caption: dish.caption.of(lang),
             ),
             const SizedBox(height: 10),
-            Text(recipe.title.of(lang).toLowerCase(),
+            Text(dish.name.of(lang).toLowerCase(),
                 style: MorphText.display.copyWith(fontSize: 28)),
             const SizedBox(height: 4),
             Text(dish.hero.of(lang),

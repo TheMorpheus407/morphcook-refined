@@ -229,6 +229,9 @@ class MonoChip extends StatelessWidget {
   final String label;
   final bool selected;
   final bool enabled;
+
+  /// Tappable but outside the user's profile — quieter, not forbidden.
+  final bool muted;
   final VoidCallback? onTap;
 
   const MonoChip({
@@ -236,6 +239,7 @@ class MonoChip extends StatelessWidget {
     required this.label,
     this.selected = false,
     this.enabled = true,
+    this.muted = false,
     this.onTap,
   });
 
@@ -245,9 +249,15 @@ class MonoChip extends StatelessWidget {
         ? MorphColors.inkFaint
         : selected
             ? MorphColors.cream
-            : MorphColors.ink;
+            : muted
+                ? MorphColors.inkSoft
+                : MorphColors.ink;
     return Opacity(
-      opacity: enabled ? 1 : 0.55,
+      opacity: !enabled
+          ? 0.55
+          : muted
+              ? 0.75
+              : 1,
       child: GestureDetector(
         onTap: enabled ? onTap : null,
         child: Container(

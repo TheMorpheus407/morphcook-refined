@@ -71,13 +71,13 @@ class _DishDetailScreenState extends State<DishDetailScreen> {
     return seen;
   }
 
-  /// Best visible recipe with [dimension] == [value], preferring matches
+  /// Best recipe in [pool] with [dimension] == [value], preferring matches
   /// on the other dimensions of the current selection.
-  Recipe? _bestFor(String dimension, String value) {
+  Recipe? _pick(List<Recipe> pool, String dimension, String value) {
     final current = _selected;
     Recipe? best;
     var bestScore = -1;
-    for (final r in _visible) {
+    for (final r in pool) {
       if (r.variant[dimension] != value) continue;
       var score = 0;
       if (current != null) {
@@ -173,6 +173,14 @@ class _DishDetailScreenState extends State<DishDetailScreen> {
             ),
             const SizedBox(height: 14),
             for (final dim in _dimensions) _dimensionRow(dim, s, state),
+            if (!state.matcher.isVisible(recipe, state.profile,
+                ignoreCalories: _ignoreCalories))
+              Padding(
+                padding: const EdgeInsets.only(top: 2, bottom: 4),
+                child: Text(s('outsideProfile'),
+                    style: MorphText.hand.copyWith(
+                        fontSize: 16, color: MorphColors.terracotta)),
+              ),
             if (hiddenByCalories > 0) _calorieOverride(s, hiddenByCalories),
             _whyHiddenLink(s),
             const DashedDivider(),
@@ -262,12 +270,16 @@ class _DishDetailScreenState extends State<DishDetailScreen> {
       String dimension, String value, AppState state, S s) {
     final lang = state.lang;
     final selected = _selected!.variant[dimension] == value;
-    final target = _bestFor(dimension, value);
+    // The profile preselects — it never locks the lattice. Cells outside
+    // the profile stay tappable, just visually quieter.
+    final visibleTarget = _pick(_visible, dimension, value);
+    final target = visibleTarget ?? _pick(_all, dimension, value);
     final reachable = target != null;
     return MonoChip(
       label: state.corpus.ontology.nameOf(value, lang),
       selected: selected,
       enabled: reachable,
+      muted: reachable && !selected && visibleTarget == null,
       onTap: () {
         if (selected) return;
         _select(target!);
@@ -305,7 +317,7 @@ class _DishDetailScreenState extends State<DishDetailScreen> {
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 4),
         child: Text(
-          '$hidden ${s('comboUnavailable')} · ${s('whyHidden')}',
+          '$hidden ${s('outsideProfileCount')} · ${s('whyHidden')}',
           style: MorphText.label(size: 10, color: MorphColors.teal),
         ),
       ),

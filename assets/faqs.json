@@ -1,10 +1,34 @@
 {
   "version": 1,
   "categories": [
-    {"id": "dietary-matching", "name": {"en": "dietary matching", "de": "Ernährungs-Matching"}},
-    {"id": "recipe-visibility", "name": {"en": "recipe visibility", "de": "Rezept-Sichtbarkeit"}},
-    {"id": "features", "name": {"en": "features", "de": "Funktionen"}},
-    {"id": "troubleshooting", "name": {"en": "troubleshooting", "de": "Problemlösung"}}
+    {
+      "id": "dietary-matching",
+      "name": {
+        "en": "dietary matching",
+        "de": "Ernährungs-Matching"
+      }
+    },
+    {
+      "id": "recipe-visibility",
+      "name": {
+        "en": "recipe visibility",
+        "de": "Rezept-Sichtbarkeit"
+      }
+    },
+    {
+      "id": "features",
+      "name": {
+        "en": "features",
+        "de": "Funktionen"
+      }
+    },
+    {
+      "id": "troubleshooting",
+      "name": {
+        "en": "troubleshooting",
+        "de": "Problemlösung"
+      }
+    }
   ],
   "entries": [
     {
@@ -19,8 +43,22 @@
         "de": "Jedes Rezept trägt eine ehrliche Liste von Enthält-Markierungen wie Milchprodukte, Gluten oder Schweinefleisch. Dein Profil enthält eine Liste der Dinge, die du meidest — ein Rezept wird dir nur angezeigt, wenn sich die beiden Listen nicht überschneiden und es zusätzlich in dein Zeitbudget und Kalorienziel passt. Es gibt keine KI, die zur Laufzeit rät, und nichts wird auf deinem Handy improvisiert: nur einfache Mengenlogik über sorgfältig geschriebene Rezepte. Deshalb kannst du dem, was du siehst, wirklich vertrauen."
       },
       "keywords": {
-        "en": ["matching", "filter", "how it works", "profile", "flags", "algorithm"],
-        "de": ["Matching", "Filter", "Funktionsweise", "Profil", "Markierungen", "Algorithmus"]
+        "en": [
+          "matching",
+          "filter",
+          "how it works",
+          "profile",
+          "flags",
+          "algorithm"
+        ],
+        "de": [
+          "Matching",
+          "Filter",
+          "Funktionsweise",
+          "Profil",
+          "Markierungen",
+          "Algorithmus"
+        ]
       }
     },
     {
@@ -35,8 +73,23 @@
         "de": "Das ist eine Abkürzung, die sich im Hintergrund in einzelne Markierungen auffächert. „Vegan“ entfaltet sich in alles Tierische — Fleisch, Fisch, Ei, Milchprodukte, Gelatine, Honig — und „halal“ in Schweinefleisch, Alkohol und nicht-halal Gelatine. Du kannst Abkürzungen auch kombinieren oder einzelne Markierungen ergänzen, etwa vegan plus nussfrei. Das Matching läuft immer über die ausgepackte Liste, damit nichts durchrutscht."
       },
       "keywords": {
-        "en": ["vegan", "halal", "kosher", "vegetarian", "compound", "diet", "combine"],
-        "de": ["vegan", "halal", "koscher", "vegetarisch", "Kombination", "Ernährungsform"]
+        "en": [
+          "vegan",
+          "halal",
+          "kosher",
+          "vegetarian",
+          "compound",
+          "diet",
+          "combine"
+        ],
+        "de": [
+          "vegan",
+          "halal",
+          "koscher",
+          "vegetarisch",
+          "Kombination",
+          "Ernährungsform"
+        ]
       }
     },
     {
@@ -51,8 +104,21 @@
         "de": "Ja — genau dafür gibt es die Zutaten-Suche in deinem Profil. Tipp „Koriander“ ein, und jedes Rezept damit verschwindet aus deiner Welt, ganz ohne grobe Kategorie. Das Zutatenverzeichnis ist ein Baum: Wenn du einen Oberbegriff wie „Käse“ meidest, sind Parmesan, Feta und alle anderen Unterzutaten automatisch mit abgedeckt. Klassen-Vermeidungen und einzelne Zutaten wirken zusammen — jeder Treffer blendet das Rezept aus."
       },
       "keywords": {
-        "en": ["avoid ingredient", "cilantro", "typeahead", "specific", "single ingredient", "exclude"],
-        "de": ["Zutat meiden", "Koriander", "einzelne Zutat", "ausschließen", "Suche"]
+        "en": [
+          "avoid ingredient",
+          "cilantro",
+          "typeahead",
+          "specific",
+          "single ingredient",
+          "exclude"
+        ],
+        "de": [
+          "Zutat meiden",
+          "Koriander",
+          "einzelne Zutat",
+          "ausschließen",
+          "Suche"
+        ]
       }
     },
     {
@@ -67,8 +133,22 @@
         "de": "Nein, und die Formulierung ist bewusst gewählt: Wir sprechen ausschließlich von „halal-kompatiblen Zutaten“ bzw. „koscher-kompatiblen Zutaten“, nie von „zertifiziert“. Zertifizierung ist eine Eigenschaft der Beschaffung — wie ein Tier geschlachtet wurde, wer die Herstellung beaufsichtigt hat — und ein Rezepttext auf deinem Handy kann das nicht garantieren. Was wir garantieren können: Diese Rezepte vermeiden die relevanten Markierungen wie Schweinefleisch, Alkohol oder nicht-halal Gelatine. Ob deine tatsächlichen Einkäufe zertifiziert sind, liegt zwischen dir und deinem Laden."
       },
       "keywords": {
-        "en": ["halal", "kosher", "certified", "certification", "compatible", "religious"],
-        "de": ["halal", "koscher", "zertifiziert", "Zertifizierung", "kompatibel", "religiös"]
+        "en": [
+          "halal",
+          "kosher",
+          "certified",
+          "certification",
+          "compatible",
+          "religious"
+        ],
+        "de": [
+          "halal",
+          "koscher",
+          "zertifiziert",
+          "Zertifizierung",
+          "kompatibel",
+          "religiös"
+        ]
       }
     },
     {
@@ -83,8 +163,22 @@
         "de": "Im echten Leben sind das zwei verschiedene Dinge — bei Laktoseintoleranz geht es um Milchzucker, bei einer Milchallergie um Milcheiweiß, und viele lang gereifte Käse sind von Natur aus fast laktosefrei. In der App geht die Abkürzung „laktosefrei“ ehrlich gesagt momentan auf Nummer sicher und blendet alles mit der Markierung Milchprodukte aus, harten Parmesan eingeschlossen. Lieber verstecken wir einen Käse, den du essen könntest, als dir einen zu zeigen, den du nicht verträgst. Wenn dir das zu streng ist, lass die Abkürzung weg und meide stattdessen gezielt Zutaten wie Milch und Sahne."
       },
       "keywords": {
-        "en": ["lactose", "dairy", "intolerance", "allergy", "milk", "cheese"],
-        "de": ["Laktose", "Milchprodukte", "Intoleranz", "Allergie", "Milch", "Käse"]
+        "en": [
+          "lactose",
+          "dairy",
+          "intolerance",
+          "allergy",
+          "milk",
+          "cheese"
+        ],
+        "de": [
+          "Laktose",
+          "Milchprodukte",
+          "Intoleranz",
+          "Allergie",
+          "Milch",
+          "Käse"
+        ]
       }
     },
     {
@@ -95,12 +189,26 @@
         "de": "Warum sehe ich ein Rezept nicht, von dem ich weiß, dass es existiert?"
       },
       "answer": {
-        "en": "a recipe stays hidden when any of four checks fails: it contains a flag you avoid, it uses a specific ingredient you've excluded, it takes longer than your time budget, or its calories sit too far from your target. the usual suspects are the quiet ones — a stock with celery, a sauce with a splash of wine. peek into your profile in settings and loosen the rule that's biting, or use the per-dish calorie override if that's the blocker.",
-        "de": "Ein Rezept bleibt verborgen, wenn eine von vier Prüfungen fehlschlägt: Es enthält eine Markierung, die du meidest, es nutzt eine gezielt ausgeschlossene Zutat, es dauert länger als dein Zeitbudget, oder seine Kalorien liegen zu weit von deinem Ziel entfernt. Die üblichen Verdächtigen sind die leisen — eine Brühe mit Sellerie, eine Sauce mit einem Schuss Wein. Schau in den Einstellungen in dein Profil und lockere die Regel, die gerade greift, oder nutze den Kalorien-Schalter direkt am Gericht, falls es daran liegt."
+        "en": "a recipe stays hidden when any of four checks fails: it contains a flag you avoid, it uses a specific ingredient you've excluded, it takes longer than your time budget, or its calories sit too far from your target. the usual suspects are the quiet ones — a stock with celery, a sauce with a splash of wine. peek into your profile in settings and loosen the rule that's biting, or use the per-dish calorie override if that's the blocker. on a dish page itself, nothing is locked: versions outside your profile stay tappable, just quieter.",
+        "de": "Ein Rezept bleibt verborgen, wenn eine von vier Prüfungen fehlschlägt: Es enthält eine Markierung, die du meidest, es nutzt eine gezielt ausgeschlossene Zutat, es dauert länger als dein Zeitbudget, oder seine Kalorien liegen zu weit von deinem Ziel entfernt. Die üblichen Verdächtigen sind die leisen — eine Brühe mit Sellerie, eine Sauce mit einem Schuss Wein. Schau in den Einstellungen in dein Profil und lockere die Regel, die gerade greift, oder nutze den Kalorien-Schalter direkt am Gericht, falls es daran liegt. Auf der Gerichtseite selbst ist nichts gesperrt: Versionen außerhalb deines Profils bleiben antippbar, nur leiser."
       },
       "keywords": {
-        "en": ["hidden", "missing", "can't find", "invisible", "recipe gone", "filtered"],
-        "de": ["versteckt", "fehlt", "nicht finden", "unsichtbar", "Rezept weg", "gefiltert"]
+        "en": [
+          "hidden",
+          "missing",
+          "can't find",
+          "invisible",
+          "recipe gone",
+          "filtered"
+        ],
+        "de": [
+          "versteckt",
+          "fehlt",
+          "nicht finden",
+          "unsichtbar",
+          "Rezept weg",
+          "gefiltert"
+        ]
       }
     },
     {
@@ -115,8 +223,20 @@
         "de": "Ja. Dein Kalorienziel ist standardmäßig ein harter Filter, aber jede Gerichtseite hat einen Schalter, der die Varianten außerhalb deines Bereichs einblendet — für die Tage, an denen es die üppige Version sein soll, ganz ohne Urteil. Der Schalter gilt nur für dieses eine Gericht und ändert dein Profil nicht; der Rest der App filtert weiter wie gewohnt. Schalte ihn wieder aus, und das Gericht zeigt sich wie sonst."
       },
       "keywords": {
-        "en": ["calories", "override", "calorie target", "show all", "outside range"],
-        "de": ["Kalorien", "Schalter", "Kalorienziel", "alle anzeigen", "außerhalb"]
+        "en": [
+          "calories",
+          "override",
+          "calorie target",
+          "show all",
+          "outside range"
+        ],
+        "de": [
+          "Kalorien",
+          "Schalter",
+          "Kalorienziel",
+          "alle anzeigen",
+          "außerhalb"
+        ]
       }
     },
     {
@@ -131,8 +251,22 @@
         "de": "Dein Zeitbudget ist ein harter Filter: Rezepte, die länger dauern, tauchen in Feed und Suche schlicht nicht auf. Das ist Absicht — ein Rezept, für das dir die Zeit fehlt, ist nur Dekoration. Wenn deine Abende plötzlich mehr Luft haben, erhöh das Budget in den Einstellungen, und die langsameren, schöneren Dinge kommen zurück. Viele Gerichte haben außerdem eine schnellere Schwester-Variante — ein knappes Budget tauscht also oft nur die Version, statt das Gericht zu verlieren."
       },
       "keywords": {
-        "en": ["time", "budget", "minutes", "quick", "too long", "duration"],
-        "de": ["Zeit", "Budget", "Minuten", "schnell", "zu lang", "Dauer"]
+        "en": [
+          "time",
+          "budget",
+          "minutes",
+          "quick",
+          "too long",
+          "duration"
+        ],
+        "de": [
+          "Zeit",
+          "Budget",
+          "Minuten",
+          "schnell",
+          "zu lang",
+          "Dauer"
+        ]
       }
     },
     {
@@ -143,12 +277,24 @@
         "de": "Warum ist eine Varianten-Option ausgegraut statt einfach weg?"
       },
       "answer": {
-        "en": "because every variant is a fully written recipe, not a math trick — and some combinations simply haven't been written yet. when you've picked vegan and tap effort, a combo like vegan × pro might show disabled with a little note like \"no vegan × keto version yet\". we keep it visible so you know the gap is real and not a bug on your end. those gaps tell us what to author next.",
-        "de": "Weil jede Variante ein vollständig geschriebenes Rezept ist und kein Rechentrick — und manche Kombinationen schlicht noch nicht geschrieben wurden. Hast du etwa vegan gewählt und tippst auf Aufwand, kann eine Kombination wie vegan × aufwendig deaktiviert erscheinen, mit einem Hinweis wie „noch keine vegane Keto-Version“. Wir lassen sie sichtbar, damit du weißt, dass die Lücke echt ist und kein Fehler bei dir. Solche Lücken zeigen uns, was wir als Nächstes schreiben sollten."
+        "en": "because every variant is a fully written recipe, not a math trick. the core grid — diet × effort × calorie level — is complete for every dish, so those combinations always land somewhere real. the greyed chips appear only on the rare extra versions (like gluten-free) that exist in fewer combinations, with a note that the gap is real and not a bug on your end. and chips that sit outside your profile aren't greyed at all — they're just quieter, and still yours to tap.",
+        "de": "Weil jede Variante ein vollständig geschriebenes Rezept ist und kein Rechentrick. Das Kern-Raster — Ernährung × Aufwand × Kalorienstufe — ist bei jedem Gericht vollständig, diese Kombinationen führen also immer zu einem echten Rezept. Ausgegraute Chips gibt es nur bei den seltenen Extra-Versionen (etwa glutenfrei), die in weniger Kombinationen existieren — mit einem Hinweis, dass die Lücke echt ist und kein Fehler bei dir. Und Chips außerhalb deines Profils sind gar nicht ausgegraut, nur leiser — antippen darfst du sie trotzdem."
       },
       "keywords": {
-        "en": ["greyed out", "disabled", "combination", "unavailable", "variant missing"],
-        "de": ["ausgegraut", "deaktiviert", "Kombination", "nicht verfügbar", "Variante fehlt"]
+        "en": [
+          "greyed out",
+          "disabled",
+          "combination",
+          "unavailable",
+          "variant missing"
+        ],
+        "de": [
+          "ausgegraut",
+          "deaktiviert",
+          "Kombination",
+          "nicht verfügbar",
+          "Variante fehlt"
+        ]
       }
     },
     {
@@ -159,12 +305,26 @@
         "de": "Wie wechsle ich zwischen Versionen eines Gerichts?"
       },
       "answer": {
-        "en": "on any dish page you'll see one slim row per dimension — diet, effort, calorie level — each collapsed to show the version you're currently on, which starts from your profile. tap a row and the alternatives unfold as chips; pick one and the ingredients and method morph in place, with the changed lines flashing briefly so you can see what moved. it's the same dish the whole time, just rewritten for a different body or a different evening.",
-        "de": "Auf jeder Gerichtseite siehst du eine schmale Zeile pro Dimension — Ernährungsform, Aufwand, Kalorienstufe — jeweils eingeklappt auf die Version, die du gerade hast und die aus deinem Profil kommt. Tipp auf eine Zeile, und die Alternativen klappen als Chips auf; wähl eine aus, und Zutaten und Zubereitung verwandeln sich an Ort und Stelle, wobei die geänderten Zeilen kurz aufleuchten. Es bleibt die ganze Zeit dasselbe Gericht — nur neu geschrieben für einen anderen Körper oder einen anderen Abend."
+        "en": "on any dish page you'll see one slim row per dimension — diet, effort, calorie level — each collapsed to show the version you're currently on, which starts from your profile. tap a row and the alternatives unfold as chips; pick one and the ingredients and method morph in place, with the changed lines flashing briefly so you can see what moved. it's the same dish the whole time, just rewritten for a different body or a different evening. versions outside your profile show up quieter instead of vanishing — your profile picks where you start, never where you're allowed to go.",
+        "de": "Auf jeder Gerichtseite siehst du eine schmale Zeile pro Dimension — Ernährungsform, Aufwand, Kalorienstufe — jeweils eingeklappt auf die Version, die du gerade hast und die aus deinem Profil kommt. Tipp auf eine Zeile, und die Alternativen klappen als Chips auf; wähl eine aus, und Zutaten und Zubereitung verwandeln sich an Ort und Stelle, wobei die geänderten Zeilen kurz aufleuchten. Es bleibt die ganze Zeit dasselbe Gericht — nur neu geschrieben für einen anderen Körper oder einen anderen Abend. Versionen außerhalb deines Profils erscheinen leiser statt zu verschwinden — dein Profil bestimmt, wo du startest, nie, wohin du darfst."
       },
       "keywords": {
-        "en": ["variant", "switch", "version", "diet", "effort", "dimension"],
-        "de": ["Variante", "wechseln", "Version", "Ernährungsform", "Aufwand", "Dimension"]
+        "en": [
+          "variant",
+          "switch",
+          "version",
+          "diet",
+          "effort",
+          "dimension"
+        ],
+        "de": [
+          "Variante",
+          "wechseln",
+          "Version",
+          "Ernährungsform",
+          "Aufwand",
+          "Dimension"
+        ]
       }
     },
     {
@@ -179,8 +339,22 @@
         "de": "Du speicherst genau die Variante, die du gerade angesehen hast — deinen veganen Döner, nicht Döner im Allgemeinen. Genau das ist die Idee des Kochbuchs: Es soll sich wie ein Buch deiner Rezepte lesen, nicht wie ein Stapel Gerichte, die du jedes Mal neu einstellen müsstest. Verliebst du dich später in eine andere Variante desselben Gerichts, speichere die einfach dazu — sie können nebeneinander leben."
       },
       "keywords": {
-        "en": ["save", "cookbook", "favorite", "bookmark", "variant", "saved recipes"],
-        "de": ["speichern", "Kochbuch", "Favorit", "merken", "Variante", "gespeicherte Rezepte"]
+        "en": [
+          "save",
+          "cookbook",
+          "favorite",
+          "bookmark",
+          "variant",
+          "saved recipes"
+        ],
+        "de": [
+          "speichern",
+          "Kochbuch",
+          "Favorit",
+          "merken",
+          "Variante",
+          "gespeicherte Rezepte"
+        ]
       }
     },
     {
@@ -195,8 +369,22 @@
         "de": "Sie übernimmt das langweilige Rechnen für dich: 2 Zehen Knoblauch aus einem Rezept plus 3 Zehen aus einem anderen werden zu einer Zeile mit 5 Zehen. Bei kompatiblen Einheiten rechnet sie auch um — Milliliter und Esslöffel derselben Flüssigkeit werden zusammengeführt statt doppelt gelistet. Alles wird dedupliziert und nach Supermarkt-Gang gruppiert, damit du den Laden einmal abläufst statt im Zickzack. Du wählst nur die Rezepte; die Liste sortiert sich selbst."
       },
       "keywords": {
-        "en": ["shopping list", "aggregate", "combine", "units", "conversion", "aisle"],
-        "de": ["Einkaufsliste", "zusammenfassen", "kombinieren", "Einheiten", "Umrechnung", "Gang"]
+        "en": [
+          "shopping list",
+          "aggregate",
+          "combine",
+          "units",
+          "conversion",
+          "aisle"
+        ],
+        "de": [
+          "Einkaufsliste",
+          "zusammenfassen",
+          "kombinieren",
+          "Einheiten",
+          "Umrechnung",
+          "Gang"
+        ]
       }
     },
     {
@@ -211,8 +399,22 @@
         "de": "Es ist ein einfaches Raster — Montag bis Sonntag, Frühstück, Mittag- und Abendessen. Tipp auf ein Feld, um ein Rezept aus deinem Kochbuch oder der Suche einzusetzen, zieh Einträge zwischen den Feldern hin und her, wenn die Woche es sich anders überlegt, und exportiere den ganzen Plan mit einem Tipp in die Einkaufsliste. Es gibt keine automatische Planung und keine versteckte Makro-Tabelle darunter — es ist ein Planer, kein Coach."
       },
       "keywords": {
-        "en": ["meal plan", "weekly", "planner", "grid", "drag", "export"],
-        "de": ["Wochenplan", "Essensplan", "Planer", "Raster", "verschieben", "exportieren"]
+        "en": [
+          "meal plan",
+          "weekly",
+          "planner",
+          "grid",
+          "drag",
+          "export"
+        ],
+        "de": [
+          "Wochenplan",
+          "Essensplan",
+          "Planer",
+          "Raster",
+          "verschieben",
+          "exportieren"
+        ]
       }
     },
     {
@@ -227,8 +429,23 @@
         "de": "Der Kochmodus verwandelt das Rezept in eine dunkle Vollbild-Ansicht, ein Schritt nach dem anderen, gebaut für klebrige Hände — große Schrift, vor und zurück, ein Portionsregler und ein Timer bei den Schritten, die einen brauchen. Du kannst mitten im Kochen pausieren, und die App merkt sich genau, wo du warst. Wenn ein Timer abläuft, kann der Bildschirm in Koralle und Petrol aufblinken — ein visueller Alarm für gehörlose und schwerhörige Köch:innen; das schaltest du in den Einstellungen ein oder aus, und es respektiert deine Einstellung für reduzierte Bewegung. Optional gibt es auch eine Tipp-Geste, um mit einem Daumen zum nächsten Schritt zu springen."
       },
       "keywords": {
-        "en": ["cook mode", "timer", "steps", "flash alert", "accessibility", "deaf", "hands-free"],
-        "de": ["Kochmodus", "Timer", "Schritte", "Blinkalarm", "Barrierefreiheit", "gehörlos"]
+        "en": [
+          "cook mode",
+          "timer",
+          "steps",
+          "flash alert",
+          "accessibility",
+          "deaf",
+          "hands-free"
+        ],
+        "de": [
+          "Kochmodus",
+          "Timer",
+          "Schritte",
+          "Blinkalarm",
+          "Barrierefreiheit",
+          "gehörlos"
+        ]
       }
     },
     {
@@ -243,8 +460,22 @@
         "de": "Geh zu Einstellungen → Backup, und die App erzeugt zwei Dateien nebeneinander: morphcook-backup.json, gut lesbar, und morphcook-backup.json.gz — dasselbe, nur per GZip auf einen Bruchteil der Größe komprimiert. Beide laufen über das Teilen-Menü deines Handys, du kannst sie also in Dateien, einen Cloud-Ordner oder eine Mail an dich selbst legen — wohin auch immer du vertraust. Der Import nimmt beide Dateien und erkennt das Format automatisch. Da MorphCook keine Cloud und kein Konto hat, ist diese Datei deine Daten — eine Kopie an einem sicheren Ort ist die dreißig Sekunden wirklich wert."
       },
       "keywords": {
-        "en": ["backup", "export", "share", "file", "json", "save data"],
-        "de": ["Backup", "Sicherung", "exportieren", "teilen", "Datei", "Daten sichern"]
+        "en": [
+          "backup",
+          "export",
+          "share",
+          "file",
+          "json",
+          "save data"
+        ],
+        "de": [
+          "Backup",
+          "Sicherung",
+          "exportieren",
+          "teilen",
+          "Datei",
+          "Daten sichern"
+        ]
       }
     },
     {
@@ -259,8 +490,22 @@
         "de": "Es kann: Setz beim Export ein Passwort, und die .json-Datei wird mit AES-256-GCM verschlüsselt — einem richtig starken Standard, und dein Ernährungsprofil ist das wert. Eines solltest du wissen: Die komprimierte .json.gz-Datei bleibt aus Kompatibilitätsgründen unverschlüsselt — wenn alles abgeschlossen sein soll, teile nur die verschlüsselte .json. Und bitte schreib dir das Passwort irgendwo wirklich auf, denn es gibt keine Wiederherstellung — kein Konto, keine Reset-Mail, keine Hintertür. Ein vergessenes Passwort heißt: Dieses Backup bleibt für immer versiegelt."
       },
       "keywords": {
-        "en": ["encryption", "password", "aes", "secure", "backup", "privacy"],
-        "de": ["Verschlüsselung", "Passwort", "AES", "sicher", "Backup", "Privatsphäre"]
+        "en": [
+          "encryption",
+          "password",
+          "aes",
+          "secure",
+          "backup",
+          "privacy"
+        ],
+        "de": [
+          "Verschlüsselung",
+          "Passwort",
+          "AES",
+          "sicher",
+          "Backup",
+          "Privatsphäre"
+        ]
       }
     },
     {
@@ -275,8 +520,20 @@
         "de": "Das ist ein kleines Dashboard in den Einstellungen, das anschaut, was du über die Zeit auf deine Einkaufslisten gesetzt hast. Du bekommst einen Vielfalts-Wert (mit wie vielen verschiedenen Zutaten du wirklich kochst), deine meistgekauften Zutaten mit Häufigkeit und eine saisonale Aufschlüsselung nach Monat. Es ist erstaunlich gut in sanften Wahrheiten — etwa der Entdeckung, dass du vierzigmal Knoblauch gekauft hast, ein bestimmtes Gemüse aber nur zweimal. Alles wird auf deinem Handy aus deinen eigenen Listen berechnet; nichts verlässt das Gerät."
       },
       "keywords": {
-        "en": ["insights", "analytics", "variety score", "statistics", "shopping patterns"],
-        "de": ["Einblicke", "Statistik", "Vielfalt", "Auswertung", "Einkaufsverhalten"]
+        "en": [
+          "insights",
+          "analytics",
+          "variety score",
+          "statistics",
+          "shopping patterns"
+        ],
+        "de": [
+          "Einblicke",
+          "Statistik",
+          "Vielfalt",
+          "Auswertung",
+          "Einkaufsverhalten"
+        ]
       }
     },
     {
@@ -291,8 +548,20 @@
         "de": "Der öffnet den Zutaten-Guide — ein kleines Küchen-Nachschlagewerk für die Zutaten, die gern Stirnrunzeln auslösen, etwa Tahin, Misopaste oder Shirataki-Nudeln. Jeder Eintrag erklärt dir, was das Ding eigentlich ist, wie du es gut einsetzt, wie du es lagerst und wo du es im Laden realistischerweise findest. Er steckt wie alles andere in der App und funktioniert offline. Rezepte sollten nicht stillschweigend voraussetzen, dass du schon alles kennst."
       },
       "keywords": {
-        "en": ["ingredient guide", "learn more", "reference", "unknown ingredient", "what is"],
-        "de": ["Zutaten-Guide", "mehr erfahren", "Nachschlagewerk", "unbekannte Zutat", "was ist"]
+        "en": [
+          "ingredient guide",
+          "learn more",
+          "reference",
+          "unknown ingredient",
+          "what is"
+        ],
+        "de": [
+          "Zutaten-Guide",
+          "mehr erfahren",
+          "Nachschlagewerk",
+          "unbekannte Zutat",
+          "was ist"
+        ]
       }
     },
     {
@@ -307,8 +576,22 @@
         "de": "Lies zuerst die Meldung, die die App dir gibt — sie versucht, konkret zu sein: „Diese Datei ist kein gültiges MorphCook-Backup.“ heißt, du hast die falsche Datei erwischt, während „Die Backup-Datei ist beschädigt und kann nicht wiederhergestellt werden.“ bedeutet, dass die Datei unterwegs Schaden genommen hat — Cloud-Sync und Messenger verstümmeln gelegentlich Dateien. Denk daran, dass der Export immer zwei Geschwister erzeugt hat, eine .json und eine .json.gz; wenn eine scheitert, probier die andere Kopie von dort, wo du sie abgelegt hast. Ist das Backup verschlüsselt, fragt die App zuerst nach deinem Passwort. Die Wiederherstellung rührt die mitgelieferten Rezepte nie an — im schlimmsten Fall geht es um deine gespeicherten Daten, nicht um die App selbst."
       },
       "keywords": {
-        "en": ["restore", "import", "failed", "corrupted", "invalid", "backup error"],
-        "de": ["wiederherstellen", "Import", "fehlgeschlagen", "beschädigt", "ungültig", "Backup-Fehler"]
+        "en": [
+          "restore",
+          "import",
+          "failed",
+          "corrupted",
+          "invalid",
+          "backup error"
+        ],
+        "de": [
+          "wiederherstellen",
+          "Import",
+          "fehlgeschlagen",
+          "beschädigt",
+          "ungültig",
+          "Backup-Fehler"
+        ]
       }
     },
     {
@@ -323,8 +606,19 @@
         "de": "Genau diese Meldung — „Falsches Passwort. Bitte versuche es erneut.“ — heißt: Die Datei ließ sich öffnen, aber das Passwort hat sie nicht entsperrt. Prüf zuerst die leisen Saboteure: Feststelltaste, ein Leerzeichen, das deine Tastatur angehängt hat, ein anderes Tastaturlayout oder eine Autokorrektur mit eigener Meinung. Stell auch sicher, dass es das Passwort für genau dieses Backup ist — ältere Exporte können ein früheres gehabt haben. Wir müssen ehrlich sein: Wenn es wirklich vergessen ist, gibt es keine Wiederherstellung — aber die unverschlüsselte .json.gz, die beim Export mit erzeugt wurde, kann dir den Tag noch retten."
       },
       "keywords": {
-        "en": ["wrong password", "incorrect password", "decrypt", "locked", "forgot password"],
-        "de": ["falsches Passwort", "entschlüsseln", "gesperrt", "Passwort vergessen"]
+        "en": [
+          "wrong password",
+          "incorrect password",
+          "decrypt",
+          "locked",
+          "forgot password"
+        ],
+        "de": [
+          "falsches Passwort",
+          "entschlüsseln",
+          "gesperrt",
+          "Passwort vergessen"
+        ]
       }
     },
     {
@@ -339,8 +633,20 @@
         "de": "Zwei mögliche Gründe. Entweder gibt es das Gericht im Bestand wirklich noch nicht — dann wird deine Suche lokal auf deinem Gerät als Inhaltswunsch vermerkt, leere Suchen helfen uns also tatsächlich bei der Entscheidung, was wir als Nächstes schreiben. Oder das Gericht existiert, aber jede Variante wird von deinem Profil ausgefiltert: Vermeidungs-Markierungen, eine ausgeschlossene Zutat, Zeitbudget oder Kalorienziel. Probier die Suche noch einmal, nachdem du in den Einstellungen einen Filter gelockert hast, und prüf die Schreibweise in der Sprache, in der du suchst."
       },
       "keywords": {
-        "en": ["search", "no results", "empty", "not found", "missing dish"],
-        "de": ["Suche", "keine Treffer", "leer", "nicht gefunden", "Gericht fehlt"]
+        "en": [
+          "search",
+          "no results",
+          "empty",
+          "not found",
+          "missing dish"
+        ],
+        "de": [
+          "Suche",
+          "keine Treffer",
+          "leer",
+          "nicht gefunden",
+          "Gericht fehlt"
+        ]
       }
     },
     {
@@ -355,8 +661,22 @@
         "de": "In den Einstellungen findest du den vollständigen Profil-Editor — jede Ernährungs-Abkürzung, jede gemiedene Zutat, dein Kalorienziel und Zeitbudget, alles jederzeit änderbar, ganz ohne neues Onboarding. Änderungen wirken sofort: Rezepte tauchen auf oder verschwinden in dem Moment, in dem du etwas umstellst. Das Leeren deiner Vermeidungen rührt Kochbuch, Wochenplan und Verlauf nicht an — die gehören dir und bleiben, wo sie sind. Wenn du vor einem großen Umbau ein Sicherheitsnetz willst, exportiere vorher ein Backup."
       },
       "keywords": {
-        "en": ["reset", "profile", "edit", "change diet", "start over", "settings"],
-        "de": ["zurücksetzen", "Profil", "bearbeiten", "Ernährung ändern", "neu anfangen", "Einstellungen"]
+        "en": [
+          "reset",
+          "profile",
+          "edit",
+          "change diet",
+          "start over",
+          "settings"
+        ],
+        "de": [
+          "zurücksetzen",
+          "Profil",
+          "bearbeiten",
+          "Ernährung ändern",
+          "neu anfangen",
+          "Einstellungen"
+        ]
       }
     }
   ]

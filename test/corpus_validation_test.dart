@@ -156,6 +156,86 @@ void main() {
       }
     });
 
+    // The wave-4 contract tests arm themselves when the regenerated corpus
+    // lands: pipeline/wave4_lattice.py stamps corpus_wave 4 into the
+    // partition manifest at merge time.
+    final corpusWave =
+        (readJsonFile('assets/partition-manifest.json')['corpus_wave']
+                as int?) ??
+            3;
+    final waveSkip = corpusWave >= 4
+        ? null
+        : 'wave-4 corpus not merged yet — run pipeline/wave4_lattice.py';
+
+    test('every dish is a complete lattice (wave 4 contract)', () async {
+      // Core diet columns × the dish's two efforts × its two calorie levels
+      // must ALL exist — combinations are the product. Extra diets
+      // (coverage cells) are sparse by design but stay inside the pairs.
+      const coreDiets = {'classic', 'vegetarian', 'vegan'};
+      const extraDiets = {'gluten-free', 'low-fodmap'};
+      final corpus = await loadRealCorpus();
+      for (final dish in corpus.dishes) {
+        final recipes = await corpus.variantsOf(dish);
+        final core =
+            recipes.where((r) => coreDiets.contains(r.variant.diet)).toList();
+        final diets = core.map((r) => r.variant.diet).toSet();
+        final efforts = core.map((r) => r.variant.effort).toSet();
+        final calories = core.map((r) => r.variant.calorie).toSet();
+        expect(diets, contains('classic'),
+            reason: 'dish ${dish.id}: no classic column');
+        expect(efforts.length, 2,
+            reason: 'dish ${dish.id}: effort pair is $efforts');
+        expect(calories.length, 2,
+            reason: 'dish ${dish.id}: calorie pair is $calories');
+        final triples =
+            core.map((r) => '${r.variant.diet}|${r.variant.effort}|'
+                '${r.variant.calorie}').toSet();
+        for (final d in diets) {
+          for (final e in efforts) {
+            for (final c in calories) {
+              expect(triples, contains('$d|$e|$c'),
+                  reason: 'dish ${dish.id}: missing lattice cell $d|$e|$c');
+            }
+          }
+        }
+        for (final r in recipes.where(
+            (r) => !coreDiets.contains(r.variant.diet))) {
+          expect(extraDiets, contains(r.variant.diet),
+              reason: 'dish ${dish.id}: ${r.id} uses retired diet '
+                  '${r.variant.diet}');
+          expect(efforts, contains(r.variant.effort),
+              reason: 'dish ${dish.id}: extra ${r.id} outside effort pair');
+          expect(calories, contains(r.variant.calorie),
+              reason: 'dish ${dish.id}: extra ${r.id} outside calorie pair');
+        }
+      }
+    }, skip: waveSkip);
+
+    test('titles carry no diet words and are unique within a dish',
+        () async {
+      final banned = RegExp(
+          r'\b(vegan\w*|vegetar\w*|veggie|classic\w*|klassi\w*|keto|halal|'
+          r'kosher|koscher|gluten\w*|fodmap|sugar.?free|zucker.?frei\w*|'
+          r'protein\w*|light|leicht\w*|lactose\w*|laktose\w*|pescatari\w*|'
+          r'low.?carb|kalorien\w*|calorie\w*)\b',
+          caseSensitive: false);
+      final corpus = await loadRealCorpus();
+      for (final dish in corpus.dishes) {
+        final seen = <String>{};
+        for (final recipe in await corpus.variantsOf(dish)) {
+          for (final lang in ['en', 'de']) {
+            final title = recipe.title.of(lang);
+            expect(banned.hasMatch(title), isFalse,
+                reason: '${recipe.id}: title[$lang] "$title" carries a '
+                    'diet word — coordinates say that, titles sell food');
+            expect(seen.add('$lang|${title.trim().toLowerCase()}'), isTrue,
+                reason: '${recipe.id}: duplicate title[$lang] "$title" '
+                    'within dish ${dish.id}');
+          }
+        }
+      }
+    }, skip: waveSkip);
+
     test('bilingual completeness (en + de) everywhere', () async {
       final corpus = await loadRealCorpus();
       void check(String owner, Map<String, String> values) {

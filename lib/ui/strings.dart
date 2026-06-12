@@ -40,6 +40,9 @@ class S {
     'fat': 'fat',
     'noVariantNote': 'no version yet for',
     'comboUnavailable': 'not written yet — maybe soon',
+    'outsideProfile':
+        'this version sits outside your profile — yours to cook anyway',
+    'outsideProfileCount': 'versions outside your profile',
     'outsideCalories': 'outside your calorie target',
     'showAnyway': 'show versions outside my target',
     'startCooking': 'start cooking',
@@ -190,6 +193,9 @@ class S {
     'fat': 'Fett',
     'noVariantNote': 'noch keine Version für',
     'comboUnavailable': 'noch nicht geschrieben — vielleicht bald',
+    'outsideProfile':
+        'diese Version liegt außerhalb deines Profils — koch sie trotzdem',
+    'outsideProfileCount': 'Versionen außerhalb deines Profils',
     'outsideCalories': 'außerhalb deines Kalorienziels',
     'showAnyway': 'Versionen außerhalb meines Ziels zeigen',
     'startCooking': 'loskochen',
