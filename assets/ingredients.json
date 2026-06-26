@@ -247,7 +247,17 @@
           "name": {
             "en": "radish",
             "de": "Radieschen"
-          }
+          },
+          "children": [
+            {
+              "id": "daikon",
+              "name": {
+                "en": "daikon",
+                "de": "Daikon-Rettich"
+              },
+              "flags": []
+            }
+          ]
         },
         {
           "id": "red-cabbage",
@@ -364,6 +374,16 @@
           "name": {
             "en": "artichoke hearts",
             "de": "Artischockenherzen"
+          },
+          "flags": [
+            "high-fodmap"
+          ]
+        },
+        {
+          "id": "beetroot",
+          "name": {
+            "en": "beetroot",
+            "de": "Rote Bete"
           },
           "flags": [
             "high-fodmap"
@@ -1004,6 +1024,16 @@
           "flags": [
             "shellfish"
           ]
+        },
+        {
+          "id": "katsuobushi",
+          "name": {
+            "en": "bonito flakes (katsuobushi)",
+            "de": "Bonitoflocken (Katsuobushi)"
+          },
+          "flags": [
+            "fish"
+          ]
         }
       ]
     },
@@ -1383,6 +1413,17 @@
           },
           "flags": [
             "gluten"
+          ]
+        },
+        {
+          "id": "phyllo-dough",
+          "name": {
+            "en": "phyllo dough",
+            "de": "Filoteig"
+          },
+          "flags": [
+            "gluten",
+            "high-fodmap"
           ]
         }
       ]
@@ -2154,6 +2195,51 @@
             "gluten",
             "added-sugar"
           ]
+        },
+        {
+          "id": "doubanjiang",
+          "name": {
+            "en": "doubanjiang",
+            "de": "Doubanjiang"
+          },
+          "flags": [
+            "soy",
+            "gluten"
+          ]
+        },
+        {
+          "id": "kimchi",
+          "name": {
+            "en": "kimchi",
+            "de": "Kimchi"
+          },
+          "flags": [
+            "fish",
+            "shellfish",
+            "high-fodmap"
+          ]
+        },
+        {
+          "id": "okonomiyaki-sauce",
+          "name": {
+            "en": "okonomiyaki sauce",
+            "de": "Okonomiyaki-Sauce"
+          },
+          "flags": [
+            "added-sugar",
+            "gluten",
+            "soy"
+          ]
+        },
+        {
+          "id": "dashi",
+          "name": {
+            "en": "dashi stock",
+            "de": "Dashi-Brühe"
+          },
+          "flags": [
+            "fish"
+          ]
         }
       ]
     },
@@ -2413,6 +2499,14 @@
             "en": "caraway seeds",
             "de": "Kümmel"
           }
+        },
+        {
+          "id": "sichuan-peppercorns",
+          "name": {
+            "en": "Sichuan peppercorns",
+            "de": "Szechuanpfeffer"
+          },
+          "flags": []
         }
       ]
     }

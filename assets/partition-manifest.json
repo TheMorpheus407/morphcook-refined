@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "corpus_version": "2026.06.6",
+  "corpus_version": "2026.06.85",
   "generated_by": "morphcook pipeline",
   "loading_strategy": {
     "at_launch": [
@@ -34,7 +34,20 @@
         "smoothie-bowl",
         "french-toast",
         "granola",
-        "mac-and-cheese"
+        "mac-and-cheese",
+        "chicken-noodle-soup",
+        "roast-chicken",
+        "banana-bread",
+        "chicken-pot-pie",
+        "stuffed-peppers",
+        "tuna-melt",
+        "chicken-stir-fry",
+        "fried-chicken",
+        "chicken-parmesan",
+        "meatloaf",
+        "grilled-cheese",
+        "baked-salmon",
+        "waffles"
       ]
     },
     {
@@ -49,7 +62,9 @@
         "brownies",
         "apple-pie",
         "cookies",
-        "cheesecake"
+        "cheesecake",
+        "jollof-rice",
+        "ceviche"
       ]
     },
     {
@@ -80,7 +95,18 @@
         "teriyaki",
         "gyoza",
         "green-curry",
-        "bibimbap"
+        "bibimbap",
+        "chicken-adobo",
+        "mapo-tofu",
+        "chicken-satay",
+        "poke-bowl",
+        "bulgogi",
+        "kimchi-jjigae",
+        "kung-pao-chicken",
+        "banh-mi",
+        "laksa",
+        "okonomiyaki",
+        "japanese-curry"
       ]
     },
     {
@@ -106,7 +132,8 @@
         "dal",
         "biryani",
         "palak-paneer",
-        "tikka-masala"
+        "tikka-masala",
+        "chana-masala"
       ]
     },
     {
@@ -118,7 +145,9 @@
         "burrito-bowl",
         "quesadilla",
         "chili",
-        "enchiladas"
+        "enchiladas",
+        "fajitas",
+        "huevos-rancheros"
       ]
     },
     {
@@ -131,7 +160,18 @@
         "meatballs",
         "crepes",
         "quiche",
-        "tomato-soup"
+        "tomato-soup",
+        "greek-salad",
+        "ratatouille",
+        "moussaka",
+        "creme-brulee",
+        "fish-and-chips",
+        "shepherds-pie",
+        "beef-stroganoff",
+        "pierogi",
+        "spanakopita",
+        "rice-pudding",
+        "borscht"
       ]
     }
   ],
