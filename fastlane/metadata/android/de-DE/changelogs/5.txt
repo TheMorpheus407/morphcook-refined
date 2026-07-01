@@ -1,0 +1,7 @@
+Erste F-Droid-Veröffentlichung.
+
+* Offline-Kochbuch, das jedes Gericht an dein Ernährungsprofil anpasst
+* Kochmodus, Einkaufslisten, Essensplanung
+* Deutsch und Englisch
+* Verschlüsselte lokale Backups
+* Kein Netzwerkzugriff, kein Tracking

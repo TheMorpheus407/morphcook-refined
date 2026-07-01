@@ -1,0 +1,30 @@
+Dasselbe Gericht existiert für jeden Körper.
+
+Die meisten Rezept-Apps behandeln Ernährungsbedürfnisse als Filter, die
+Gerichte aus der Welt entfernen: Wer vegan lebt, verliert den Döner, wer eine
+Nussallergie entwickelt, verliert Pad Thai. MorphCook dreht das um. Jedes
+Gericht existiert als vollständig ausgearbeitete Varianten — veganer Döner,
+glutenfreier Alfredo, Keto-Burger — und dein Profil entscheidet, welche
+Variante jedes Gerichts du siehst. Du behältst das ganze Kochbuch.
+
+Lege einmal deine Unverträglichkeiten, dein Kalorienziel, dein Zeitbudget und
+deine Sprache fest, und jedes Rezept passt sich an. Wechsle jederzeit zu einer
+anderen Variante eines Gerichts.
+
+Funktionen:
+
+* Jedes Gericht als mehrere echte Varianten ausgearbeitet, nicht weggefiltert
+* Ein Profil, das das gesamte Kochbuch an deine Bedürfnisse anpasst
+* Schritt-für-Schritt-Kochmodus
+* Einkaufslisten und Essensplanung
+* Zweisprachig: Deutsch und Englisch
+* Verschlüsselte, exportierbare Backups (AES-256-GCM), die auf deinem Gerät bleiben
+
+Datenschutz von Grund auf:
+
+* Vollständig offline — die App stellt keine Netzwerkanfragen
+* Keine Konten, keine Werbung, keine Analyse, kein Tracking, keine Laufzeit-KI
+* Fordert keine sensiblen Berechtigungen an
+* Nichts verlässt dein Gerät, außer du exportierst selbst ein Backup
+
+MorphCook ist freie und quelloffene Software.

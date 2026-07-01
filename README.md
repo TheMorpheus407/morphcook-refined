@@ -1,16 +1,45 @@
-# morphcook
+# MorphCook
 
-A new Flutter project.
+*The same dish exists for every body.*
 
-## Getting Started
+Recipe apps treat dietary needs as filters that remove dishes from the world:
+go vegan and the Döner disappears, develop a nut allergy and Pad Thai is gone.
+MorphCook inverts this. Every dish exists as fully-authored variants — vegan
+Döner, gluten-free Alfredo, keto burger — and your profile decides which
+variant of each dish you see. You keep the whole cookbook.
 
-This project is a starting point for a Flutter application.
+The app is an offline-first Flutter app (Android + iOS): no backend, no
+accounts, no telemetry, no runtime AI, no network permission. The bilingual
+(EN/DE) recipe corpus ships bundled with the app.
 
-A few resources to get you started if this is your first Flutter project:
+This repository is the maintained, actively-refined build of MorphCook. It was
+originally produced by Claude Fable 5 as one entry in a
+[multi-model comparison](https://github.com/TheMorpheus407/morphcook) and has
+been developed by hand since.
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+## Build
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+```sh
+flutter pub get
+flutter test
+flutter run
+```
+
+Release APK (what F-Droid builds):
+
+```sh
+flutter build apk --release
+```
+
+## Privacy
+
+MorphCook makes no network requests and collects nothing. See
+[PRIVACY.md](PRIVACY.md).
+
+## Licenses
+
+- Application code and recipe corpus: **MIT** — see [LICENSE](LICENSE).
+- Bundled fonts, all under the **SIL Open Font License 1.1**:
+  - Playfair Display — `assets/fonts/OFL-PlayfairDisplay.txt`
+  - JetBrains Mono — `assets/fonts/OFL-JetBrainsMono.txt`
+  - Caveat — `assets/fonts/OFL-Caveat.txt`
