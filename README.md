@@ -31,6 +31,11 @@ Release APK (what F-Droid builds):
 flutter build apk --release
 ```
 
+For reproducible F-Droid builds the Flutter SDK is pinned as a git submodule
+(`submodules/flutter`, currently 3.38.3). A normal clone ignores it; the
+F-Droid buildserver initializes it and builds with that exact toolchain. Local
+development can just use your system Flutter.
+
 ## Privacy
 
 MorphCook makes no network requests and collects nothing. See
