@@ -61,6 +61,12 @@ android {
             }
         }
     }
+
+    dependenciesInfo {
+        // Play-only encrypted dependency blob; F-Droid rejects APKs containing it.
+        includeInApk = false
+        includeInBundle = false
+    }
 }
 
 flutter {
