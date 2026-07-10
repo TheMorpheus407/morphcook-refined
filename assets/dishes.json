@@ -5413,6 +5413,2763 @@
         "comfort-food"
       ],
       "frequency_tier": "high"
+    },
+    {
+      "id": "cinnamon-rolls",
+      "name": {
+        "en": "cinnamon rolls",
+        "de": "Zimtschnecken"
+      },
+      "hero": {
+        "en": "soft cinnamon spirals for the adventurer who definitely found them legally",
+        "de": "Weiche Zimtschnecken für Abenteurer, die ihren süßen Fund ganz bestimmt bezahlt haben."
+      },
+      "caption": {
+        "en": "guard the sweet hoard",
+        "de": "Den süßen Hort gut bewachen."
+      },
+      "stripe": "#b07a4f",
+      "recipes": [
+        "cinnamon-rolls-classic-easy-400",
+        "cinnamon-rolls-classic-easy-600",
+        "cinnamon-rolls-classic-medium-400",
+        "cinnamon-rolls-classic-medium-600",
+        "cinnamon-rolls-vegan-easy-400",
+        "cinnamon-rolls-vegan-easy-600",
+        "cinnamon-rolls-vegan-medium-400",
+        "cinnamon-rolls-vegan-medium-600",
+        "cinnamon-rolls-gluten-free-easy-400"
+      ],
+      "partition_id": "pop-culture",
+      "secondary_partitions": [],
+      "cuisine_tags": [
+        "american",
+        "dessert",
+        "baking",
+        "gaming"
+      ],
+      "frequency_tier": "medium"
+    },
+    {
+      "id": "chocolate-cake",
+      "name": {
+        "en": "chocolate cake",
+        "de": "Schokoladenkuchen"
+      },
+      "hero": {
+        "en": "a dark, tender layer cake that passes every test and keeps the promise on the plate.",
+        "de": "Ein dunkler, saftiger Schokoladenkuchen, der den Test besteht und sein Versprechen hält."
+      },
+      "caption": {
+        "en": "test complete, cake confirmed",
+        "de": "Test bestanden, Kuchen echt"
+      },
+      "stripe": "#6b3f36",
+      "recipes": [
+        "chocolate-cake-classic-medium-400",
+        "chocolate-cake-classic-medium-600",
+        "chocolate-cake-classic-hard-400",
+        "chocolate-cake-classic-hard-600",
+        "chocolate-cake-vegan-medium-400",
+        "chocolate-cake-vegan-medium-600",
+        "chocolate-cake-vegan-hard-400",
+        "chocolate-cake-vegan-hard-600",
+        "chocolate-cake-gluten-free-medium-400"
+      ],
+      "partition_id": "pop-culture",
+      "secondary_partitions": [],
+      "cuisine_tags": [
+        "american",
+        "dessert",
+        "baking",
+        "gaming"
+      ],
+      "frequency_tier": "medium"
+    },
+    {
+      "id": "mushroom-soup",
+      "name": {
+        "en": "mushroom soup",
+        "de": "Pilzsuppe"
+      },
+      "hero": {
+        "en": "a deep, earthy bowl for careful foragers, wholesome even when the mushrooms look dramatic.",
+        "de": "eine erdige Schüssel Waldwärme für vorsichtige Sammler, gemütlich und ganz harmlos."
+      },
+      "caption": {
+        "en": "not suspicious, just forest comfort",
+        "de": "Harmlos, nur Wald im Topf"
+      },
+      "stripe": "#8b7a5a",
+      "recipes": [
+        "mushroom-soup-classic-easy-400",
+        "mushroom-soup-classic-easy-600",
+        "mushroom-soup-classic-medium-400",
+        "mushroom-soup-classic-medium-600",
+        "mushroom-soup-vegan-easy-400",
+        "mushroom-soup-vegan-easy-600",
+        "mushroom-soup-vegan-medium-400",
+        "mushroom-soup-vegan-medium-600"
+      ],
+      "partition_id": "pop-culture",
+      "secondary_partitions": [
+        "cuisine-european"
+      ],
+      "cuisine_tags": [
+        "european",
+        "soup",
+        "comfort-food",
+        "gaming"
+      ],
+      "frequency_tier": "high"
+    },
+    {
+      "id": "pumpkin-soup",
+      "name": {
+        "en": "pumpkin soup",
+        "de": "Kürbissuppe"
+      },
+      "hero": {
+        "en": "a copper pot of autumn glow, ladled after the last pumpkin leaves the patch.",
+        "de": "ein Topf goldener Herbst, gekocht nach dem letzten Gang durchs Beet."
+      },
+      "caption": {
+        "en": "first frost, full bowl",
+        "de": "Frost am Zaun, Suppe im Topf"
+      },
+      "stripe": "#b98245",
+      "recipes": [
+        "pumpkin-soup-classic-easy-400",
+        "pumpkin-soup-classic-easy-600",
+        "pumpkin-soup-classic-medium-400",
+        "pumpkin-soup-classic-medium-600",
+        "pumpkin-soup-vegan-easy-400",
+        "pumpkin-soup-vegan-easy-600",
+        "pumpkin-soup-vegan-medium-400",
+        "pumpkin-soup-vegan-medium-600"
+      ],
+      "partition_id": "pop-culture",
+      "secondary_partitions": [
+        "cuisine-european"
+      ],
+      "cuisine_tags": [
+        "european",
+        "soup",
+        "comfort-food",
+        "gaming"
+      ],
+      "frequency_tier": "medium"
+    },
+    {
+      "id": "katsudon",
+      "name": {
+        "en": "katsudon",
+        "de": "Katsudon"
+      },
+      "hero": {
+        "en": "crispy tonkatsu tucked into soft egg and rice, because discipline deserves a bowl",
+        "de": "Knuspriges Tonkatsu, weiches Ei und Reis für den Moment, in dem sich Disziplin auszahlt."
+      },
+      "caption": {
+        "en": "win first, bowl later",
+        "de": "erst siegen, dann löffeln"
+      },
+      "stripe": "#b88752",
+      "recipes": [
+        "katsudon-classic-easy-600",
+        "katsudon-classic-easy-800",
+        "katsudon-classic-medium-600",
+        "katsudon-classic-medium-800",
+        "katsudon-vegetarian-easy-600",
+        "katsudon-vegetarian-easy-800",
+        "katsudon-vegetarian-medium-600",
+        "katsudon-vegetarian-medium-800",
+        "katsudon-vegan-easy-600",
+        "katsudon-vegan-easy-800",
+        "katsudon-vegan-medium-600",
+        "katsudon-vegan-medium-800"
+      ],
+      "partition_id": "pop-culture",
+      "secondary_partitions": [
+        "cuisine-asian"
+      ],
+      "cuisine_tags": [
+        "japanese",
+        "rice",
+        "bowl",
+        "anime"
+      ],
+      "frequency_tier": "medium"
+    },
+    {
+      "id": "onigiri",
+      "name": {
+        "en": "onigiri",
+        "de": "Onigiri"
+      },
+      "hero": {
+        "en": "a warm little triangle of rice and nori, definitely not a donut, packed for the next training arc.",
+        "de": "Ein salziges Reisdreieck im Nori-Mantel, ganz sicher kein Donut, bereit für die nächste Trainingsrunde."
+      },
+      "caption": {
+        "en": "definitely not a donut",
+        "de": "Ganz sicher kein Donut"
+      },
+      "stripe": "#6f7355",
+      "recipes": [
+        "onigiri-classic-easy-400",
+        "onigiri-classic-easy-600",
+        "onigiri-classic-medium-400",
+        "onigiri-classic-medium-600",
+        "onigiri-vegetarian-easy-400",
+        "onigiri-vegetarian-easy-600",
+        "onigiri-vegetarian-medium-400",
+        "onigiri-vegetarian-medium-600",
+        "onigiri-vegan-easy-400",
+        "onigiri-vegan-easy-600",
+        "onigiri-vegan-medium-400",
+        "onigiri-vegan-medium-600"
+      ],
+      "partition_id": "pop-culture",
+      "secondary_partitions": [
+        "cuisine-asian"
+      ],
+      "cuisine_tags": [
+        "japanese",
+        "rice",
+        "bento",
+        "anime"
+      ],
+      "frequency_tier": "medium"
+    },
+    {
+      "id": "beef-stew",
+      "name": {
+        "en": "beef stew",
+        "de": "Rindereintopf"
+      },
+      "hero": {
+        "en": "a deep, slow-simmered bowl for muddy boots, low lamplight, and the quest you can start tomorrow.",
+        "de": "ein kräftiger, langsam geschmorter Eintopf für nasse Stiefel, warmes Licht und den Aufbruch morgen."
+      },
+      "caption": {
+        "en": "quest tomorrow, stew tonight",
+        "de": "Aufbruch morgen, Eintopf heute"
+      },
+      "stripe": "#8a5a3b",
+      "recipes": [
+        "beef-stew-classic-easy-400",
+        "beef-stew-classic-easy-600",
+        "beef-stew-classic-medium-400",
+        "beef-stew-classic-medium-600",
+        "beef-stew-vegetarian-easy-400",
+        "beef-stew-vegetarian-easy-600",
+        "beef-stew-vegetarian-medium-400",
+        "beef-stew-vegetarian-medium-600",
+        "beef-stew-vegan-easy-400",
+        "beef-stew-vegan-easy-600",
+        "beef-stew-vegan-medium-400",
+        "beef-stew-vegan-medium-600"
+      ],
+      "partition_id": "pop-culture",
+      "secondary_partitions": [
+        "cuisine-european"
+      ],
+      "cuisine_tags": [
+        "european",
+        "stew",
+        "comfort-food",
+        "gaming"
+      ],
+      "frequency_tier": "high"
+    },
+    {
+      "id": "nachos",
+      "name": {
+        "en": "nachos",
+        "de": "Nachos"
+      },
+      "hero": {
+        "en": "a tray of crunchy chips, melted cheese, and jalapeños waits by the couch for one more round.",
+        "de": "Ein Blech voller knuspriger Chips, geschmolzenem Käse und Jalapeños wartet auf die nächste Couchrunde."
+      },
+      "caption": {
+        "en": "one more round, extra jalapeños",
+        "de": "Noch eine Runde, extra Jalapeños."
+      },
+      "stripe": "#b57a3a",
+      "recipes": [
+        "nachos-classic-easy-400",
+        "nachos-classic-easy-600",
+        "nachos-classic-medium-400",
+        "nachos-classic-medium-600",
+        "nachos-vegetarian-easy-400",
+        "nachos-vegetarian-easy-600",
+        "nachos-vegetarian-medium-400",
+        "nachos-vegetarian-medium-600",
+        "nachos-vegan-easy-400",
+        "nachos-vegan-easy-600",
+        "nachos-vegan-medium-400",
+        "nachos-vegan-medium-600"
+      ],
+      "partition_id": "pop-culture",
+      "secondary_partitions": [
+        "cuisine-mexican"
+      ],
+      "cuisine_tags": [
+        "tex-mex",
+        "mexican",
+        "snack",
+        "gaming"
+      ],
+      "frequency_tier": "high"
+    },
+    {
+      "id": "nuckla-coka",
+      "name": {
+        "en": "nuckla-coka",
+        "de": "Nuckla-Coka"
+      },
+      "hero": {
+        "en": "caramel-bright cola syrup, citrus peels, vanilla, and warm spice in our unofficial rebuild of nuckla-coka.",
+        "de": "Karamell, Zitrusschale, Vanille und warme Gewürze: unsere inoffiziell nachgebaute Nuckla-Coka."
+      },
+      "caption": {
+        "en": "bottle-cap sparkle, no shortcuts",
+        "de": "Kronkorkenglanz, echt gerührt"
+      },
+      "stripe": "#a66a32",
+      "recipes": [
+        "nuckla-coka-classic-easy-400",
+        "nuckla-coka-classic-easy-600",
+        "nuckla-coka-classic-medium-400",
+        "nuckla-coka-classic-medium-600"
+      ],
+      "partition_id": "pop-culture",
+      "secondary_partitions": [],
+      "cuisine_tags": [
+        "american",
+        "drink",
+        "soda",
+        "gaming"
+      ],
+      "frequency_tier": "medium"
+    },
+    {
+      "id": "leblonc-curry",
+      "name": {
+        "en": "leblonc curry",
+        "de": "LeBlonc-Curry"
+      },
+      "hero": {
+        "en": "our unofficial rebuild of leblonc curry folds coffee, grated apple, and honey into a patient dark roux.",
+        "de": "unser inoffiziell nachgebautes LeBlonc-Curry bekommt Kaffee, geriebenen Apfel und Honig in einer langsam dunkel gerösteten Mehlschwitze."
+      },
+      "caption": {
+        "en": "dark roux, soft rice, quiet secrets",
+        "de": "dunkle Sauce, Reis, kleine Geheimnisse"
+      },
+      "stripe": "#8a6a3f",
+      "recipes": [
+        "leblonc-curry-classic-easy-600",
+        "leblonc-curry-classic-easy-800",
+        "leblonc-curry-classic-medium-600",
+        "leblonc-curry-classic-medium-800",
+        "leblonc-curry-vegetarian-easy-600",
+        "leblonc-curry-vegetarian-easy-800",
+        "leblonc-curry-vegetarian-medium-600",
+        "leblonc-curry-vegetarian-medium-800",
+        "leblonc-curry-vegan-easy-600",
+        "leblonc-curry-vegan-easy-800",
+        "leblonc-curry-vegan-medium-600",
+        "leblonc-curry-vegan-medium-800",
+        "leblonc-curry-gluten-free-easy-600"
+      ],
+      "partition_id": "pop-culture",
+      "secondary_partitions": [
+        "cuisine-asian"
+      ],
+      "cuisine_tags": [
+        "japanese",
+        "curry",
+        "rice",
+        "gaming"
+      ],
+      "frequency_tier": "medium"
+    },
+    {
+      "id": "crabby-patty",
+      "name": {
+        "en": "crabby patty",
+        "de": "Krabbelburger"
+      },
+      "hero": {
+        "en": "our unofficial rebuild of the crabby patty, griddled and glossy with a sweet-tangy secret sauce under the crunch.",
+        "de": "unser inoffiziell nachgebauter Krabbelburger: gebraten, knackig geschichtet und mit süß-saurer Geheimsauce."
+      },
+      "caption": {
+        "en": "secret sauce, real skillet",
+        "de": "Geheimsauce, echte Pfanne"
+      },
+      "stripe": "#b9824a",
+      "recipes": [
+        "crabby-patty-classic-easy-600",
+        "crabby-patty-classic-easy-800",
+        "crabby-patty-classic-medium-600",
+        "crabby-patty-classic-medium-800",
+        "crabby-patty-vegetarian-easy-600",
+        "crabby-patty-vegetarian-easy-800",
+        "crabby-patty-vegetarian-medium-600",
+        "crabby-patty-vegetarian-medium-800",
+        "crabby-patty-vegan-easy-600",
+        "crabby-patty-vegan-easy-800",
+        "crabby-patty-vegan-medium-600",
+        "crabby-patty-vegan-medium-800",
+        "crabby-patty-gluten-free-easy-600"
+      ],
+      "partition_id": "pop-culture",
+      "secondary_partitions": [],
+      "cuisine_tags": [
+        "american",
+        "burger",
+        "comfort-food",
+        "cartoon"
+      ],
+      "frequency_tier": "medium"
+    },
+    {
+      "id": "butterbrew",
+      "name": {
+        "en": "butterbrew",
+        "de": "Butterbräu"
+      },
+      "hero": {
+        "en": "our unofficial rebuild of butterbrew pours golden and cozy, with real butterscotch under a soft cream cap.",
+        "de": "unser inoffiziell nachgebautes Butterbräu: goldwarm, karamellig und mit weicher Sahnehaube."
+      },
+      "caption": {
+        "en": "butterscotch, spice, cloud of cream",
+        "de": "Karamellwärme unter Sahnewolken"
+      },
+      "stripe": "#b8864a",
+      "recipes": [
+        "butterbrew-classic-easy-400",
+        "butterbrew-classic-easy-600",
+        "butterbrew-classic-medium-400",
+        "butterbrew-classic-medium-600",
+        "butterbrew-vegan-easy-400",
+        "butterbrew-vegan-easy-600",
+        "butterbrew-vegan-medium-400",
+        "butterbrew-vegan-medium-600"
+      ],
+      "partition_id": "pop-culture",
+      "secondary_partitions": [
+        "cuisine-european"
+      ],
+      "cuisine_tags": [
+        "british",
+        "drink",
+        "sweet",
+        "fantasy"
+      ],
+      "frequency_tier": "medium"
+    },
+    {
+      "id": "lembras",
+      "name": {
+        "en": "lembras",
+        "de": "Lembras"
+      },
+      "hero": {
+        "en": "our unofficial rebuild of lembras bakes up golden, honeyed, and sturdy enough for the long pocket-warm road.",
+        "de": "Lembras, inoffiziell nachgebaut: goldgelb, honigsanft und fest genug für jede Tasche."
+      },
+      "caption": {
+        "en": "one square, miles of comfort",
+        "de": "gold für unterwegs"
+      },
+      "stripe": "#b99b62",
+      "recipes": [
+        "lembras-classic-easy-400",
+        "lembras-classic-easy-600",
+        "lembras-classic-medium-400",
+        "lembras-classic-medium-600",
+        "lembras-vegan-easy-400",
+        "lembras-vegan-easy-600",
+        "lembras-vegan-medium-400",
+        "lembras-vegan-medium-600"
+      ],
+      "partition_id": "pop-culture",
+      "secondary_partitions": [
+        "cuisine-european"
+      ],
+      "cuisine_tags": [
+        "british",
+        "baking",
+        "travel-food",
+        "fantasy"
+      ],
+      "frequency_tier": "medium"
+    },
+    {
+      "id": "sea-salt-ice-cream",
+      "name": {
+        "en": "sea-salt ice cream",
+        "de": "Meersalz-Eis"
+      },
+      "hero": {
+        "en": "our unofficial rebuild of sea-salt ice cream keeps the blue optional and lets cream, condensed milk, and a clean sea-salt snap lead.",
+        "de": "unser inoffiziell nachgebautes Meersalz-Eis bleibt sanft, salzig-süß und nur auf Wunsch natürlich blau."
+      },
+      "caption": {
+        "en": "salty first, sweet after",
+        "de": "erst salzig, dann süß"
+      },
+      "stripe": "#9fb8bd",
+      "recipes": [
+        "sea-salt-ice-cream-classic-easy-400",
+        "sea-salt-ice-cream-classic-easy-600",
+        "sea-salt-ice-cream-classic-medium-400",
+        "sea-salt-ice-cream-classic-medium-600",
+        "sea-salt-ice-cream-vegan-easy-400",
+        "sea-salt-ice-cream-vegan-easy-600",
+        "sea-salt-ice-cream-vegan-medium-400",
+        "sea-salt-ice-cream-vegan-medium-600"
+      ],
+      "partition_id": "pop-culture",
+      "secondary_partitions": [],
+      "cuisine_tags": [
+        "dessert",
+        "ice-cream",
+        "gaming"
+      ],
+      "frequency_tier": "medium"
+    },
+    {
+      "id": "sweetroll",
+      "name": {
+        "en": "sweetroll",
+        "de": "Süßrolle"
+      },
+      "hero": {
+        "en": "a tiny honey-vanilla bundt with snowy glaze, our unofficial rebuild of the snack everyone swears went missing.",
+        "de": "ein kleines Honig-Vanille-Gugelhupfchen mit weißer Glasur, inoffiziell nachgebaut wie vom Wachposten vermisst."
+      },
+      "caption": {
+        "en": "sticky fingers, clean plate",
+        "de": "Glasur an den Fingern"
+      },
+      "stripe": "#b98f5d",
+      "recipes": [
+        "sweetroll-classic-easy-400",
+        "sweetroll-classic-easy-600",
+        "sweetroll-classic-medium-400",
+        "sweetroll-classic-medium-600",
+        "sweetroll-vegan-easy-400",
+        "sweetroll-vegan-easy-600",
+        "sweetroll-vegan-medium-400",
+        "sweetroll-vegan-medium-600",
+        "sweetroll-gluten-free-easy-400"
+      ],
+      "partition_id": "pop-culture",
+      "secondary_partitions": [
+        "cuisine-european"
+      ],
+      "cuisine_tags": [
+        "gaming",
+        "european",
+        "dessert",
+        "baking"
+      ],
+      "frequency_tier": "medium"
+    },
+    {
+      "id": "black-forest-cake",
+      "name": {
+        "en": "black forest cake",
+        "de": "Schwarzwälder Kirschtorte"
+      },
+      "hero": {
+        "en": "our unofficial rebuild of the promised test cake: soft chocolate sponge, cherries, kirsch, and billowy cream.",
+        "de": "inoffiziell nachgebaut, wie versprochen: schokoladige Böden, Sauerkirschen, Kirschwasser und Sahne."
+      },
+      "caption": {
+        "en": "the promised slice, finally",
+        "de": "endlich das versprochene Stück"
+      },
+      "stripe": "#7b3f46",
+      "recipes": [
+        "black-forest-cake-classic-medium-400",
+        "black-forest-cake-classic-medium-600",
+        "black-forest-cake-classic-hard-400",
+        "black-forest-cake-classic-hard-600",
+        "black-forest-cake-vegan-medium-400",
+        "black-forest-cake-vegan-medium-600",
+        "black-forest-cake-vegan-hard-400",
+        "black-forest-cake-vegan-hard-600",
+        "black-forest-cake-gluten-free-medium-400"
+      ],
+      "partition_id": "pop-culture",
+      "secondary_partitions": [
+        "cuisine-european"
+      ],
+      "cuisine_tags": [
+        "german",
+        "dessert",
+        "baking",
+        "gaming"
+      ],
+      "frequency_tier": "low"
+    },
+    {
+      "id": "butterscotch-cinnamon-pie",
+      "name": {
+        "en": "butterscotch cinnamon pie",
+        "de": "Butterscotch-Zimtkuchen"
+      },
+      "hero": {
+        "en": "a tender cream pie with brown-butter candy notes, warm cinnamon, and our unofficial rebuild of that famous slice.",
+        "de": "ein cremiger Kuchen mit Karamellbutter, warmem Zimt und inoffiziell nachgebautem Gänsehaut-Gefühl."
+      },
+      "caption": {
+        "en": "warm slice, soft lantern glow",
+        "de": "zimtig, weich, wie heimkommen"
+      },
+      "stripe": "#b98a56",
+      "recipes": [
+        "butterscotch-cinnamon-pie-classic-easy-400",
+        "butterscotch-cinnamon-pie-classic-easy-600",
+        "butterscotch-cinnamon-pie-classic-medium-400",
+        "butterscotch-cinnamon-pie-classic-medium-600",
+        "butterscotch-cinnamon-pie-vegan-easy-400",
+        "butterscotch-cinnamon-pie-vegan-easy-600",
+        "butterscotch-cinnamon-pie-vegan-medium-400",
+        "butterscotch-cinnamon-pie-vegan-medium-600"
+      ],
+      "partition_id": "pop-culture",
+      "secondary_partitions": [],
+      "cuisine_tags": [
+        "american",
+        "dessert",
+        "baking",
+        "gaming"
+      ],
+      "frequency_tier": "medium"
+    },
+    {
+      "id": "well-done-steak",
+      "name": {
+        "en": "well-done steak",
+        "de": "Durchgebratenes Steak"
+      },
+      "hero": {
+        "en": "our unofficial rebuild of the impossible jingle steak: glossy crust, pinkless middle, buttery potatoes, and a little campfire smoke.",
+        "de": "inoffiziell nachgebaut: das große Jubel-Steak mit glänzender Kruste, durch und durch gar, dazu Butterkartoffeln und ein Hauch Lagerfeuer."
+      },
+      "caption": {
+        "en": "victory tastes like seared butter",
+        "de": "so schmeckt der sieg"
+      },
+      "stripe": "#9a5f3c",
+      "recipes": [
+        "well-done-steak-classic-easy-600",
+        "well-done-steak-classic-easy-800",
+        "well-done-steak-classic-medium-600",
+        "well-done-steak-classic-medium-800",
+        "well-done-steak-vegetarian-easy-600",
+        "well-done-steak-vegetarian-easy-800",
+        "well-done-steak-vegetarian-medium-600",
+        "well-done-steak-vegetarian-medium-800",
+        "well-done-steak-vegan-easy-600",
+        "well-done-steak-vegan-easy-800",
+        "well-done-steak-vegan-medium-600",
+        "well-done-steak-vegan-medium-800"
+      ],
+      "partition_id": "pop-culture",
+      "secondary_partitions": [],
+      "cuisine_tags": [
+        "american",
+        "steakhouse",
+        "comfort-food",
+        "gaming"
+      ],
+      "frequency_tier": "medium"
+    },
+    {
+      "id": "sandvich",
+      "name": {
+        "en": "sandvich",
+        "de": "Sandwitsch"
+      },
+      "hero": {
+        "en": "our unofficial rebuild of the sandvich stacks soft bread, ham, swiss, crisp lettuce, tomato, and one bright olive pick.",
+        "de": "inoffiziell nachgebaut: das Sandwitsch stapelt weiches Brot, Schinken, Schweizer Käse, knackigen Salat, Tomate und eine Olive am Spieß."
+      },
+      "caption": {
+        "en": "big lunch, tiny olive flag",
+        "de": "großes Pausenbrot, kleine Olivenflagge"
+      },
+      "stripe": "#8b7652",
+      "recipes": [
+        "sandvich-classic-easy-400",
+        "sandvich-classic-easy-600",
+        "sandvich-classic-medium-400",
+        "sandvich-classic-medium-600",
+        "sandvich-vegetarian-easy-400",
+        "sandvich-vegetarian-easy-600",
+        "sandvich-vegetarian-medium-400",
+        "sandvich-vegetarian-medium-600",
+        "sandvich-vegan-easy-400",
+        "sandvich-vegan-easy-600",
+        "sandvich-vegan-medium-400",
+        "sandvich-vegan-medium-600",
+        "sandvich-gluten-free-easy-600"
+      ],
+      "partition_id": "pop-culture",
+      "secondary_partitions": [],
+      "cuisine_tags": [
+        "american",
+        "sandwich",
+        "lunch",
+        "gaming"
+      ],
+      "frequency_tier": "medium"
+    },
+    {
+      "id": "beer-basted-ribs",
+      "name": {
+        "en": "beer-basted ribs",
+        "de": "Bierrippchen"
+      },
+      "hero": {
+        "en": "our unofficial rebuild: sticky dark-beer ribs, slow and glossy like tavern firelight.",
+        "de": "unser inoffizieller Nachbau: langsam glasierte Bierrippchen mit dunklem Bierglanz."
+      },
+      "caption": {
+        "en": "dark beer, sticky bones, full hearth",
+        "de": "malzig, klebrig, direkt vom Rost"
+      },
+      "stripe": "#8a5a3c",
+      "recipes": [
+        "beer-basted-ribs-classic-medium-600",
+        "beer-basted-ribs-classic-medium-800",
+        "beer-basted-ribs-classic-hard-600",
+        "beer-basted-ribs-classic-hard-800",
+        "beer-basted-ribs-vegetarian-medium-600",
+        "beer-basted-ribs-vegetarian-medium-800",
+        "beer-basted-ribs-vegetarian-hard-600",
+        "beer-basted-ribs-vegetarian-hard-800",
+        "beer-basted-ribs-vegan-medium-600",
+        "beer-basted-ribs-vegan-medium-800",
+        "beer-basted-ribs-vegan-hard-600",
+        "beer-basted-ribs-vegan-hard-800"
+      ],
+      "partition_id": "pop-culture",
+      "secondary_partitions": [
+        "cuisine-european"
+      ],
+      "cuisine_tags": [
+        "gaming",
+        "german",
+        "pork",
+        "comfort-food"
+      ],
+      "frequency_tier": "medium"
+    },
+    {
+      "id": "pink-frosted-donuts",
+      "name": {
+        "en": "pink frosted donuts",
+        "de": "Rosa Donuts"
+      },
+      "hero": {
+        "en": "our unofficial rebuild keeps the rings pillowy, the glaze berry-pink, and the sprinkles joyfully messy.",
+        "de": "inoffiziell nachgebaut: fluffige Heferinge, rosa Beerenguss und Streusel wie aus der kleinen Bäckereischachtel."
+      },
+      "caption": {
+        "en": "berry-pink, soft, sprinkled",
+        "de": "rosa, weich, voller Streusel"
+      },
+      "stripe": "#d88fa8",
+      "recipes": [
+        "pink-frosted-donuts-classic-medium-400",
+        "pink-frosted-donuts-classic-medium-600",
+        "pink-frosted-donuts-classic-hard-400",
+        "pink-frosted-donuts-classic-hard-600",
+        "pink-frosted-donuts-vegan-medium-400",
+        "pink-frosted-donuts-vegan-medium-600",
+        "pink-frosted-donuts-vegan-hard-400",
+        "pink-frosted-donuts-vegan-hard-600",
+        "pink-frosted-donuts-gluten-free-medium-400"
+      ],
+      "partition_id": "pop-culture",
+      "secondary_partitions": [],
+      "cuisine_tags": [
+        "american",
+        "dessert",
+        "baking",
+        "cartoon"
+      ],
+      "frequency_tier": "medium"
+    },
+    {
+      "id": "bacon-pancakes",
+      "name": {
+        "en": "bacon pancakes",
+        "de": "Speck-Pancakes"
+      },
+      "hero": {
+        "en": "our unofficial rebuild stacks smoky bacon right into soft diner pancakes, sweet at the edges and salty in the middle.",
+        "de": "inoffiziell nachgebaut: fluffige Pancakes mit Speck im Teig, außen sirupsüß und innen herzhaft."
+      },
+      "caption": {
+        "en": "breakfast folded into breakfast",
+        "de": "Frühstück im Frühstück"
+      },
+      "stripe": "#b88a5f",
+      "recipes": [
+        "bacon-pancakes-classic-easy-400",
+        "bacon-pancakes-classic-easy-600",
+        "bacon-pancakes-classic-medium-400",
+        "bacon-pancakes-classic-medium-600",
+        "bacon-pancakes-vegetarian-easy-400",
+        "bacon-pancakes-vegetarian-easy-600",
+        "bacon-pancakes-vegetarian-medium-400",
+        "bacon-pancakes-vegetarian-medium-600",
+        "bacon-pancakes-vegan-easy-400",
+        "bacon-pancakes-vegan-easy-600",
+        "bacon-pancakes-vegan-medium-400",
+        "bacon-pancakes-vegan-medium-600"
+      ],
+      "partition_id": "pop-culture",
+      "secondary_partitions": [],
+      "cuisine_tags": [
+        "american",
+        "breakfast",
+        "pork",
+        "cartoon"
+      ],
+      "frequency_tier": "medium"
+    },
+    {
+      "id": "creamy-heart-soup",
+      "name": {
+        "en": "creamy heart soup",
+        "de": "Cremige Herzsuppe"
+      },
+      "hero": {
+        "en": "our unofficial rebuild turns radishes, milk, butter, and a shy spoon of sweetness into a blush-pink campfire cream soup.",
+        "de": "inoffiziell nachgebaut: Radieschen, Milch, Butter und ein Hauch Süße werden zur rosigen Lagerfeuer-Cremesuppe."
+      },
+      "caption": {
+        "en": "pink, creamy, gently sweet",
+        "de": "rosa, cremig, leise süß"
+      },
+      "stripe": "#d89aa0",
+      "recipes": [
+        "creamy-heart-soup-classic-easy-400",
+        "creamy-heart-soup-classic-easy-600",
+        "creamy-heart-soup-classic-medium-400",
+        "creamy-heart-soup-classic-medium-600",
+        "creamy-heart-soup-vegan-easy-400",
+        "creamy-heart-soup-vegan-easy-600",
+        "creamy-heart-soup-vegan-medium-400",
+        "creamy-heart-soup-vegan-medium-600"
+      ],
+      "partition_id": "pop-culture",
+      "secondary_partitions": [
+        "cuisine-european"
+      ],
+      "cuisine_tags": [
+        "gaming",
+        "european",
+        "soup",
+        "comfort-food"
+      ],
+      "frequency_tier": "medium"
+    },
+    {
+      "id": "gotchop-pork-roast",
+      "name": {
+        "en": "gotchop pork roast",
+        "de": "Überröstungs-Schweinebraten"
+      },
+      "hero": {
+        "en": "our unofficial rebuild tucks buttery potato and king oyster mushrooms under crackly bacon until it eats like a little roast.",
+        "de": "Inoffiziell nachgebaut: Kartoffeln und Kräuterseitlinge unter Speck, bis es wie ein kleiner Braten schmeckt."
+      },
+      "caption": {
+        "en": "potatoes doing a pork-roast impression",
+        "de": "Kartoffeln auf Braten-Mission"
+      },
+      "stripe": "#9b6a4e",
+      "recipes": [
+        "gotchop-pork-roast-classic-easy-400",
+        "gotchop-pork-roast-classic-easy-600",
+        "gotchop-pork-roast-classic-medium-400",
+        "gotchop-pork-roast-classic-medium-600",
+        "gotchop-pork-roast-vegetarian-easy-400",
+        "gotchop-pork-roast-vegetarian-easy-600",
+        "gotchop-pork-roast-vegetarian-medium-400",
+        "gotchop-pork-roast-vegetarian-medium-600",
+        "gotchop-pork-roast-vegan-easy-400",
+        "gotchop-pork-roast-vegan-easy-600",
+        "gotchop-pork-roast-vegan-medium-400",
+        "gotchop-pork-roast-vegan-medium-600"
+      ],
+      "partition_id": "pop-culture",
+      "secondary_partitions": [
+        "cuisine-asian"
+      ],
+      "cuisine_tags": [
+        "japanese",
+        "pork",
+        "roast",
+        "anime"
+      ],
+      "frequency_tier": "medium"
+    },
+    {
+      "id": "treacle-tart",
+      "name": {
+        "en": "treacle tart",
+        "de": "Sirupkuchen"
+      },
+      "hero": {
+        "en": "a sticky gold slice of our unofficial rebuild, all lemon-bright syrup and buttery crumb.",
+        "de": "Ein klebrig-goldenes Stück, inoffiziell nachgebaut mit Zitronenduft und buttriger Krume."
+      },
+      "caption": {
+        "en": "golden, crumbly, lemon-sweet",
+        "de": "golden, krümelig, zitronensüß"
+      },
+      "stripe": "#b98545",
+      "recipes": [
+        "treacle-tart-classic-easy-400",
+        "treacle-tart-classic-easy-600",
+        "treacle-tart-classic-medium-400",
+        "treacle-tart-classic-medium-600",
+        "treacle-tart-vegan-easy-400",
+        "treacle-tart-vegan-easy-600",
+        "treacle-tart-vegan-medium-400",
+        "treacle-tart-vegan-medium-600",
+        "treacle-tart-gluten-free-medium-600"
+      ],
+      "partition_id": "pop-culture",
+      "secondary_partitions": [
+        "cuisine-european"
+      ],
+      "cuisine_tags": [
+        "british",
+        "dessert",
+        "baking",
+        "fantasy"
+      ],
+      "frequency_tier": "medium"
+    },
+    {
+      "id": "pumpkin-pasties",
+      "name": {
+        "en": "pumpkin pasties",
+        "de": "Kürbispasteten"
+      },
+      "hero": {
+        "en": "spiced pumpkin hand pies, our unofficial rebuild for a rattling train snack craving.",
+        "de": "würzige Kürbis-Handpies, inoffiziell nachgebaut für den Snackwagen-Moment."
+      },
+      "caption": {
+        "en": "warm, flaky, pumpkin-sweet",
+        "de": "blättrig, warm, kürbissüß"
+      },
+      "stripe": "#b97845",
+      "recipes": [
+        "pumpkin-pasties-classic-easy-400",
+        "pumpkin-pasties-classic-easy-600",
+        "pumpkin-pasties-classic-medium-400",
+        "pumpkin-pasties-classic-medium-600",
+        "pumpkin-pasties-vegan-easy-400",
+        "pumpkin-pasties-vegan-easy-600",
+        "pumpkin-pasties-vegan-medium-400",
+        "pumpkin-pasties-vegan-medium-600",
+        "pumpkin-pasties-gluten-free-medium-400"
+      ],
+      "partition_id": "pop-culture",
+      "secondary_partitions": [
+        "cuisine-european"
+      ],
+      "cuisine_tags": [
+        "british",
+        "dessert",
+        "baking",
+        "fantasy"
+      ],
+      "frequency_tier": "medium"
+    },
+    {
+      "id": "lemon-cakes",
+      "name": {
+        "en": "lemon cakes",
+        "de": "Zitronenküchlein"
+      },
+      "hero": {
+        "en": "our unofficial rebuild of tiny lemon tea cakes, glazed bright and soft enough to disappear with a cup.",
+        "de": "inoffiziell nachgebaut: kleine Zitronenküchlein, weich wie Teegebäck und hell glasiert."
+      },
+      "caption": {
+        "en": "sunny little tea cakes",
+        "de": "zitronig zum Tee"
+      },
+      "stripe": "#d6c56f",
+      "recipes": [
+        "lemon-cakes-classic-easy-400",
+        "lemon-cakes-classic-easy-600",
+        "lemon-cakes-classic-medium-400",
+        "lemon-cakes-classic-medium-600",
+        "lemon-cakes-vegan-easy-400",
+        "lemon-cakes-vegan-easy-600",
+        "lemon-cakes-vegan-medium-400",
+        "lemon-cakes-vegan-medium-600",
+        "lemon-cakes-gluten-free-easy-400",
+        "lemon-cakes-gluten-free-medium-600"
+      ],
+      "partition_id": "pop-culture",
+      "secondary_partitions": [
+        "cuisine-european"
+      ],
+      "cuisine_tags": [
+        "british",
+        "dessert",
+        "baking",
+        "fantasy"
+      ],
+      "frequency_tier": "medium"
+    },
+    {
+      "id": "turkish-delight",
+      "name": {
+        "en": "turkish delight",
+        "de": "Lokum"
+      },
+      "hero": {
+        "en": "soft rosewater squares, starch-dusted and glowing like our unofficial rebuild of a very persuasive candy box.",
+        "de": "weiche Rosenwasser-Würfel, stäubig gezuckert und inoffiziell nachgebaut wie eine sehr überzeugende Naschdose."
+      },
+      "caption": {
+        "en": "rose, sugar, snowy fingers",
+        "de": "Rosen, Zucker, staubige Finger"
+      },
+      "stripe": "#c88f9a",
+      "recipes": [
+        "turkish-delight-classic-medium-400",
+        "turkish-delight-classic-medium-600",
+        "turkish-delight-classic-hard-400",
+        "turkish-delight-classic-hard-600"
+      ],
+      "partition_id": "pop-culture",
+      "secondary_partitions": [
+        "cuisine-middle-eastern"
+      ],
+      "cuisine_tags": [
+        "turkish",
+        "dessert",
+        "candy",
+        "fantasy"
+      ],
+      "frequency_tier": "low"
+    },
+    {
+      "id": "cheese-buns",
+      "name": {
+        "en": "cheese buns",
+        "de": "Käsebrötchen"
+      },
+      "hero": {
+        "en": "our unofficial rebuild: chewy bakery buns with a golden, salty cheese crust and a soft, butter-warm middle.",
+        "de": "inoffiziell nachgebaut: elastisch-weiche Hefebrötchen mit goldener Käsekruste und warmem Bäckereiduft."
+      },
+      "caption": {
+        "en": "cheese-crusted and still warm",
+        "de": "Käsekruste, noch warm"
+      },
+      "stripe": "#b9823f",
+      "recipes": [
+        "cheese-buns-classic-medium-400",
+        "cheese-buns-classic-medium-600",
+        "cheese-buns-classic-hard-400",
+        "cheese-buns-classic-hard-600",
+        "cheese-buns-vegan-medium-400",
+        "cheese-buns-vegan-medium-600",
+        "cheese-buns-vegan-hard-400",
+        "cheese-buns-vegan-hard-600",
+        "cheese-buns-gluten-free-medium-400"
+      ],
+      "partition_id": "pop-culture",
+      "secondary_partitions": [
+        "cuisine-european"
+      ],
+      "cuisine_tags": [
+        "german",
+        "baking",
+        "comfort-food",
+        "fandom"
+      ],
+      "frequency_tier": "medium"
+    },
+    {
+      "id": "lamb-plum-stew",
+      "name": {
+        "en": "lamb plum stew",
+        "de": "Lammeintopf mit Pflaumen"
+      },
+      "hero": {
+        "en": "our unofficial rebuild: soft braised lamb, dark sweet plums, and rice for catching every glossy spoonful.",
+        "de": "unser inoffiziell nachgebauter Lammeintopf: zartes Lamm, dunkle Pflaumen und Reis für jede glänzende Sauce."
+      },
+      "caption": {
+        "en": "dark, tender, spooned over rice",
+        "de": "dunkel, zart, auf Reis"
+      },
+      "stripe": "#8a5f52",
+      "recipes": [
+        "lamb-plum-stew-classic-easy-600",
+        "lamb-plum-stew-classic-easy-800",
+        "lamb-plum-stew-classic-medium-600",
+        "lamb-plum-stew-classic-medium-800",
+        "lamb-plum-stew-vegetarian-easy-600",
+        "lamb-plum-stew-vegetarian-easy-800",
+        "lamb-plum-stew-vegetarian-medium-600",
+        "lamb-plum-stew-vegetarian-medium-800",
+        "lamb-plum-stew-vegan-easy-600",
+        "lamb-plum-stew-vegan-easy-800",
+        "lamb-plum-stew-vegan-medium-600",
+        "lamb-plum-stew-vegan-medium-800"
+      ],
+      "partition_id": "pop-culture",
+      "secondary_partitions": [
+        "cuisine-middle-eastern"
+      ],
+      "cuisine_tags": [
+        "fandom",
+        "persian",
+        "stew",
+        "rice"
+      ],
+      "frequency_tier": "medium"
+    },
+    {
+      "id": "fish-fingers-and-custard",
+      "name": {
+        "en": "fish fingers and custard",
+        "de": "Fischstäbchen mit Vanillesoße"
+      },
+      "hero": {
+        "en": "our unofficial rebuild keeps the fish fingers crisp, the custard sweet, and the whole thing proudly strange.",
+        "de": "inoffiziell nachgebaut: knusprige Fischstäbchen, echte Vanillesoße, genau so seltsam wie erhofft."
+      },
+      "caption": {
+        "en": "crunch first, vanilla second",
+        "de": "knuspern, tunken, staunen"
+      },
+      "stripe": "#c9a85f",
+      "recipes": [
+        "fish-fingers-and-custard-classic-easy-400",
+        "fish-fingers-and-custard-classic-easy-600",
+        "fish-fingers-and-custard-classic-medium-400",
+        "fish-fingers-and-custard-classic-medium-600",
+        "fish-fingers-and-custard-vegetarian-easy-400",
+        "fish-fingers-and-custard-vegetarian-easy-600",
+        "fish-fingers-and-custard-vegetarian-medium-400",
+        "fish-fingers-and-custard-vegetarian-medium-600",
+        "fish-fingers-and-custard-vegan-easy-400",
+        "fish-fingers-and-custard-vegan-easy-600",
+        "fish-fingers-and-custard-vegan-medium-400",
+        "fish-fingers-and-custard-vegan-medium-600"
+      ],
+      "partition_id": "pop-culture",
+      "secondary_partitions": [
+        "cuisine-european"
+      ],
+      "cuisine_tags": [
+        "british",
+        "fish",
+        "custard",
+        "sci-fi"
+      ],
+      "frequency_tier": "medium"
+    },
+    {
+      "id": "the-moist-baker",
+      "name": {
+        "en": "the moist baker",
+        "de": "Der Saftbäcker"
+      },
+      "hero": {
+        "en": "our unofficial rebuild stacks roast turkey, herby stuffing crumbs, cranberry sparkle, and the gravy-soaked middle slice everyone remembers.",
+        "de": "unser inoffiziell nachgebautes Sandwich mit Pute, würzigen Bröseln, Cranberry-Kick und der sagenhaft saftigen Mittelscheibe."
+      },
+      "caption": {
+        "en": "gravy in the middle",
+        "de": "Soße mitten drin"
+      },
+      "stripe": "#9a6f48",
+      "recipes": [
+        "the-moist-baker-classic-easy-600",
+        "the-moist-baker-classic-easy-800",
+        "the-moist-baker-classic-medium-600",
+        "the-moist-baker-classic-medium-800",
+        "the-moist-baker-vegetarian-easy-600",
+        "the-moist-baker-vegetarian-easy-800",
+        "the-moist-baker-vegetarian-medium-600",
+        "the-moist-baker-vegetarian-medium-800",
+        "the-moist-baker-vegan-easy-600",
+        "the-moist-baker-vegan-easy-800",
+        "the-moist-baker-vegan-medium-600",
+        "the-moist-baker-vegan-medium-800",
+        "the-moist-baker-gluten-free-medium-600",
+        "the-moist-baker-gluten-free-medium-800"
+      ],
+      "partition_id": "pop-culture",
+      "secondary_partitions": [],
+      "cuisine_tags": [
+        "american",
+        "sandwich",
+        "comfort-food",
+        "fandom"
+      ],
+      "frequency_tier": "medium"
+    },
+    {
+      "id": "plomek-soup",
+      "name": {
+        "en": "plomek soup",
+        "de": "Plomek-Suppe"
+      },
+      "hero": {
+        "en": "our unofficial rebuild of a pale, silky vegetable soup for quiet minds and softer spoons.",
+        "de": "unser inoffiziell nachgebauter, seidig heller Gemüsesuppenmoment für ruhige Köpfe."
+      },
+      "caption": {
+        "en": "soft logic, warm bowl",
+        "de": "sanft, hell, löffelruhig"
+      },
+      "stripe": "#d8b46a",
+      "recipes": [
+        "plomek-soup-classic-easy-400",
+        "plomek-soup-classic-easy-600",
+        "plomek-soup-classic-medium-400",
+        "plomek-soup-classic-medium-600",
+        "plomek-soup-vegan-easy-400",
+        "plomek-soup-vegan-easy-600",
+        "plomek-soup-vegan-medium-400",
+        "plomek-soup-vegan-medium-600"
+      ],
+      "partition_id": "pop-culture",
+      "secondary_partitions": [
+        "cuisine-european"
+      ],
+      "cuisine_tags": [
+        "european",
+        "soup",
+        "vegetable",
+        "sci-fi"
+      ],
+      "frequency_tier": "medium"
+    },
+    {
+      "id": "blue-milk",
+      "name": {
+        "en": "blue milk",
+        "de": "Blaue Milch"
+      },
+      "hero": {
+        "en": "cold vanilla blue milk, our unofficial rebuild, gets its soft sky tint from butterfly pea.",
+        "de": "kühle Vanille-Milch in Blau, inoffiziell nachgebaut und ehrlich mit Schmetterlingserbse gefärbt."
+      },
+      "caption": {
+        "en": "vanilla, blue, breakfast-table magic",
+        "de": "vanillig blau, ganz ohne Trick"
+      },
+      "stripe": "#8fb7c7",
+      "recipes": [
+        "blue-milk-classic-easy-400",
+        "blue-milk-classic-easy-600",
+        "blue-milk-classic-medium-400",
+        "blue-milk-classic-medium-600",
+        "blue-milk-vegan-easy-400",
+        "blue-milk-vegan-easy-600",
+        "blue-milk-vegan-medium-400",
+        "blue-milk-vegan-medium-600"
+      ],
+      "partition_id": "pop-culture",
+      "secondary_partitions": [],
+      "cuisine_tags": [
+        "drink",
+        "sweet",
+        "sci-fi"
+      ],
+      "frequency_tier": "medium"
+    },
+    {
+      "id": "apple-cabbage-stew",
+      "name": {
+        "en": "apple cabbage stew",
+        "de": "Apfel-Kohl-Eintopf"
+      },
+      "hero": {
+        "en": "our unofficial rebuild of the hearth-pot stew: soft cabbage, sweet apple, and caraway steam under a buttery lid.",
+        "de": "unser inoffiziell nachgebauter Herdtopf mit weichem Kohl, süßem Apfel und Kümmelduft."
+      },
+      "caption": {
+        "en": "sweet cabbage, rain outside",
+        "de": "süßer Kohl, Regen am Fenster"
+      },
+      "stripe": "#8d7a4f",
+      "recipes": [
+        "apple-cabbage-stew-classic-easy-400",
+        "apple-cabbage-stew-classic-easy-600",
+        "apple-cabbage-stew-classic-medium-400",
+        "apple-cabbage-stew-classic-medium-600",
+        "apple-cabbage-stew-vegan-easy-400",
+        "apple-cabbage-stew-vegan-easy-600",
+        "apple-cabbage-stew-vegan-medium-400",
+        "apple-cabbage-stew-vegan-medium-600"
+      ],
+      "partition_id": "pop-culture",
+      "secondary_partitions": [
+        "cuisine-european"
+      ],
+      "cuisine_tags": [
+        "gaming",
+        "nordic",
+        "european",
+        "stew"
+      ],
+      "frequency_tier": "medium"
+    },
+    {
+      "id": "sticky-honey-roast",
+      "name": {
+        "en": "sticky honey roast",
+        "de": "Klebriger Honigbraten"
+      },
+      "hero": {
+        "en": "a glossy honey-pork roast with carrots, our unofficial rebuild for a golden oven-table moment.",
+        "de": "glänzender Honig-Schweinebraten mit Karotten, inoffiziell nachgebaut für warmen Ofenduft."
+      },
+      "caption": {
+        "en": "sticky, shiny, carrot-sweet",
+        "de": "glänzend, klebrig, möhrensüß"
+      },
+      "stripe": "#b98245",
+      "recipes": [
+        "sticky-honey-roast-classic-easy-400",
+        "sticky-honey-roast-classic-easy-600",
+        "sticky-honey-roast-classic-medium-400",
+        "sticky-honey-roast-classic-medium-600",
+        "sticky-honey-roast-vegetarian-easy-400",
+        "sticky-honey-roast-vegetarian-easy-600",
+        "sticky-honey-roast-vegetarian-medium-400",
+        "sticky-honey-roast-vegetarian-medium-600",
+        "sticky-honey-roast-vegan-easy-400",
+        "sticky-honey-roast-vegan-easy-600",
+        "sticky-honey-roast-vegan-medium-400",
+        "sticky-honey-roast-vegan-medium-600"
+      ],
+      "partition_id": "pop-culture",
+      "secondary_partitions": [
+        "cuisine-european"
+      ],
+      "cuisine_tags": [
+        "gaming",
+        "european",
+        "pork",
+        "roast"
+      ],
+      "frequency_tier": "medium"
+    },
+    {
+      "id": "complete-breakfast",
+      "name": {
+        "en": "complete breakfast",
+        "de": "Komplettes Frühstück"
+      },
+      "hero": {
+        "en": "our unofficial rebuild stacks sunny eggs, crisp hash browns, toast, and a cold glass of milk into one stamina-bright morning plate.",
+        "de": "unser inoffiziell nachgebautes Tellerfrühstück mit Spiegelei, Rösti-Knusper, Toast und einem Glas Milch."
+      },
+      "caption": {
+        "en": "eggs, crunch, toast, milk",
+        "de": "alles drauf, morgens hellwach"
+      },
+      "stripe": "#b98545",
+      "recipes": [
+        "complete-breakfast-classic-easy-400",
+        "complete-breakfast-classic-easy-600",
+        "complete-breakfast-classic-medium-400",
+        "complete-breakfast-classic-medium-600",
+        "complete-breakfast-vegan-easy-400",
+        "complete-breakfast-vegan-easy-600",
+        "complete-breakfast-vegan-medium-400",
+        "complete-breakfast-vegan-medium-600",
+        "complete-breakfast-gluten-free-easy-400"
+      ],
+      "partition_id": "pop-culture",
+      "secondary_partitions": [],
+      "cuisine_tags": [
+        "american",
+        "breakfast",
+        "skillet",
+        "gaming"
+      ],
+      "frequency_tier": "high"
+    },
+    {
+      "id": "pocket-puffs",
+      "name": {
+        "en": "pocket puffs",
+        "de": "Taschen-Windbeutel"
+      },
+      "hero": {
+        "en": "berry-cream choux clouds, our unofficial rebuild of the tiny treats that look too cute to ration.",
+        "de": "Beerige Sahnewölkchen aus Brandteig, inoffiziell nachgebaut und viel zu niedlich zum Teilen."
+      },
+      "caption": {
+        "en": "tiny puffs, berry hearts",
+        "de": "klein, rund, beerensüß"
+      },
+      "stripe": "#c98295",
+      "recipes": [
+        "pocket-puffs-classic-medium-400",
+        "pocket-puffs-classic-medium-600",
+        "pocket-puffs-classic-hard-400",
+        "pocket-puffs-classic-hard-600",
+        "pocket-puffs-vegan-medium-400",
+        "pocket-puffs-vegan-medium-600",
+        "pocket-puffs-vegan-hard-400",
+        "pocket-puffs-vegan-hard-600"
+      ],
+      "partition_id": "pop-culture",
+      "secondary_partitions": [
+        "cuisine-european"
+      ],
+      "cuisine_tags": [
+        "gaming",
+        "french",
+        "dessert",
+        "baking"
+      ],
+      "frequency_tier": "low"
+    },
+    {
+      "id": "monster-cake",
+      "name": {
+        "en": "monster cake",
+        "de": "Monster-Kuchen"
+      },
+      "hero": {
+        "en": "our unofficial rebuild stacks rustic sponge, wild berry jam, and dark chocolate horns for a party cake with a little mischief.",
+        "de": "Unser inoffiziell nachgebauter Stapelkuchen setzt auf wilde Beerenmarmelade, lockeren Teig und dunkle Schokohörner."
+      },
+      "caption": {
+        "en": "jammy layers with chocolate horns",
+        "de": "Beerenfüllung, Schokohörner, rustikal gestapelt"
+      },
+      "stripe": "#8f5a63",
+      "recipes": [
+        "monster-cake-classic-easy-400",
+        "monster-cake-classic-easy-600",
+        "monster-cake-classic-medium-400",
+        "monster-cake-classic-medium-600",
+        "monster-cake-vegan-easy-400",
+        "monster-cake-vegan-easy-600",
+        "monster-cake-vegan-medium-400",
+        "monster-cake-vegan-medium-600"
+      ],
+      "partition_id": "pop-culture",
+      "secondary_partitions": [
+        "cuisine-european"
+      ],
+      "cuisine_tags": [
+        "gaming",
+        "european",
+        "dessert",
+        "baking"
+      ],
+      "frequency_tier": "medium"
+    },
+    {
+      "id": "honey-cakes",
+      "name": {
+        "en": "honey cakes",
+        "de": "Honigkuchen"
+      },
+      "hero": {
+        "en": "dense golden honey cakes, our unofficial rebuild, brushed with honey once more while warm.",
+        "de": "Dichte goldene Honigkuchen, inoffiziell nachgebaut und warm noch einmal mit Honig bepinselt."
+      },
+      "caption": {
+        "en": "twice honeyed, pocket warm",
+        "de": "zweimal Honig, noch warm"
+      },
+      "stripe": "#b8893f",
+      "recipes": [
+        "honey-cakes-classic-easy-400",
+        "honey-cakes-classic-easy-600",
+        "honey-cakes-classic-medium-400",
+        "honey-cakes-classic-medium-600",
+        "honey-cakes-vegan-easy-400",
+        "honey-cakes-vegan-easy-600",
+        "honey-cakes-vegan-medium-400",
+        "honey-cakes-vegan-medium-600",
+        "honey-cakes-gluten-free-easy-400"
+      ],
+      "partition_id": "pop-culture",
+      "secondary_partitions": [
+        "cuisine-european"
+      ],
+      "cuisine_tags": [
+        "british",
+        "dessert",
+        "baking",
+        "fantasy"
+      ],
+      "frequency_tier": "medium"
+    },
+    {
+      "id": "oyakodon",
+      "name": {
+        "en": "oyakodon",
+        "de": "Oyakodon"
+      },
+      "hero": {
+        "en": "soft eggs, tender chicken, and rice for a royal road trip with the map still folded.",
+        "de": "Zartes Hähnchen, seidiges Ei und Reis für eine königliche Reise mit noch gefalteter Karte."
+      },
+      "caption": {
+        "en": "roadside bowl, crown-level comfort",
+        "de": "Reisschale für königliche Kilometer"
+      },
+      "stripe": "#b88a4a",
+      "recipes": [
+        "oyakodon-classic-easy-400",
+        "oyakodon-classic-easy-600",
+        "oyakodon-classic-medium-400",
+        "oyakodon-classic-medium-600",
+        "oyakodon-vegetarian-easy-400",
+        "oyakodon-vegetarian-easy-600",
+        "oyakodon-vegetarian-medium-400",
+        "oyakodon-vegetarian-medium-600",
+        "oyakodon-vegan-easy-400",
+        "oyakodon-vegan-easy-600",
+        "oyakodon-vegan-medium-400",
+        "oyakodon-vegan-medium-600"
+      ],
+      "partition_id": "pop-culture",
+      "secondary_partitions": [
+        "cuisine-asian"
+      ],
+      "cuisine_tags": [
+        "japanese",
+        "rice",
+        "bowl",
+        "gaming"
+      ],
+      "frequency_tier": "medium"
+    },
+    {
+      "id": "karaage",
+      "name": {
+        "en": "karaage",
+        "de": "Karaage"
+      },
+      "hero": {
+        "en": "soy-ginger chicken with a potato-starch crunch for the midnight walk home after the final round.",
+        "de": "Soja-Ingwer-Hähnchen im Kartoffelstärke-Knusper, wie nach einer langen Nacht unter Neon."
+      },
+      "caption": {
+        "en": "neon crunch, lemon ready",
+        "de": "Knusperpause, Zitrone bereit"
+      },
+      "stripe": "#b77a45",
+      "recipes": [
+        "karaage-classic-easy-400",
+        "karaage-classic-easy-600",
+        "karaage-classic-medium-400",
+        "karaage-classic-medium-600",
+        "karaage-vegetarian-easy-400",
+        "karaage-vegetarian-easy-600",
+        "karaage-vegetarian-medium-400",
+        "karaage-vegetarian-medium-600",
+        "karaage-vegan-easy-400",
+        "karaage-vegan-easy-600",
+        "karaage-vegan-medium-400",
+        "karaage-vegan-medium-600"
+      ],
+      "partition_id": "pop-culture",
+      "secondary_partitions": [
+        "cuisine-asian"
+      ],
+      "cuisine_tags": [
+        "japanese",
+        "izakaya",
+        "fried",
+        "anime"
+      ],
+      "frequency_tier": "medium"
+    },
+    {
+      "id": "omurice",
+      "name": {
+        "en": "omurice",
+        "de": "Omurice"
+      },
+      "hero": {
+        "en": "a golden omelette blanket over ketchup chicken rice, anime-café cozy with the eggs set to hard mode.",
+        "de": "Goldenes Omelett über Ketchupreis, gemütlich wie ein Familiencafé nach Schulschluss."
+      },
+      "caption": {
+        "en": "after-school ketchup heart",
+        "de": "Ketchupherz nach Schulschluss"
+      },
+      "stripe": "#c58f4a",
+      "recipes": [
+        "omurice-classic-easy-600",
+        "omurice-classic-easy-800",
+        "omurice-classic-hard-600",
+        "omurice-classic-hard-800",
+        "omurice-vegetarian-easy-600",
+        "omurice-vegetarian-easy-800",
+        "omurice-vegetarian-hard-600",
+        "omurice-vegetarian-hard-800",
+        "omurice-vegan-easy-600",
+        "omurice-vegan-easy-800",
+        "omurice-vegan-hard-600",
+        "omurice-vegan-hard-800"
+      ],
+      "partition_id": "pop-culture",
+      "secondary_partitions": [
+        "cuisine-asian"
+      ],
+      "cuisine_tags": [
+        "japanese",
+        "yoshoku",
+        "rice",
+        "anime"
+      ],
+      "frequency_tier": "medium"
+    },
+    {
+      "id": "baked-apples",
+      "name": {
+        "en": "baked apples",
+        "de": "Bratäpfel"
+      },
+      "hero": {
+        "en": "golden oven apples, cinnamon-soft and marzipan-stuffed, glowing like a tiny power-up.",
+        "de": "Goldene Bratäpfel mit Marzipan und Zimt, fast wie ein kleines Power-up aus dem Ofen."
+      },
+      "caption": {
+        "en": "golden hearts, cinnamon core",
+        "de": "Goldener Kern, Zimtduft"
+      },
+      "stripe": "#b87a3d",
+      "recipes": [
+        "baked-apples-classic-easy-400",
+        "baked-apples-classic-easy-600",
+        "baked-apples-classic-medium-400",
+        "baked-apples-classic-medium-600",
+        "baked-apples-vegan-easy-400",
+        "baked-apples-vegan-easy-600",
+        "baked-apples-vegan-medium-400",
+        "baked-apples-vegan-medium-600"
+      ],
+      "partition_id": "pop-culture",
+      "secondary_partitions": [
+        "cuisine-european"
+      ],
+      "cuisine_tags": [
+        "german",
+        "dessert",
+        "baked",
+        "gaming"
+      ],
+      "frequency_tier": "medium"
+    },
+    {
+      "id": "pumpkin-pie",
+      "name": {
+        "en": "pumpkin pie",
+        "de": "Pumpkin Pie"
+      },
+      "hero": {
+        "en": "a spiced pumpkin custard pie for blocky harvest days and cinnamon-dusted save points",
+        "de": "Würzige Kürbiscreme im Mürbeteig, als hätte der Herbst gerade gespeichert."
+      },
+      "caption": {
+        "en": "slice unlocked after harvest",
+        "de": "Ernte gespeichert, Gabel bereit"
+      },
+      "stripe": "#b36f3d",
+      "recipes": [
+        "pumpkin-pie-classic-easy-400",
+        "pumpkin-pie-classic-easy-600",
+        "pumpkin-pie-classic-medium-400",
+        "pumpkin-pie-classic-medium-600",
+        "pumpkin-pie-vegan-easy-400",
+        "pumpkin-pie-vegan-easy-600",
+        "pumpkin-pie-vegan-medium-400",
+        "pumpkin-pie-vegan-medium-600"
+      ],
+      "partition_id": "pop-culture",
+      "secondary_partitions": [],
+      "cuisine_tags": [
+        "american",
+        "dessert",
+        "baking",
+        "gaming"
+      ],
+      "frequency_tier": "medium"
+    },
+    {
+      "id": "stuffed-mushrooms",
+      "name": {
+        "en": "stuffed mushrooms",
+        "de": "Gefüllte Champignons"
+      },
+      "hero": {
+        "en": "tender baked caps packed with herbs and cheese, a savory little power-up for the whole table.",
+        "de": "Zarte Champignonköpfe aus dem Ofen, mit Kräutern und Käse gefüllt wie ein ehrliches kleines Power-up."
+      },
+      "caption": {
+        "en": "little caps, big power-up",
+        "de": "Kleine Kappen, großer Bonus"
+      },
+      "stripe": "#8b7355",
+      "recipes": [
+        "stuffed-mushrooms-classic-easy-400",
+        "stuffed-mushrooms-classic-easy-600",
+        "stuffed-mushrooms-classic-medium-400",
+        "stuffed-mushrooms-classic-medium-600",
+        "stuffed-mushrooms-vegetarian-easy-400",
+        "stuffed-mushrooms-vegetarian-easy-600",
+        "stuffed-mushrooms-vegetarian-medium-400",
+        "stuffed-mushrooms-vegetarian-medium-600",
+        "stuffed-mushrooms-vegan-easy-400",
+        "stuffed-mushrooms-vegan-easy-600",
+        "stuffed-mushrooms-vegan-medium-400",
+        "stuffed-mushrooms-vegan-medium-600"
+      ],
+      "partition_id": "pop-culture",
+      "secondary_partitions": [
+        "cuisine-european"
+      ],
+      "cuisine_tags": [
+        "european",
+        "appetizer",
+        "baked",
+        "gaming"
+      ],
+      "frequency_tier": "medium"
+    },
+    {
+      "id": "peach-shortcake",
+      "name": {
+        "en": "peach shortcake",
+        "de": "Pfirsich-Shortcake"
+      },
+      "hero": {
+        "en": "ripe peaches tumble over tender shortcakes and cream, a tiny royal rescue in dessert form.",
+        "de": "reife Pfirsiche, zarte Shortcakes und Sahne wie eine süße Pause auf der Rettungsrunde."
+      },
+      "caption": {
+        "en": "peaches, cream, level-clear joy",
+        "de": "Pfirsiche, Sahne, Levelglanz"
+      },
+      "stripe": "#d69a73",
+      "recipes": [
+        "peach-shortcake-classic-easy-400",
+        "peach-shortcake-classic-easy-600",
+        "peach-shortcake-classic-medium-400",
+        "peach-shortcake-classic-medium-600",
+        "peach-shortcake-vegan-easy-400",
+        "peach-shortcake-vegan-easy-600",
+        "peach-shortcake-vegan-medium-400",
+        "peach-shortcake-vegan-medium-600"
+      ],
+      "partition_id": "pop-culture",
+      "secondary_partitions": [],
+      "cuisine_tags": [
+        "american",
+        "dessert",
+        "baking",
+        "gaming"
+      ],
+      "frequency_tier": "medium"
+    },
+    {
+      "id": "bacon-and-eggs",
+      "name": {
+        "en": "bacon and eggs",
+        "de": "Spiegeleier mit Speck"
+      },
+      "hero": {
+        "en": "a skillet of bacon-slicked eggs for mornings when the little hearth feels almost too eager.",
+        "de": "Speck, Spiegeleier und Brot aus der Pfanne, als hätte das Herdfeuer heute Laune."
+      },
+      "caption": {
+        "en": "firelight, bacon fat, toast soldiers",
+        "de": "Speckfett, Eigelb, ein sehr waches Feuer"
+      },
+      "stripe": "#b6784f",
+      "recipes": [
+        "bacon-and-eggs-classic-easy-400",
+        "bacon-and-eggs-classic-easy-600",
+        "bacon-and-eggs-classic-medium-400",
+        "bacon-and-eggs-classic-medium-600",
+        "bacon-and-eggs-vegetarian-easy-400",
+        "bacon-and-eggs-vegetarian-easy-600",
+        "bacon-and-eggs-vegetarian-medium-400",
+        "bacon-and-eggs-vegetarian-medium-600",
+        "bacon-and-eggs-vegan-easy-400",
+        "bacon-and-eggs-vegan-easy-600",
+        "bacon-and-eggs-vegan-medium-400",
+        "bacon-and-eggs-vegan-medium-600",
+        "bacon-and-eggs-gluten-free-easy-400"
+      ],
+      "partition_id": "pop-culture",
+      "secondary_partitions": [],
+      "cuisine_tags": [
+        "american",
+        "breakfast",
+        "skillet",
+        "anime"
+      ],
+      "frequency_tier": "high"
+    },
+    {
+      "id": "cherry-pie",
+      "name": {
+        "en": "cherry pie",
+        "de": "Cherry Pie"
+      },
+      "hero": {
+        "en": "a lattice-topped slice for when the pines go quiet and the coffee stays hot.",
+        "de": "Ein Gitterstück für stille Tannen, rote Kirschen und Kaffee zu später Stunde."
+      },
+      "caption": {
+        "en": "lattice, cherries, midnight diner coffee",
+        "de": "Kirschen, Gitter, Kaffee um Mitternacht"
+      },
+      "stripe": "#9b4652",
+      "recipes": [
+        "cherry-pie-classic-medium-400",
+        "cherry-pie-classic-medium-600",
+        "cherry-pie-classic-hard-400",
+        "cherry-pie-classic-hard-600",
+        "cherry-pie-vegan-medium-400",
+        "cherry-pie-vegan-medium-600",
+        "cherry-pie-vegan-hard-400",
+        "cherry-pie-vegan-hard-600",
+        "cherry-pie-gluten-free-medium-400"
+      ],
+      "partition_id": "pop-culture",
+      "secondary_partitions": [],
+      "cuisine_tags": [
+        "american",
+        "dessert",
+        "baking",
+        "fandom"
+      ],
+      "frequency_tier": "low"
+    },
+    {
+      "id": "smores",
+      "name": {
+        "en": "s'mores",
+        "de": "S'mores"
+      },
+      "hero": {
+        "en": "toasty marshmallow and chocolate soften between graham crackers, and even the biggest shadow feels cozy.",
+        "de": "Gerösteter Marshmallow und Schokolade werden zwischen Graham-Crackern weich, und selbst der größte Schatten wirkt gemütlich."
+      },
+      "caption": {
+        "en": "sticky fingers, giant marshmallow weather",
+        "de": "Klebrige Finger, großes Marshmallow-Kino"
+      },
+      "stripe": "#9a6a46",
+      "recipes": [
+        "smores-classic-easy-400",
+        "smores-classic-easy-600",
+        "smores-classic-medium-400",
+        "smores-classic-medium-600",
+        "smores-vegetarian-easy-400",
+        "smores-vegetarian-easy-600",
+        "smores-vegetarian-medium-400",
+        "smores-vegetarian-medium-600",
+        "smores-gluten-free-easy-400"
+      ],
+      "partition_id": "pop-culture",
+      "secondary_partitions": [],
+      "cuisine_tags": [
+        "american",
+        "dessert",
+        "campfire",
+        "movie-night"
+      ],
+      "frequency_tier": "medium"
+    },
+    {
+      "id": "hot-dogs",
+      "name": {
+        "en": "hot dogs",
+        "de": "Hotdogs"
+      },
+      "hero": {
+        "en": "street-cart steam, a soft bun, and a snappy dog almost honest enough for the guild.",
+        "de": "Aus dem Wagen steigt Dampf; im weichen Brötchen liegt ein Würstchen, fast ehrlich genug für die Gilde."
+      },
+      "caption": {
+        "en": "cart steam, mustard, one suspiciously honest dog",
+        "de": "Wagendampf, Senfspur, fast ehrliches Würstchen"
+      },
+      "stripe": "#b5663f",
+      "recipes": [
+        "hot-dogs-classic-easy-400",
+        "hot-dogs-classic-easy-600",
+        "hot-dogs-classic-medium-400",
+        "hot-dogs-classic-medium-600",
+        "hot-dogs-vegetarian-easy-400",
+        "hot-dogs-vegetarian-easy-600",
+        "hot-dogs-vegetarian-medium-400",
+        "hot-dogs-vegetarian-medium-600",
+        "hot-dogs-vegan-easy-400",
+        "hot-dogs-vegan-easy-600",
+        "hot-dogs-vegan-medium-400",
+        "hot-dogs-vegan-medium-600",
+        "hot-dogs-gluten-free-easy-400"
+      ],
+      "partition_id": "pop-culture",
+      "secondary_partitions": [],
+      "cuisine_tags": [
+        "american",
+        "street-food",
+        "fantasy"
+      ],
+      "frequency_tier": "high"
+    },
+    {
+      "id": "loaded-baked-potatoes",
+      "name": {
+        "en": "loaded baked potatoes",
+        "de": "Loaded Baked Potatoes"
+      },
+      "hero": {
+        "en": "crisp-skinned potatoes split wide and piled high, a mess-hall feast after the long wall watch.",
+        "de": "knusprige Ofenkartoffeln, aufgebrochen und voll beladen, wie ein warmes Fest nach der Mauerwache."
+      },
+      "caption": {
+        "en": "wall watch, butter melting",
+        "de": "Mauerwache, dann Schmand und Speck"
+      },
+      "stripe": "#a9794d",
+      "recipes": [
+        "loaded-baked-potatoes-classic-easy-600",
+        "loaded-baked-potatoes-classic-easy-800",
+        "loaded-baked-potatoes-classic-medium-600",
+        "loaded-baked-potatoes-classic-medium-800",
+        "loaded-baked-potatoes-vegetarian-easy-600",
+        "loaded-baked-potatoes-vegetarian-easy-800",
+        "loaded-baked-potatoes-vegetarian-medium-600",
+        "loaded-baked-potatoes-vegetarian-medium-800",
+        "loaded-baked-potatoes-vegan-easy-600",
+        "loaded-baked-potatoes-vegan-easy-800",
+        "loaded-baked-potatoes-vegan-medium-600",
+        "loaded-baked-potatoes-vegan-medium-800"
+      ],
+      "partition_id": "pop-culture",
+      "secondary_partitions": [],
+      "cuisine_tags": [
+        "american",
+        "potato",
+        "comfort-food",
+        "anime"
+      ],
+      "frequency_tier": "high"
+    },
+    {
+      "id": "mitarashi-dango",
+      "name": {
+        "en": "mitarashi dango",
+        "de": "Mitarashi-Dango"
+      },
+      "hero": {
+        "en": "soft rice dumplings in sweet soy gloss, skewered for a lantern-lit festival episode at home.",
+        "de": "Weiche Reiskügelchen in süßem Sojaglanz, wie vom Matsuri-Stand auf dem Heimweg."
+      },
+      "caption": {
+        "en": "sticky festival moons",
+        "de": "glänzende Spieße fürs Sommerfest"
+      },
+      "stripe": "#b8875f",
+      "recipes": [
+        "mitarashi-dango-classic-easy-400",
+        "mitarashi-dango-classic-easy-600",
+        "mitarashi-dango-classic-medium-400",
+        "mitarashi-dango-classic-medium-600"
+      ],
+      "partition_id": "pop-culture",
+      "secondary_partitions": [
+        "cuisine-asian"
+      ],
+      "cuisine_tags": [
+        "japanese",
+        "wagashi",
+        "street-food",
+        "anime"
+      ],
+      "frequency_tier": "medium"
+    },
+    {
+      "id": "melonpan",
+      "name": {
+        "en": "melonpan",
+        "de": "Melonpan"
+      },
+      "hero": {
+        "en": "a soft sweet bun under a crackly cookie cap, ready for the after-school bakery run.",
+        "de": "Ein weiches süßes Brötchen mit knusprigem Keksdeckel, wie vom Bäcker nach Schulschluss."
+      },
+      "caption": {
+        "en": "cookie cap, bakery glow",
+        "de": "Keksdeckel, Pausenbrot, kleines Leuchten"
+      },
+      "stripe": "#c8a86a",
+      "recipes": [
+        "melonpan-classic-medium-400",
+        "melonpan-classic-medium-600",
+        "melonpan-classic-hard-400",
+        "melonpan-classic-hard-600",
+        "melonpan-vegan-medium-400",
+        "melonpan-vegan-medium-600",
+        "melonpan-vegan-hard-400",
+        "melonpan-vegan-hard-600",
+        "melonpan-gluten-free-medium-400"
+      ],
+      "partition_id": "pop-culture",
+      "secondary_partitions": [
+        "cuisine-asian"
+      ],
+      "cuisine_tags": [
+        "japanese",
+        "baking",
+        "sweet",
+        "anime"
+      ],
+      "frequency_tier": "medium"
+    },
+    {
+      "id": "taiyaki",
+      "name": {
+        "en": "taiyaki",
+        "de": "Taiyaki"
+      },
+      "hero": {
+        "en": "fish-shaped waffle cakes with red-bean hearts, warm like the festival episode saved you one.",
+        "de": "Fischwaffeln mit süßem Bohnenherz, warm wie ein Fund am Sommerfeststand."
+      },
+      "caption": {
+        "en": "festival fish, still warm",
+        "de": "Sommerfest-Fisch, noch warm"
+      },
+      "stripe": "#b9824a",
+      "recipes": [
+        "taiyaki-classic-easy-400",
+        "taiyaki-classic-easy-600",
+        "taiyaki-classic-medium-400",
+        "taiyaki-classic-medium-600",
+        "taiyaki-vegan-easy-400",
+        "taiyaki-vegan-easy-600",
+        "taiyaki-vegan-medium-400",
+        "taiyaki-vegan-medium-600"
+      ],
+      "partition_id": "pop-culture",
+      "secondary_partitions": [
+        "cuisine-asian"
+      ],
+      "cuisine_tags": [
+        "japanese",
+        "wagashi",
+        "street-food",
+        "anime"
+      ],
+      "frequency_tier": "medium"
+    },
+    {
+      "id": "elswhere-fondue",
+      "name": {
+        "en": "elswhere fondue",
+        "de": "Elswo-Fondue"
+      },
+      "hero": {
+        "en": "our unofficial rebuild: a moon-pale ale cheese fondue, mellow and nutty with just a tiny sweet glow.",
+        "de": "inoffiziell nachgebaut: mondhelles Käsefondue mit Bier, nussig und nur ganz zart süß."
+      },
+      "caption": {
+        "en": "ale, cheese, soft sweetness",
+        "de": "Bier, Käse, leise Süße"
+      },
+      "stripe": "#b89a5b",
+      "recipes": [
+        "elswhere-fondue-classic-easy-600",
+        "elswhere-fondue-classic-easy-800",
+        "elswhere-fondue-classic-medium-600",
+        "elswhere-fondue-classic-medium-800",
+        "elswhere-fondue-vegan-easy-600",
+        "elswhere-fondue-vegan-easy-800",
+        "elswhere-fondue-vegan-medium-600",
+        "elswhere-fondue-vegan-medium-800",
+        "elswhere-fondue-gluten-free-easy-600"
+      ],
+      "partition_id": "pop-culture",
+      "secondary_partitions": [
+        "cuisine-european"
+      ],
+      "cuisine_tags": [
+        "gaming",
+        "swiss",
+        "alpine",
+        "comfort-food"
+      ],
+      "frequency_tier": "medium"
+    },
+    {
+      "id": "boiled-creme-treat",
+      "name": {
+        "en": "boiled creme treat",
+        "de": "Gekochte Cremeschnitte"
+      },
+      "hero": {
+        "en": "a soft choux shell tucked with vanilla custard, our unofficial rebuild of the city-stall sweet everyone remembers.",
+        "de": "luftiger Brandteig mit Vanillecreme, inoffiziell nachgebaut wie vom Marktwagen."
+      },
+      "caption": {
+        "en": "warm custard, soft pastry",
+        "de": "cremeweich und warm"
+      },
+      "stripe": "#d8b982",
+      "recipes": [
+        "boiled-creme-treat-classic-easy-400",
+        "boiled-creme-treat-classic-easy-600",
+        "boiled-creme-treat-classic-medium-400",
+        "boiled-creme-treat-classic-medium-600",
+        "boiled-creme-treat-vegan-easy-400",
+        "boiled-creme-treat-vegan-easy-600",
+        "boiled-creme-treat-vegan-medium-400",
+        "boiled-creme-treat-vegan-medium-600",
+        "boiled-creme-treat-gluten-free-medium-400"
+      ],
+      "partition_id": "pop-culture",
+      "secondary_partitions": [
+        "cuisine-european"
+      ],
+      "cuisine_tags": [
+        "gaming",
+        "nordic",
+        "european",
+        "dessert"
+      ],
+      "frequency_tier": "medium"
+    },
+    {
+      "id": "suspicious-stew",
+      "name": {
+        "en": "suspicious stew",
+        "de": "Verdächtiger Eintopf"
+      },
+      "hero": {
+        "en": "our unofficial rebuild: a chunky woodland mushroom stew with one edible bloom smiling from the bowl.",
+        "de": "inoffiziell nachgebaut: ein kräftiger Pilzeintopf mit einer essbaren Blüte obenauf."
+      },
+      "caption": {
+        "en": "tiny flower, very serious stew",
+        "de": "eine Blüte, alle schauen zweimal"
+      },
+      "stripe": "#7d8358",
+      "recipes": [
+        "suspicious-stew-classic-easy-400",
+        "suspicious-stew-classic-easy-600",
+        "suspicious-stew-classic-medium-400",
+        "suspicious-stew-classic-medium-600",
+        "suspicious-stew-vegan-easy-400",
+        "suspicious-stew-vegan-easy-600",
+        "suspicious-stew-vegan-medium-400",
+        "suspicious-stew-vegan-medium-600"
+      ],
+      "partition_id": "pop-culture",
+      "secondary_partitions": [
+        "cuisine-european"
+      ],
+      "cuisine_tags": [
+        "gaming",
+        "european",
+        "stew",
+        "comfort-food"
+      ],
+      "frequency_tier": "medium"
+    },
+    {
+      "id": "dragonbreath-chili",
+      "name": {
+        "en": "dragonbreath chili",
+        "de": "Drachenatem-Chili"
+      },
+      "hero": {
+        "en": "our unofficial rebuild goes dark, smoky, and habanero-hot enough to make the spoon breathe back.",
+        "de": "unser inoffiziell nachgebauter Topf wird dunkel, rauchig und habaneroscharf bis zum Drachenpusten."
+      },
+      "caption": {
+        "en": "smoke first, fire next",
+        "de": "erst Rauch, dann Feuer"
+      },
+      "stripe": "#9f4b32",
+      "recipes": [
+        "dragonbreath-chili-classic-easy-400",
+        "dragonbreath-chili-classic-easy-600",
+        "dragonbreath-chili-classic-medium-400",
+        "dragonbreath-chili-classic-medium-600",
+        "dragonbreath-chili-vegetarian-easy-400",
+        "dragonbreath-chili-vegetarian-easy-600",
+        "dragonbreath-chili-vegetarian-medium-400",
+        "dragonbreath-chili-vegetarian-medium-600",
+        "dragonbreath-chili-vegan-easy-400",
+        "dragonbreath-chili-vegan-easy-600",
+        "dragonbreath-chili-vegan-medium-400",
+        "dragonbreath-chili-vegan-medium-600"
+      ],
+      "partition_id": "pop-culture",
+      "secondary_partitions": [
+        "cuisine-mexican"
+      ],
+      "cuisine_tags": [
+        "gaming",
+        "tex-mex",
+        "stew",
+        "spicy"
+      ],
+      "frequency_tier": "medium"
+    },
+    {
+      "id": "mirelark-cakes",
+      "name": {
+        "en": "mirelark cakes",
+        "de": "Mirelark-Küchlein"
+      },
+      "hero": {
+        "en": "our unofficial rebuild: golden crab cakes, bright with lemon, with just enough crunch to feel a little dangerous.",
+        "de": "inoffiziell nachgebaut: goldene Krabbenküchlein, zitronig hell und genau richtig knusprig."
+      },
+      "caption": {
+        "en": "crisp edges, lemon sparks",
+        "de": "knusperrand, zitrone, sofort weg"
+      },
+      "stripe": "#b88a5a",
+      "recipes": [
+        "mirelark-cakes-classic-easy-400",
+        "mirelark-cakes-classic-easy-600",
+        "mirelark-cakes-classic-medium-400",
+        "mirelark-cakes-classic-medium-600",
+        "mirelark-cakes-vegetarian-easy-400",
+        "mirelark-cakes-vegetarian-easy-600",
+        "mirelark-cakes-vegetarian-medium-400",
+        "mirelark-cakes-vegetarian-medium-600",
+        "mirelark-cakes-vegan-easy-400",
+        "mirelark-cakes-vegan-easy-600",
+        "mirelark-cakes-vegan-medium-400",
+        "mirelark-cakes-vegan-medium-600"
+      ],
+      "partition_id": "pop-culture",
+      "secondary_partitions": [],
+      "cuisine_tags": [
+        "gaming",
+        "american",
+        "seafood",
+        "fried"
+      ],
+      "frequency_tier": "medium"
+    },
+    {
+      "id": "sundown-sarsaparilla",
+      "name": {
+        "en": "sundown sarsaparilla",
+        "de": "Sundown-Sarsaparille"
+      },
+      "hero": {
+        "en": "our unofficial rebuild pours dark, foamy, and root-spiced like a desert sunset in a bottle.",
+        "de": "unser inoffiziell nachgebauter Schluck schmeckt dunkel, schaumig und würzig nach Wüstenabend."
+      },
+      "caption": {
+        "en": "root-spice fizz, sunset glow",
+        "de": "wurzelwürz-prickeln im abendglas"
+      },
+      "stripe": "#8a5a3c",
+      "recipes": [
+        "sundown-sarsaparilla-classic-easy-400",
+        "sundown-sarsaparilla-classic-easy-600",
+        "sundown-sarsaparilla-classic-medium-400",
+        "sundown-sarsaparilla-classic-medium-600"
+      ],
+      "partition_id": "pop-culture",
+      "secondary_partitions": [],
+      "cuisine_tags": [
+        "gaming",
+        "american",
+        "drink",
+        "soda"
+      ],
+      "frequency_tier": "medium"
+    },
+    {
+      "id": "fancy-lasses-snack-cakes",
+      "name": {
+        "en": "fancy lasses snack cakes",
+        "de": "Feine-Fräulein-Küchlein"
+      },
+      "hero": {
+        "en": "our unofficial rebuild: tiny vanilla sponge cakes under a neat pink cap of lunchbox frosting.",
+        "de": "Inoffiziell nachgebaut: kleine Vanille-Biskuits mit rosa Frosthaube, bereit für jede Brotdose."
+      },
+      "caption": {
+        "en": "dainty cakes, very shelf-brave",
+        "de": "fein, rosa, fast unkaputtbar"
+      },
+      "stripe": "#c98f9a",
+      "recipes": [
+        "fancy-lasses-snack-cakes-classic-easy-400",
+        "fancy-lasses-snack-cakes-classic-easy-600",
+        "fancy-lasses-snack-cakes-classic-medium-400",
+        "fancy-lasses-snack-cakes-classic-medium-600",
+        "fancy-lasses-snack-cakes-vegan-easy-400",
+        "fancy-lasses-snack-cakes-vegan-easy-600",
+        "fancy-lasses-snack-cakes-vegan-medium-400",
+        "fancy-lasses-snack-cakes-vegan-medium-600"
+      ],
+      "partition_id": "pop-culture",
+      "secondary_partitions": [],
+      "cuisine_tags": [
+        "gaming",
+        "american",
+        "dessert",
+        "baking"
+      ],
+      "frequency_tier": "medium"
+    },
+    {
+      "id": "nice-cream",
+      "name": {
+        "en": "nice cream",
+        "de": "Nice Cream"
+      },
+      "hero": {
+        "en": "banana-soft, cart-cold, and our unofficial rebuild of the friendliest frozen scoop.",
+        "de": "bananenweich, wagenkalt und inoffiziell nachgebaut als freundlichste Kugel im Becher."
+      },
+      "caption": {
+        "en": "soft scoop, sweet little wink",
+        "de": "weiche Kugel, kleines Zwinkern"
+      },
+      "stripe": "#d9c889",
+      "recipes": [
+        "nice-cream-classic-easy-400",
+        "nice-cream-classic-easy-600",
+        "nice-cream-classic-medium-400",
+        "nice-cream-classic-medium-600"
+      ],
+      "partition_id": "pop-culture",
+      "secondary_partitions": [],
+      "cuisine_tags": [
+        "gaming",
+        "dessert",
+        "ice-cream",
+        "vegan"
+      ],
+      "frequency_tier": "medium"
+    },
+    {
+      "id": "glammburger",
+      "name": {
+        "en": "glammburger",
+        "de": "Glammburger"
+      },
+      "hero": {
+        "en": "our unofficial rebuild: a glossy brioche burger with a golden sesame wink and just enough edible sparkle to feel famous.",
+        "de": "inoffiziell nachgebaut: ein glänzender Brioche-Burger mit goldenem Sesam und ehrlichem Funkeln."
+      },
+      "caption": {
+        "en": "gold dust, soft bun, big entrance",
+        "de": "Goldstaub, weiches Brötchen, großer Auftritt"
+      },
+      "stripe": "#b89454",
+      "recipes": [
+        "glammburger-classic-easy-600",
+        "glammburger-classic-easy-800",
+        "glammburger-classic-medium-600",
+        "glammburger-classic-medium-800",
+        "glammburger-vegetarian-easy-600",
+        "glammburger-vegetarian-easy-800",
+        "glammburger-vegetarian-medium-600",
+        "glammburger-vegetarian-medium-800",
+        "glammburger-vegan-easy-600",
+        "glammburger-vegan-easy-800",
+        "glammburger-vegan-medium-600",
+        "glammburger-vegan-medium-800",
+        "glammburger-gluten-free-easy-600"
+      ],
+      "partition_id": "pop-culture",
+      "secondary_partitions": [],
+      "cuisine_tags": [
+        "american",
+        "burger",
+        "comfort-food",
+        "gaming"
+      ],
+      "frequency_tier": "medium"
+    },
+    {
+      "id": "pawffins",
+      "name": {
+        "en": "pawffins",
+        "de": "Pfötchen-Poffins"
+      },
+      "hero": {
+        "en": "our unofficial rebuild: berry-stained mini cake-doughnut rings with a pale sugar glaze and a soft muffin crumb.",
+        "de": "inoffiziell nachgebaut: beerenrote Mini-Kuchenkringel mit zarter Zuckerglasur und weicher Muffinkrume."
+      },
+      "caption": {
+        "en": "berry rings, tiny quest fuel",
+        "de": "Beerenglanz im kleinen Kringel"
+      },
+      "stripe": "#b87986",
+      "recipes": [
+        "pawffins-classic-easy-400",
+        "pawffins-classic-easy-600",
+        "pawffins-classic-medium-400",
+        "pawffins-classic-medium-600",
+        "pawffins-vegan-easy-400",
+        "pawffins-vegan-easy-600",
+        "pawffins-vegan-medium-400",
+        "pawffins-vegan-medium-600",
+        "pawffins-gluten-free-easy-400"
+      ],
+      "partition_id": "pop-culture",
+      "secondary_partitions": [],
+      "cuisine_tags": [
+        "gaming",
+        "american",
+        "dessert",
+        "baking"
+      ],
+      "frequency_tier": "medium"
+    },
+    {
+      "id": "estos-broth",
+      "name": {
+        "en": "estos broth",
+        "de": "Estos-Brühe"
+      },
+      "hero": {
+        "en": "our unofficial rebuild glows gold with roasted squash, ginger, turmeric, and soft herbs, poured steaming for the next try.",
+        "de": "unser inoffizieller Nachbau leuchtet goldgelb mit geröstetem Kürbis, Ingwer, Kurkuma und Kräutern, dampfend heiß für neue Kraft."
+      },
+      "caption": {
+        "en": "gold in a warm mug",
+        "de": "gold im heißen Becher"
+      },
+      "stripe": "#c7973a",
+      "recipes": [
+        "estos-broth-classic-easy-400",
+        "estos-broth-classic-easy-600",
+        "estos-broth-classic-medium-400",
+        "estos-broth-classic-medium-600"
+      ],
+      "partition_id": "pop-culture",
+      "secondary_partitions": [
+        "cuisine-european"
+      ],
+      "cuisine_tags": [
+        "gaming",
+        "european",
+        "soup",
+        "comfort-food"
+      ],
+      "frequency_tier": "medium"
+    },
+    {
+      "id": "hasperot-wrap",
+      "name": {
+        "en": "hasperot wrap",
+        "de": "Hasperot-Wrap"
+      },
+      "hero": {
+        "en": "our unofficial rebuild rolls briny crunch, sharp vinegar, and a slow chili burn into one reckless little wrap.",
+        "de": "unser inoffiziell nachgebauter Wrap knistert salzig-sauer, knackig und mit Chili im Nacken."
+      },
+      "caption": {
+        "en": "hot pickle crunch, rolled tight",
+        "de": "sauer, scharf, fest gerollt"
+      },
+      "stripe": "#9b5a3f",
+      "recipes": [
+        "hasperot-wrap-classic-easy-400",
+        "hasperot-wrap-classic-easy-600",
+        "hasperot-wrap-classic-medium-400",
+        "hasperot-wrap-classic-medium-600"
+      ],
+      "partition_id": "pop-culture",
+      "secondary_partitions": [
+        "cuisine-middle-eastern"
+      ],
+      "cuisine_tags": [
+        "sci-fi",
+        "middle-eastern",
+        "pickle",
+        "wrap"
+      ],
+      "frequency_tier": "medium"
+    },
+    {
+      "id": "ronton-wrap",
+      "name": {
+        "en": "ronton wrap",
+        "de": "Ronton-Wrap"
+      },
+      "hero": {
+        "en": "our unofficial rebuild folds smoky grilled sausage, peppery sauce, and crunchy slaw into warm flatbread.",
+        "de": "unser inoffiziell nachgebauter wrap packt rauchige grillwurst, pfeffrige sauce und knackigen slaw in warmes fladenbrot."
+      },
+      "caption": {
+        "en": "street-market smoke, slaw crunch",
+        "de": "marktduft, grillrauch, krautsalatknacken"
+      },
+      "stripe": "#9f6f45",
+      "recipes": [
+        "ronton-wrap-classic-easy-600",
+        "ronton-wrap-classic-easy-800",
+        "ronton-wrap-classic-medium-600",
+        "ronton-wrap-classic-medium-800",
+        "ronton-wrap-vegetarian-easy-600",
+        "ronton-wrap-vegetarian-easy-800",
+        "ronton-wrap-vegetarian-medium-600",
+        "ronton-wrap-vegetarian-medium-800",
+        "ronton-wrap-vegan-easy-600",
+        "ronton-wrap-vegan-easy-800",
+        "ronton-wrap-vegan-medium-600",
+        "ronton-wrap-vegan-medium-800",
+        "ronton-wrap-gluten-free-medium-600"
+      ],
+      "partition_id": "pop-culture",
+      "secondary_partitions": [],
+      "cuisine_tags": [
+        "sci-fi",
+        "american",
+        "street-food",
+        "wrap"
+      ],
+      "frequency_tier": "medium"
+    },
+    {
+      "id": "popplets",
+      "name": {
+        "en": "popplets",
+        "de": "Popplets"
+      },
+      "hero": {
+        "en": "our unofficial rebuild fries tiny crisp popplets with sweet shrimp snap or chickpea comfort for one-more handfuls.",
+        "de": "inoffiziell nachgebaut: kleine knusprige Popplets, mal mit süßer Garnele, mal mit Kichererbsen."
+      },
+      "caption": {
+        "en": "crispy, tiny, gone too fast",
+        "de": "knusprig, klein, sofort weg"
+      },
+      "stripe": "#b8845c",
+      "recipes": [
+        "popplets-classic-easy-400",
+        "popplets-classic-easy-600",
+        "popplets-classic-medium-400",
+        "popplets-classic-medium-600",
+        "popplets-vegetarian-easy-400",
+        "popplets-vegetarian-easy-600",
+        "popplets-vegetarian-medium-400",
+        "popplets-vegetarian-medium-600",
+        "popplets-vegan-easy-400",
+        "popplets-vegan-easy-600",
+        "popplets-vegan-medium-400",
+        "popplets-vegan-medium-600"
+      ],
+      "partition_id": "pop-culture",
+      "secondary_partitions": [],
+      "cuisine_tags": [
+        "sci-fi",
+        "american",
+        "seafood",
+        "fried"
+      ],
+      "frequency_tier": "medium"
+    },
+    {
+      "id": "cauldron-cakes",
+      "name": {
+        "en": "cauldron cakes",
+        "de": "Kesselkuchen"
+      },
+      "hero": {
+        "en": "sticky dark chocolate mini cakes with a molten dip, our unofficial rebuild for the snack-cart daydream.",
+        "de": "klebrige dunkle Schoko-Minikuchen mit flüssigem Dip, inoffiziell nachgebaut für den Süßigkeitenwagen im Kopf."
+      },
+      "caption": {
+        "en": "sticky chocolate, little cauldron mood",
+        "de": "schokoladig, klebrig, kesselig"
+      },
+      "stripe": "#6f4a3a",
+      "recipes": [
+        "cauldron-cakes-classic-easy-400",
+        "cauldron-cakes-classic-easy-600",
+        "cauldron-cakes-classic-medium-400",
+        "cauldron-cakes-classic-medium-600",
+        "cauldron-cakes-vegan-easy-400",
+        "cauldron-cakes-vegan-easy-600",
+        "cauldron-cakes-vegan-medium-400",
+        "cauldron-cakes-vegan-medium-600"
+      ],
+      "partition_id": "pop-culture",
+      "secondary_partitions": [
+        "cuisine-european"
+      ],
+      "cuisine_tags": [
+        "british",
+        "dessert",
+        "baking",
+        "fantasy"
+      ],
+      "frequency_tier": "medium"
+    },
+    {
+      "id": "everything-burrito",
+      "name": {
+        "en": "everything burrito",
+        "de": "Alles-Burrito"
+      },
+      "hero": {
+        "en": "our unofficial rebuild of the overstuffed legend: rice, beans, beef, cheese, salsa, fries, greens, and every crunchy thing tucked into one heroic wrap.",
+        "de": "inoffiziell nachgebaut, prall gefüllt mit Reis, Bohnen, Rind, Käse, Salsa, Pommes, Grünzeug und allem Knusprigen in einer heldenhaften Rolle."
+      },
+      "caption": {
+        "en": "unofficially wrapped with everything",
+        "de": "inoffiziell mit allem gerollt"
+      },
+      "stripe": "#b7744a",
+      "recipes": [
+        "everything-burrito-classic-easy-600",
+        "everything-burrito-classic-easy-800",
+        "everything-burrito-classic-medium-600",
+        "everything-burrito-classic-medium-800",
+        "everything-burrito-vegetarian-easy-600",
+        "everything-burrito-vegetarian-easy-800",
+        "everything-burrito-vegetarian-medium-600",
+        "everything-burrito-vegetarian-medium-800",
+        "everything-burrito-vegan-easy-600",
+        "everything-burrito-vegan-easy-800",
+        "everything-burrito-vegan-medium-600",
+        "everything-burrito-vegan-medium-800",
+        "everything-burrito-gluten-free-easy-600"
+      ],
+      "partition_id": "pop-culture",
+      "secondary_partitions": [
+        "cuisine-mexican"
+      ],
+      "cuisine_tags": [
+        "tex-mex",
+        "mexican",
+        "wrap",
+        "cartoon"
+      ],
+      "frequency_tier": "medium"
+    },
+    {
+      "id": "wonko-bars",
+      "name": {
+        "en": "wonko bars",
+        "de": "Wonko-Riegel"
+      },
+      "hero": {
+        "en": "our unofficial rebuild of wonko bars, with snappy tempered milk chocolate and a soft caramel-malt center.",
+        "de": "Wonko-Riegel, inoffiziell nachgebaut: knackige Vollmilchschokolade mit weichem Karamell-Malz-Kern."
+      },
+      "caption": {
+        "en": "golden wrapper, caramel heart",
+        "de": "goldene Hülle, Karamellherz"
+      },
+      "stripe": "#b8864b",
+      "recipes": [
+        "wonko-bars-classic-medium-400",
+        "wonko-bars-classic-medium-600",
+        "wonko-bars-classic-hard-400",
+        "wonko-bars-classic-hard-600",
+        "wonko-bars-vegan-medium-400",
+        "wonko-bars-vegan-medium-600",
+        "wonko-bars-vegan-hard-400",
+        "wonko-bars-vegan-hard-600",
+        "wonko-bars-gluten-free-medium-400"
+      ],
+      "partition_id": "pop-culture",
+      "secondary_partitions": [],
+      "cuisine_tags": [
+        "fantasy",
+        "american",
+        "dessert",
+        "candy"
+      ],
+      "frequency_tier": "medium"
+    },
+    {
+      "id": "dubious-food",
+      "name": {
+        "en": "dubious food",
+        "de": "Zweifelhaftes Gericht"
+      },
+      "hero": {
+        "en": "our unofficial rebuild: leftover fried rice, bright vegetables, and a skillet full of bad decisions that somehow taste excellent.",
+        "de": "inoffiziell nachgebaut: Reisreste, buntes Gemüse und eine Pfanne voller fragwürdiger Ideen, die unverschämt gut schmecken."
+      },
+      "caption": {
+        "en": "ugly on purpose, good anyway",
+        "de": "wild aussehend, ehrlich gut"
+      },
+      "stripe": "#8f6f4f",
+      "recipes": [
+        "dubious-food-classic-easy-400",
+        "dubious-food-classic-easy-600",
+        "dubious-food-classic-medium-400",
+        "dubious-food-classic-medium-600",
+        "dubious-food-vegetarian-easy-400",
+        "dubious-food-vegetarian-easy-600",
+        "dubious-food-vegetarian-medium-400",
+        "dubious-food-vegetarian-medium-600",
+        "dubious-food-vegan-easy-400",
+        "dubious-food-vegan-easy-600",
+        "dubious-food-vegan-medium-400",
+        "dubious-food-vegan-medium-600"
+      ],
+      "partition_id": "pop-culture",
+      "secondary_partitions": [
+        "cuisine-asian"
+      ],
+      "cuisine_tags": [
+        "gaming",
+        "asian",
+        "rice",
+        "skillet"
+      ],
+      "frequency_tier": "medium"
     }
   ]
 }

@@ -1,7 +1,0 @@
-First F-Droid release.
-
-* Offline recipe cookbook that morphs every dish to your dietary profile
-* Cook mode, shopping lists, meal planning
-* English and German
-* Encrypted local backups
-* No network access, no tracking

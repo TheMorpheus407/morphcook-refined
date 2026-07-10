@@ -678,6 +678,18 @@
           "Einstellungen"
         ]
       }
+    },
+    {
+      "id": "fan-recreations",
+      "category": "features",
+      "question": {
+        "en": "what's the deal with the pop-culture dishes?",
+        "de": "Was hat es mit den Popkultur-Gerichten auf sich?"
+      },
+      "answer": {
+        "en": "some dishes on our pop-culture shelf recreate food from games, shows and books — with real ingredients and honest numbers, like every other recipe here. they are unofficial fan recreations with zero affiliation: we're not connected to or endorsed by any franchise, and our names are playful nods, deliberately a twist off the originals. the cooking, though — that part is all yours.",
+        "de": "Einige Gerichte in unserem Popkultur-Regal bauen Essen aus Spielen, Serien und Büchern nach — mit echten Zutaten und ehrlichen Nährwerten, wie jedes andere Rezept hier auch. Es sind inoffizielle Fan-Nachbauten ohne jede Verbindung: Wir sind mit keinem Franchise verbunden und werden von keinem unterstützt; unsere Namen sind augenzwinkernde Anspielungen, absichtlich einen Dreh vom Original entfernt. Das Kochen aber — das gehört ganz dir."
+      }
     }
   ]
 }

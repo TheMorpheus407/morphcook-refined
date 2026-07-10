@@ -1,0 +1,8 @@
+Erste F-Droid-Veröffentlichung.
+
+* Offline-Kochbuch, das jedes Gericht an dein Ernährungsprofil anpasst
+* Kochmodus, Einkaufslisten, Essensplanung
+* Dunkles Design und gut lesbare Schrift (freundlich bei Dyslexie/Sehschwäche)
+* Deutsch und Englisch
+* Verschlüsselte lokale Backups
+* Kein Netzwerkzugriff, kein Tracking
