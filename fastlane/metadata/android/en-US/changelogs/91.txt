@@ -1,0 +1,5 @@
+You asked for better readability and reading comfort, so we've stepped back from the more eccentric design: the clean, highly legible typography is now the default and first-time setup is shorter and skippable. Prefer the decorative style? It's still available in Settings.
+
+Also new since 1.4.0:
+* Write and save your own personal recipes
+* Attach photos to recipes — stored locally, never uploaded

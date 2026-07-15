@@ -1,15 +1,21 @@
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../data/app_state.dart';
+import '../../logic/local_file_bytes.dart';
 import '../../models/dish.dart';
+import '../../models/personal_recipe.dart';
 import '../../models/recipe.dart';
+import '../../models/recipe_image.dart';
 import '../strings.dart';
 import '../theme.dart';
 import '../widgets/decor.dart';
+import '../widgets/recipe_cover.dart';
 import 'cook_mode_screen.dart';
 import 'faq_screen.dart';
 import 'guide_sheet.dart';
+import 'personal_recipe_editor_screen.dart';
 
 const _dimensions = ['diet', 'effort', 'calorie'];
 
@@ -18,7 +24,13 @@ const _dimensions = ['diet', 'effort', 'calorie'];
 /// Unreachable combos are disabled with a note, never hidden.
 class DishDetailScreen extends StatefulWidget {
   final String dishId;
-  const DishDetailScreen({super.key, required this.dishId});
+  final Future<List<int>?> Function()? pickImageBytes;
+
+  const DishDetailScreen({
+    super.key,
+    required this.dishId,
+    this.pickImageBytes,
+  });
 
   @override
   State<DishDetailScreen> createState() => _DishDetailScreenState();
@@ -41,9 +53,9 @@ class _DishDetailScreenState extends State<DishDetailScreen> {
 
   Future<void> _load() async {
     final state = context.read<AppState>();
-    final dish = state.corpus.dishById(widget.dishId);
+    final dish = state.dishById(widget.dishId);
     if (dish == null) return;
-    final all = await state.corpus.variantsOf(dish);
+    final all = await state.variantsOf(dish);
     final best = await state.bestVariant(dish.id);
     if (!mounted) return;
     setState(() {
@@ -55,9 +67,17 @@ class _DishDetailScreenState extends State<DishDetailScreen> {
 
   List<Recipe> get _visible {
     final state = context.read<AppState>();
+    if (_selected != null && state.isPersonalRecipe(_selected!.id)) {
+      return _all;
+    }
     return _all
-        .where((r) => state.matcher
-            .isVisible(r, state.profile, ignoreCalories: _ignoreCalories))
+        .where(
+          (r) => state.matcher.isVisible(
+            r,
+            state.profile,
+            ignoreCalories: _ignoreCalories,
+          ),
+        )
         .toList();
   }
 
@@ -104,8 +124,11 @@ class _DishDetailScreenState extends State<DishDetailScreen> {
       _expandedDimension = null;
     });
     // Highlight flash resets after the morph duration.
-    final duration = motionDuration(context, state.profile.reduceMotion,
-        normal: const Duration(milliseconds: 1200));
+    final duration = motionDuration(
+      context,
+      state.profile.reduceMotion,
+      normal: const Duration(milliseconds: 1200),
+    );
     Future.delayed(duration, () {
       if (mounted) setState(() => _previousIngredients = {});
     });
@@ -124,24 +147,50 @@ class _DishDetailScreenState extends State<DishDetailScreen> {
       return Scaffold(
         appBar: AppBar(),
         body: const PaperBackground(
-            child: Center(child: SkeletonBlock(height: 200))),
+          child: Center(child: SkeletonBlock(height: 200)),
+        ),
       );
     }
 
-    final hiddenByCalories = _all
-        .where((r) => state.matcher.hiddenOnlyByCalories(r, state.profile))
-        .length;
+    final personal = state.personalRecipeById(recipe.id);
+    final hiddenByCalories = personal == null
+        ? _all
+              .where(
+                (r) => state.matcher.hiddenOnlyByCalories(r, state.profile),
+              )
+              .length
+        : 0;
     final saved = state.isSaved(recipe.id);
+    final localImage = state.recipeImageFor(recipe.id);
+    final fallbackCaption = recipe.caption.of(lang);
     final motion = motionDuration(context, state.profile.reduceMotion);
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(morph.cased(dish.name.of(lang)),
-            style: morph.text.display.copyWith(fontSize: 22)),
+        title: Text(
+          morph.cased(dish.name.of(lang)),
+          style: morph.text.display.copyWith(fontSize: 22),
+        ),
         actions: [
+          if (personal != null)
+            IconButton(
+              key: const ValueKey('edit-personal-recipe'),
+              icon: const Icon(Icons.edit_outlined),
+              tooltip: s('editRecipe'),
+              onPressed: () => _editPersonal(personal),
+            ),
+          if (personal != null)
+            IconButton(
+              key: const ValueKey('delete-personal-recipe'),
+              icon: Icon(Icons.delete_outline, color: morph.colors.coral),
+              tooltip: s('deleteRecipe'),
+              onPressed: () => _deletePersonal(personal, s),
+            ),
           IconButton(
-            icon: Icon(saved ? Icons.bookmark : Icons.bookmark_border,
-                color: saved ? morph.colors.terracotta : morph.colors.ink),
+            icon: Icon(
+              saved ? Icons.bookmark : Icons.bookmark_border,
+              color: saved ? morph.colors.terracotta : morph.colors.ink,
+            ),
             tooltip: saved ? s('saved') : s('save'),
             onPressed: () => state.toggleSaved(recipe.id),
           ),
@@ -151,43 +200,94 @@ class _DishDetailScreenState extends State<DishDetailScreen> {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(20, 4, 20, 32),
           children: [
-            StripedPlaceholder(
-              color: _hex(dish.stripe),
+            RecipeCover(
+              recipeId: recipe.id,
+              fallbackColor: _hex(dish.stripe),
               height: 150,
-              caption: recipe.caption.of(lang),
+              fallbackCaption: fallbackCaption.isEmpty ? null : fallbackCaption,
+              semanticLabel: recipe.title.of(lang),
             ),
-            const SizedBox(height: 14),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                TextButton.icon(
+                  key: const ValueKey('set-recipe-image'),
+                  onPressed: () => _chooseImage(recipe, state, s),
+                  icon: const Icon(
+                    Icons.add_photo_alternate_outlined,
+                    size: 18,
+                  ),
+                  label: Text(
+                    localImage == null
+                        ? s('chooseRecipeImage')
+                        : s('changeRecipeImage'),
+                  ),
+                ),
+                if (localImage != null)
+                  IconButton(
+                    key: const ValueKey('remove-recipe-image'),
+                    tooltip: s('removeRecipeImage'),
+                    onPressed: () => _removeImage(recipe, state, s),
+                    icon: Icon(
+                      Icons.hide_image_outlined,
+                      size: 19,
+                      color: morph.colors.coral,
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 4),
             AnimatedSwitcher(
               duration: motion,
               child: Column(
                 key: ValueKey(recipe.id),
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(morph.cased(recipe.title.of(lang)),
-                      style: morph.text.display.copyWith(fontSize: 30)),
+                  Text(
+                    morph.cased(recipe.title.of(lang)),
+                    style: morph.text.display.copyWith(fontSize: 30),
+                  ),
                   const SizedBox(height: 6),
-                  Text(recipe.intro.of(lang),
-                      style: morph.text.mono.copyWith(
-                          fontSize: 12, color: morph.colors.inkSoft)),
+                  Text(
+                    recipe.intro.of(lang),
+                    style: morph.text.mono.copyWith(
+                      fontSize: 12,
+                      color: morph.colors.inkSoft,
+                    ),
+                  ),
                 ],
               ),
             ),
             const SizedBox(height: 14),
-            for (final dim in _dimensions) _dimensionRow(dim, s, state),
-            if (!state.matcher.isVisible(recipe, state.profile,
-                ignoreCalories: _ignoreCalories))
+            if (personal != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 2, bottom: 8),
+                child: Text(
+                  s('privateRecipeHint'),
+                  style: morph.text.handAt(16, color: morph.colors.inkSoft),
+                ),
+              )
+            else
+              for (final dim in _dimensions) _dimensionRow(dim, s, state),
+            if (personal == null &&
+                !state.matcher.isVisible(
+                  recipe,
+                  state.profile,
+                  ignoreCalories: _ignoreCalories,
+                ))
               Padding(
                 padding: const EdgeInsets.only(top: 2, bottom: 4),
-                child: Text(s('outsideProfile'),
-                    style: morph.text
-                        .handAt(16, color: morph.colors.terracotta)),
+                child: Text(
+                  s('outsideProfile'),
+                  style: morph.text.handAt(16, color: morph.colors.terracotta),
+                ),
               ),
             if (hiddenByCalories > 0) _calorieOverride(s, hiddenByCalories),
-            _whyHiddenLink(s),
+            if (personal == null) _whyHiddenLink(s),
             const DashedDivider(),
             _metaStrip(recipe, state, s),
             const SizedBox(height: 10),
-            _sectionTabs(s),
+            _sectionTabs(recipe, s),
             const SizedBox(height: 12),
             AnimatedSwitcher(
               duration: motion,
@@ -196,7 +296,10 @@ class _DishDetailScreenState extends State<DishDetailScreen> {
                 child: switch (_section) {
                   0 => _ingredients(recipe, state, s),
                   1 => _method(recipe, lang, s),
-                  _ => _macros(recipe, s),
+                  _ =>
+                    recipe.hasNutrition
+                        ? _macros(recipe, s)
+                        : _method(recipe, lang, s),
                 },
               ),
             ),
@@ -220,14 +323,16 @@ class _DishDetailScreenState extends State<DishDetailScreen> {
       'effort' => s('effort'),
       _ => s('calorieLevel'),
     };
-    final currentValue =
-        state.corpus.ontology.nameOf(recipe.variant[dimension], lang);
+    final currentValue = state.corpus.ontology.nameOf(
+      recipe.variant[dimension],
+      lang,
+    );
 
     return Column(
       children: [
         InkWell(
-          onTap: () => setState(
-              () => _expandedDimension = expanded ? null : dimension),
+          onTap: () =>
+              setState(() => _expandedDimension = expanded ? null : dimension),
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: 9),
             child: Row(
@@ -235,19 +340,28 @@ class _DishDetailScreenState extends State<DishDetailScreen> {
                 Text('— $label ', style: morph.text.label()),
                 const Expanded(child: DashedDivider(height: 1)),
                 const SizedBox(width: 8),
-                Text(morph.cased(currentValue),
-                    style: morph.text.mono.copyWith(
-                        fontSize: 12,
-                        color: morph.colors.terracotta)),
-                Icon(expanded ? Icons.expand_less : Icons.expand_more,
-                    size: 16, color: morph.colors.inkSoft),
+                Text(
+                  morph.cased(currentValue),
+                  style: morph.text.mono.copyWith(
+                    fontSize: 12,
+                    color: morph.colors.terracotta,
+                  ),
+                ),
+                Icon(
+                  expanded ? Icons.expand_less : Icons.expand_more,
+                  size: 16,
+                  color: morph.colors.inkSoft,
+                ),
               ],
             ),
           ),
         ),
         AnimatedCrossFade(
-          duration: motionDuration(context, state.profile.reduceMotion,
-              normal: const Duration(milliseconds: 220)),
+          duration: motionDuration(
+            context,
+            state.profile.reduceMotion,
+            normal: const Duration(milliseconds: 220),
+          ),
           crossFadeState: expanded
               ? CrossFadeState.showFirst
               : CrossFadeState.showSecond,
@@ -268,8 +382,7 @@ class _DishDetailScreenState extends State<DishDetailScreen> {
     );
   }
 
-  Widget _variantChip(
-      String dimension, String value, AppState state, S s) {
+  Widget _variantChip(String dimension, String value, AppState state, S s) {
     final lang = state.lang;
     final selected = _selected!.variant[dimension] == value;
     // The profile preselects — it never locks the lattice. Cells outside
@@ -316,8 +429,11 @@ class _DishDetailScreenState extends State<DishDetailScreen> {
     if (hidden <= 0) return const SizedBox.shrink();
     final morph = MorphTheme.of(context);
     return GestureDetector(
-      onTap: () => Navigator.of(context).push(MaterialPageRoute(
-          builder: (_) => const FaqScreen(initialEntryId: 'why-recipe-hidden'))),
+      onTap: () => Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => const FaqScreen(initialEntryId: 'why-recipe-hidden'),
+        ),
+      ),
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 4),
         child: Text(
@@ -337,9 +453,12 @@ class _DishDetailScreenState extends State<DishDetailScreen> {
       runSpacing: 6,
       children: [
         _meta('${recipe.timeMinutes} ${s('minutes')}'),
-        _meta('${recipe.caloriesPerServing} kcal ${s('perServing')}'),
-        _meta(state.corpus.ontology.nameOf(recipe.variant.effort, lang)),
-        if (state.profile.showVariantTags)
+        if (recipe.hasNutrition) ...[
+          _meta('${recipe.caloriesPerServing} kcal ${s('perServing')}'),
+          _meta(state.corpus.ontology.nameOf(recipe.variant.effort, lang)),
+        ] else
+          _meta('${recipe.servings} ${s('servings')}'),
+        if (recipe.hasNutrition && state.profile.showVariantTags)
           for (final tag in recipe.tags.of(lang).take(3)) _meta(tag),
       ],
     );
@@ -350,17 +469,22 @@ class _DishDetailScreenState extends State<DishDetailScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
       decoration: BoxDecoration(
-          border: Border.all(color: morph.colors.line),
-          borderRadius: BorderRadius.circular(2)),
+        border: Border.all(color: morph.colors.line),
+        borderRadius: BorderRadius.circular(2),
+      ),
       child: Text(morph.cased(text), style: morph.text.label(size: 9)),
     );
   }
 
-  Widget _sectionTabs(S s) {
-    final labels = [s('ingredients'), s('method'), s('macros')];
+  Widget _sectionTabs(Recipe recipe, S s) {
+    final labels = [
+      s('ingredients'),
+      s('method'),
+      if (recipe.hasNutrition) s('macros'),
+    ];
     return Row(
       children: [
-        for (var i = 0; i < 3; i++) ...[
+        for (var i = 0; i < labels.length; i++) ...[
           MonoChip(
             label: labels[i],
             selected: _section == i,
@@ -378,32 +502,37 @@ class _DishDetailScreenState extends State<DishDetailScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        for (final ing in recipe.ingredients)
-          _ingredientLine(ing, state, lang),
+        for (final ing in recipe.ingredients) _ingredientLine(ing, state, lang),
         const SizedBox(height: 14),
         OutlinedButton.icon(
           onPressed: () => _addToShoppingList(recipe, state, s),
-          icon: Icon(Icons.add_shopping_cart,
-              size: 16, color: morph.colors.teal),
-          label: Text(s('addToList'),
-              style: morph.text.label(color: morph.colors.teal)),
+          icon: Icon(
+            Icons.add_shopping_cart,
+            size: 16,
+            color: morph.colors.teal,
+          ),
+          label: Text(
+            s('addToList'),
+            style: morph.text.label(color: morph.colors.teal),
+          ),
           style: OutlinedButton.styleFrom(
             side: BorderSide(color: morph.colors.teal),
             shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(2)),
+              borderRadius: BorderRadius.circular(2),
+            ),
           ),
         ),
       ],
     );
   }
 
-  Widget _ingredientLine(
-      RecipeIngredient ing, AppState state, String lang) {
+  Widget _ingredientLine(RecipeIngredient ing, AppState state, String lang) {
     final morph = MorphTheme.of(context);
     final node = state.corpus.dictionary.byId(ing.ingredientId);
-    final name = node?.name.of(lang) ?? ing.ingredientId;
+    final name = ing.customName ?? node?.name.of(lang) ?? ing.ingredientId;
     final note = ing.note?.of(lang);
-    final isNew = _previousIngredients.isNotEmpty &&
+    final isNew =
+        _previousIngredients.isNotEmpty &&
         !_previousIngredients.contains(ing.ingredientId);
     final hasGuide = state.corpus.guide.containsKey(ing.ingredientId);
 
@@ -422,9 +551,13 @@ class _DishDetailScreenState extends State<DishDetailScreen> {
         children: [
           SizedBox(
             width: 78,
-            child: Text('$qty ${ing.unit}',
-                style: morph.text.mono.copyWith(
-                    fontSize: 12, color: morph.colors.terracotta)),
+            child: Text(
+              '$qty ${ing.unit}',
+              style: morph.text.mono.copyWith(
+                fontSize: 12,
+                color: morph.colors.terracotta,
+              ),
+            ),
           ),
           Expanded(
             child: Text(
@@ -437,8 +570,11 @@ class _DishDetailScreenState extends State<DishDetailScreen> {
               onTap: () => showGuideSheet(context, ing.ingredientId),
               child: Padding(
                 padding: const EdgeInsets.only(left: 6),
-                child: Icon(Icons.menu_book_outlined,
-                    size: 15, color: morph.colors.teal),
+                child: Icon(
+                  Icons.menu_book_outlined,
+                  size: 15,
+                  color: morph.colors.teal,
+                ),
               ),
             ),
         ],
@@ -457,23 +593,32 @@ class _DishDetailScreenState extends State<DishDetailScreen> {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('${i + 1}.',
-                    style: morph.text.display.copyWith(
-                        fontSize: 20, color: morph.colors.terracotta)),
+                Text(
+                  '${i + 1}.',
+                  style: morph.text.display.copyWith(
+                    fontSize: 20,
+                    color: morph.colors.terracotta,
+                  ),
+                ),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(recipe.steps[i].text.of(lang),
-                          style: morph.text.mono.copyWith(fontSize: 12.5)),
+                      Text(
+                        recipe.steps[i].text.of(lang),
+                        style: morph.text.mono.copyWith(fontSize: 12.5),
+                      ),
                       if (recipe.steps[i].timerMinutes != null)
                         Padding(
                           padding: const EdgeInsets.only(top: 3),
                           child: Text(
-                              '⏲ ${recipe.steps[i].timerMinutes} ${s('minutes')}',
-                              style: morph.text
-                                  .handAt(16, color: morph.colors.teal)),
+                            '⏲ ${recipe.steps[i].timerMinutes} ${s('minutes')}',
+                            style: morph.text.handAt(
+                              16,
+                              color: morph.colors.teal,
+                            ),
+                          ),
                         ),
                     ],
                   ),
@@ -510,9 +655,11 @@ class _DishDetailScreenState extends State<DishDetailScreen> {
         Padding(
           padding: const EdgeInsets.only(top: 6),
           child: Text(
-              morph.cased(
-                  '${s('perServing')} · ${recipe.servings} ${s('servings')}'),
-              style: morph.text.label(size: 10)),
+            morph.cased(
+              '${s('perServing')} · ${recipe.servings} ${s('servings')}',
+            ),
+            style: morph.text.label(size: 10),
+          ),
         ),
       ],
     );
@@ -526,11 +673,11 @@ class _DishDetailScreenState extends State<DishDetailScreen> {
         backgroundColor: morph.colors.ink,
         foregroundColor: morph.colors.paper,
         padding: const EdgeInsets.symmetric(vertical: 16),
-        shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(2)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(2)),
       ),
-      onPressed: () => Navigator.of(context).push(MaterialPageRoute(
-          builder: (_) => CookModeScreen(recipe: recipe))),
+      onPressed: () => Navigator.of(
+        context,
+      ).push(MaterialPageRoute(builder: (_) => CookModeScreen(recipe: recipe))),
       child: Text(
         morph.cased(resume ? s('resumeCooking') : s('startCooking')),
         style: morph.text.label(color: morph.colors.paper, size: 12),
@@ -538,12 +685,114 @@ class _DishDetailScreenState extends State<DishDetailScreen> {
     );
   }
 
-  Future<void> _addToShoppingList(
-      Recipe recipe, AppState state, S s) async {
+  Future<void> _addToShoppingList(Recipe recipe, AppState state, S s) async {
     await state.addToShoppingList([(recipe, 1.0)]);
     if (!mounted) return;
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text(s('addedToList'))));
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(s('addedToList'))));
+  }
+
+  Future<void> _editPersonal(PersonalRecipe recipe) async {
+    final changed = await Navigator.of(context).push<String>(
+      MaterialPageRoute(
+        builder: (_) => PersonalRecipeEditorScreen(recipe: recipe),
+      ),
+    );
+    if (!mounted || changed == null) return;
+    await _load();
+  }
+
+  Future<void> _deletePersonal(PersonalRecipe recipe, S s) async {
+    final morph = MorphTheme.of(context);
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: morph.colors.paper,
+        title: Text(
+          s('deleteRecipe'),
+          style: morph.text.display.copyWith(fontSize: 21),
+        ),
+        content: Text(s('deleteRecipeConfirm'), style: morph.text.mono),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(s('cancel')),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(
+              s('erase'),
+              style: morph.text.label(color: morph.colors.coral),
+            ),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+    try {
+      await context.read<AppState>().deletePersonalRecipe(recipe.id);
+    } catch (_) {
+      if (mounted) _toast(s('personalRecipeDeleteFailed'));
+      return;
+    }
+    if (!mounted) return;
+    Navigator.of(context).pop();
+  }
+
+  Future<void> _removeImage(Recipe recipe, AppState state, S s) async {
+    try {
+      await state.removeRecipeImage(recipe.id);
+    } catch (_) {
+      if (mounted) _toast(s('recipeImageRemoveFailed'));
+    }
+  }
+
+  Future<void> _chooseImage(Recipe recipe, AppState state, S s) async {
+    try {
+      final bytes =
+          await (widget.pickImageBytes?.call() ?? _pickImageFromDevice());
+      if (bytes == null || !mounted) return;
+      await state.setRecipeImage(recipe.id, bytes);
+    } on RecipeImageException catch (error) {
+      if (!mounted) return;
+      final message = switch (error.failure) {
+        RecipeImageFailure.tooLarge => s('recipeImageTooLarge'),
+        RecipeImageFailure.dimensionsTooLarge => s(
+          'recipeImageDimensionsTooLarge',
+        ),
+        RecipeImageFailure.unsupportedType => s('recipeImageUnsupported'),
+        RecipeImageFailure.storageLimit => s('recipeImageStorageFull'),
+        RecipeImageFailure.invalidRecipeId => s('recipeImageReadError'),
+      };
+      _toast(message);
+    } on LocalFileTooLargeException {
+      if (mounted) _toast(s('recipeImageTooLarge'));
+    } catch (_) {
+      if (mounted) _toast(s('recipeImageReadError'));
+    }
+  }
+
+  Future<List<int>?> _pickImageFromDevice() async {
+    try {
+      final picked = await FilePicker.pickFiles(
+        withData: false,
+        withReadStream: true,
+        type: FileType.image,
+        allowMultiple: false,
+      );
+      final file = picked?.files.firstOrNull;
+      if (file == null) return null;
+      return await readPickedFileBytes(file, maxBytes: maxRecipeImageBytes);
+    } finally {
+      await clearPickerTemporaryFiles();
+    }
+  }
+
+  void _toast(String message) {
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 }
 

@@ -1,0 +1,5 @@
+Ihr habt euch bessere Lesbarkeit und mehr Lesekomfort gewünscht — deshalb haben wir uns vom exzentrischeren Design verabschiedet: Die klare, gut lesbare Schrift ist jetzt Standard und das Ersteinrichten ist kürzer und überspringbar. Wer das dekorative Design lieber mag, findet es weiterhin in den Einstellungen.
+
+Außerdem neu seit 1.4.0:
+* Eigene persönliche Rezepte schreiben und speichern
+* Fotos zu Rezepten hinzufügen — lokal gespeichert, nie hochgeladen
