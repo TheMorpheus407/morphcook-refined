@@ -1,0 +1,3 @@
+Der Startbildschirm sortiert die Küche jetzt in Rubriken: Frühstück & Brunch, Hauptgerichte, Suppen & Eintöpfe, Salate & Bowls, Snacks & Streetfood, Desserts & Süßes und Getränke. Tipp auf eine Rubrik und stöbere nur dort — Süßes und Herzhaftes sind endlich getrennt, wie von vielen gewünscht.
+
+Die Suche hat dieselben Rubrik-Filter bekommen: "etwas fürs Frühstück" ist jetzt ein Tipp statt langem Scrollen.

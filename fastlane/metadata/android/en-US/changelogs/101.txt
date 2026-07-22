@@ -1,0 +1,3 @@
+The home screen now sorts the kitchen into categories: breakfast & brunch, main courses, soups & stews, salads & bowls, snacks & street food, desserts & sweets, and drinks. Tap a category chip to browse just that shelf — sweet and savory finally live apart, as many of you asked.
+
+Search got the same category filters, so "something for breakfast" is now one tap instead of a scroll.
