@@ -1,30 +1,33 @@
-Dasselbe Gericht existiert für jeden Körper.
+Rezept-Apps behandeln deine Ernährung wie einen Filter. Du sagst „vegan"
+und der Döner verschwindet. Du sagst „glutenfrei" und der Pasta-Abend
+ist vorbei. MorphCook weigert sich.
 
-Die meisten Rezept-Apps behandeln Ernährungsbedürfnisse als Filter, die
-Gerichte aus der Welt entfernen: Wer vegan lebt, verliert den Döner, wer eine
-Nussallergie entwickelt, verliert Pad Thai. MorphCook dreht das um. Jedes
-Gericht existiert als vollständig ausgearbeitete Varianten — veganer Döner,
-glutenfreier Alfredo, Keto-Burger — und dein Profil entscheidet, welche
-Variante jedes Gerichts du siehst. Du behältst das ganze Kochbuch.
+Hier existiert dasselbe Gericht für jeden Körper. Der vegane Döner ist
+keine Ersatztabelle — er ist ein vollständig geschriebenes Rezept, mit
+eigenen Zutaten, eigenen Schritten, eigenem Stolz. Glutenfreie Alfredo,
+Keto-Burger, FODMAP-arme Shakshuka: alles echte Rezepte, alle schon im
+Buch.
 
-Lege einmal deine Unverträglichkeiten, dein Kalorienziel, dein Zeitbudget und
-deine Sprache fest, und jedes Rezept passt sich an. Wechsle jederzeit zu einer
-anderen Variante eines Gerichts.
+Sag der App, wie du isst — Ernährungsweisen, Allergien, einzelne
+Zutaten, dein Kalorienziel, die Minuten, die du wirklich hast — und dein
+Kochbuch wird leise deins. Keine „für dich angepasst"-Banner. Keine
+Maschinerie im Schaufenster.
 
-Funktionen:
+Was drin ist:
+· zweisprachige Rezepte (Deutsch & Englisch), mit Sorgfalt geschrieben
+· Varianten-Wechsel pro Gericht: Ernährung, Aufwand, Kalorien-Level
+· ein Kochbuch, das *deine* Version eines Gerichts speichert
+· Wochenplanung mit Drag & Drop
+· eine smarte Einkaufsliste, die Knoblauch zu Knoblauch addiert
+  (2 Zehen + 3 Zehen = 5 Zehen) und nach Gängen sortiert
+· Kochmodus: dunkel, Schritt für Schritt, mit Timern, Portionsregler
+  und visuellem Blitz-Alarm für gehörlose und schwerhörige Köch:innen
+· Rezept-Links oder Text-PDFs importieren und vor dem Speichern prüfen
+· Rezepte oder Kochbücher per Bluetooth, Quick Share oder anderer App teilen
+· Offline-Anleitung, Feedback-Entwürfe und private fachliche Einschätzungen
+· verschlüsselte, dateibasierte Backups, die dir gehören
 
-* Jedes Gericht als mehrere echte Varianten ausgearbeitet, nicht weggefiltert
-* Ein Profil, das das gesamte Kochbuch an deine Bedürfnisse anpasst
-* Schritt-für-Schritt-Kochmodus
-* Einkaufslisten und Essensplanung
-* Zweisprachig: Deutsch und Englisch
-* Verschlüsselte, exportierbare Backups (AES-256-GCM), die auf deinem Gerät bleiben
-
-Datenschutz von Grund auf:
-
-* Vollständig offline — die App stellt keine Netzwerkanfragen
-* Keine Konten, keine Werbung, keine Analyse, kein Tracking, keine Laufzeit-KI
-* Fordert keine sensiblen Berechtigungen an
-* Nichts verlässt dein Gerät, außer du exportierst selbst ein Backup
-
-MorphCook ist freie und quelloffene Software.
+Optionale Webseiten-Importe speichern Rezepte und auf Wunsch Fotos offline.
+Beim Laden eines Rezepts oder eines gewählten Fotos wird die jeweilige Website kontaktiert.
+Keine Konten, Werbung oder Tracking. Profil und Kochbuch bleiben auf deinem
+Gerät, bis du sie selbst exportierst.

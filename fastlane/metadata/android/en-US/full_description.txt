@@ -1,29 +1,32 @@
-The same dish exists for every body.
+recipe apps treat your diet like a filter. you say "vegan" and the döner
+disappears. you say "gluten-free" and pasta night is over. morphcook
+refuses.
 
-Most recipe apps treat dietary needs as filters that remove dishes from the
-world: go vegan and the Döner disappears, develop a nut allergy and Pad Thai is
-gone. MorphCook inverts this. Every dish exists as fully-authored variants —
-vegan Döner, gluten-free Alfredo, keto burger — and your profile decides which
-variant of each dish you see. You keep the whole cookbook.
+here, the same dish exists for every body. the vegan döner is not a
+substitution table — it's a fully written recipe, with its own
+ingredients, its own steps, its own pride. gluten-free alfredo, keto
+burger, low-fodmap shakshuka: all real recipes, all already in the book.
 
-Set your dietary avoidances, calorie target, time budget and language once, and
-every recipe reshapes itself to match. Switch a dish to another variant any time
-you like.
+tell the app how you eat — diets, allergies, single ingredients you'd
+rather avoid, your calorie target, the minutes you actually have — and
+your cookbook quietly becomes yours. no "adapted for you" banners. no
+machinery on display.
 
-Features:
+what's inside:
+· bilingual recipes (english & german), written with care
+· per-dish variant switching: diet, effort, calorie level
+· a cookbook that saves *your* version of a dish
+· weekly meal planning with drag & drop
+· a smart shopping list that adds garlic to garlic (2 cloves + 3 cloves
+  = 5 cloves) and sorts by aisle
+· cook mode: dark, step by step, with timers, a servings scaler and a
+  visual flash alert for deaf and hard-of-hearing cooks
+· import recipe links or text PDFs and review before saving
+· share a recipe or cookbook through Bluetooth, Quick Share or other sharing apps
+· offline user manual, feedback drafts and private expert assessment notes
+· encrypted, file-based backups you fully own
 
-* Every dish authored as multiple real variants, not filtered away
-* A profile that morphs the whole cookbook to your needs
-* Step-by-step cook mode
-* Shopping lists and meal planning
-* Bilingual: English and German
-* Encrypted, exportable backups (AES-256-GCM) that stay on your device
-
-Privacy by design:
-
-* Fully offline — the app makes no network requests
-* No accounts, no ads, no analytics, no tracking, no runtime AI
-* Requests no sensitive permissions
-* Nothing ever leaves your device unless you export a backup yourself
-
-MorphCook is free and open source software.
+optional website imports let you save a recipe link and its photo for offline use.
+loading a link contacts that website; photos download only when selected.
+no accounts, ads or tracking. your profile and cookbook stay on your device
+unless you choose to export them.
