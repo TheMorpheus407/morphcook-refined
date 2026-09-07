@@ -48,3 +48,10 @@ MorphCook makes no network requests and collects nothing. See
   - Playfair Display — `assets/fonts/OFL-PlayfairDisplay.txt`
   - JetBrains Mono — `assets/fonts/OFL-JetBrainsMono.txt`
   - Caveat — `assets/fonts/OFL-Caveat.txt`
+
+## Website imports
+
+In the cookbook, use the link icon to import a recipe URL. Review its ingredients,
+steps, time and servings before saving. Text is available offline; photos download
+only if selected. Website diet and allergy claims are unverified. Ambiguous
+amounts retain their original text and are explicitly marked as unscaled.
