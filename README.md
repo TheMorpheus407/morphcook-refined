@@ -62,3 +62,11 @@ Share one recipe from its details or the whole cookbook from the sharing screen.
 The ZIP includes readable text and importable recipe data, with optional photos.
 Recipients preview additions; their profile, plans and history stay private.
 Android offers Bluetooth, Quick Share and other installed compatible apps.
+
+## PDF import, manual and feedback
+
+Import selectable-text PDF recipes from the cookbook and review before saving.
+Settings includes the offline EN/DE manual, feedback drafts and license notices.
+Recipe details let you request and privately record attributed expert assessments.
+The app does not supply professional reviews or verify credentials. Notes travel
+only in full backups, with a warning when the assessed recipe changes.
