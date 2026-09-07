@@ -38,7 +38,7 @@ development can just use your system Flutter.
 
 ## Privacy
 
-MorphCook makes no network requests and collects nothing. See
+MorphCook is offline-first and collects no analytics. Website requests and optional photo downloads occur only when you choose an import. See
 [PRIVACY.md](PRIVACY.md).
 
 ## Licenses
@@ -55,3 +55,10 @@ In the cookbook, use the link icon to import a recipe URL. Review its ingredient
 steps, time and servings before saving. Text is available offline; photos download
 only if selected. Website diet and allergy claims are unverified. Ambiguous
 amounts retain their original text and are explicitly marked as unscaled.
+
+## Recipe sharing
+
+Share one recipe from its details or the whole cookbook from the sharing screen.
+The ZIP includes readable text and importable recipe data, with optional photos.
+Recipients preview additions; their profile, plans and history stay private.
+Android offers Bluetooth, Quick Share and other installed compatible apps.
