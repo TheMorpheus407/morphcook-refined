@@ -49,6 +49,15 @@ MorphCook is offline-first and collects no analytics. Website requests and optio
   - JetBrains Mono — `assets/fonts/OFL-JetBrainsMono.txt`
   - Caveat — `assets/fonts/OFL-Caveat.txt`
 
+## Recipe origins
+
+Open a bundled recipe's details to see its origin below the introduction.
+The notice identifies the MorphCook collection, discloses that the recipe is
+AI-generated and states that human cooking verification is not provided. It
+appears in English or German and remains visible when you switch variants.
+Personal recipes do not receive this notice; website imports retain their
+supplied author and source link.
+
 ## Website imports
 
 In the cookbook, use the link icon to import a recipe URL. Review its ingredients,
