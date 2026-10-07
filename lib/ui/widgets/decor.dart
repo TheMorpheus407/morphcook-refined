@@ -1,3 +1,4 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
 import '../theme.dart';
@@ -181,6 +182,40 @@ class SectionHeader extends StatelessWidget {
   }
 }
 
+/// Tap target for saving a recipe straight from a card. Uses a
+/// [RawGestureDetector] (not GestureDetector/InkWell) so cards keep exactly
+/// one GestureDetector — their own — and the bookmark wins the tap arena
+/// instead of bubbling to the card's detail navigation.
+class BookmarkBadge extends StatelessWidget {
+  final bool saved;
+  final VoidCallback? onTap;
+
+  const BookmarkBadge({super.key, required this.saved, this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final morph = MorphTheme.of(context);
+    return RawGestureDetector(
+      behavior: HitTestBehavior.opaque,
+      gestures: {
+        TapGestureRecognizer:
+            GestureRecognizerFactoryWithHandlers<TapGestureRecognizer>(
+              () => TapGestureRecognizer(),
+              (recognizer) => recognizer.onTap = onTap,
+            ),
+      },
+      child: Padding(
+        padding: const EdgeInsets.all(6),
+        child: Icon(
+          saved ? Icons.bookmark : Icons.bookmark_border,
+          size: 20,
+          color: saved ? morph.colors.terracotta : morph.colors.ink,
+        ),
+      ),
+    );
+  }
+}
+
 /// Polaroid-ish card: white frame, striped photo area, handwritten caption,
 /// slight deterministic rotation (level in readable mode).
 class PolaroidCard extends StatelessWidget {
@@ -192,6 +227,8 @@ class PolaroidCard extends StatelessWidget {
   final int rotationSeed;
   final double photoHeight;
   final Widget? photo;
+  final bool saved;
+  final VoidCallback? onBookmarkTap;
 
   const PolaroidCard({
     super.key,
@@ -203,6 +240,8 @@ class PolaroidCard extends StatelessWidget {
     this.rotationSeed = 0,
     this.photoHeight = 110,
     this.photo,
+    this.saved = false,
+    this.onBookmarkTap,
   });
 
   @override
@@ -238,6 +277,15 @@ class PolaroidCard extends StatelessWidget {
                   children: [
                     photo ??
                         StripedPlaceholder(color: stripe, height: photoHeight),
+                    if (onBookmarkTap != null)
+                      Positioned(
+                        top: 2,
+                        right: 2,
+                        child: BookmarkBadge(
+                          saved: saved,
+                          onTap: onBookmarkTap,
+                        ),
+                      ),
                     if (badge != null)
                       Positioned(
                         top: 6,

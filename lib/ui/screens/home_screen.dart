@@ -55,7 +55,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
     final visibleDishes =
         state.corpus.dishes.where((d) => _best[d.id] != null).toList()
-          ..sort((a, b) => a.frequencyTier.compareTo(b.frequencyTier));
+          ..sort((a, b) {
+            final tier = a.frequencyTier.compareTo(b.frequencyTier);
+            return tier != 0 ? tier : a.id.compareTo(b.id);
+          });
 
     Dish? featured;
     var bestScore = -1;
@@ -121,9 +124,9 @@ class _HomeScreenState extends State<HomeScreen> {
                       s('categoryEmpty'),
                       textAlign: TextAlign.center,
                       style: MorphTheme.of(context).text.handAt(
-                            18,
-                            color: MorphTheme.of(context).colors.inkSoft,
-                          ),
+                        18,
+                        color: MorphTheme.of(context).colors.inkSoft,
+                      ),
                     ),
                   )
                 else
@@ -161,9 +164,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 label: category.name.of(lang),
                 selected: _category == category.id,
                 onTap: () => setState(
-                  () => _category = _category == category.id
-                      ? null
-                      : category.id,
+                  () =>
+                      _category = _category == category.id ? null : category.id,
                 ),
               ),
             ),
@@ -172,8 +174,12 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _dishGrid(List<Dish> dishes, int indexOffset, String lang,
-      AppState state) {
+  Widget _dishGrid(
+    List<Dish> dishes,
+    int indexOffset,
+    String lang,
+    AppState state,
+  ) {
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -196,12 +202,8 @@ class _HomeScreenState extends State<HomeScreen> {
           title: dish.name.of(lang),
           caption: dish.caption.of(lang),
           badge:
-              state.profile.showVariantTags &&
-                  recipe.variant.diet != 'classic'
-              ? state.corpus.ontology.nameOf(
-                  recipe.variant.diet,
-                  lang,
-                )
+              state.profile.showVariantTags && recipe.variant.diet != 'classic'
+              ? state.corpus.ontology.nameOf(recipe.variant.diet, lang)
               : null,
           rotationSeed: globalIndex,
           photo: RecipeCover(
@@ -211,6 +213,8 @@ class _HomeScreenState extends State<HomeScreen> {
             semanticLabel: recipe.title.of(lang),
           ),
           onTap: () => _openDish(dish),
+          saved: state.isSaved(recipe.id),
+          onBookmarkTap: () => state.toggleSaved(recipe.id),
         );
       },
     );
@@ -275,12 +279,24 @@ class _HomeScreenState extends State<HomeScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              RecipeCover(
-                recipeId: recipe.id,
-                fallbackColor: _hex(dish.stripe),
-                height: 150,
-                fallbackCaption: dish.caption.of(lang),
-                semanticLabel: recipe.title.of(lang),
+              Stack(
+                children: [
+                  RecipeCover(
+                    recipeId: recipe.id,
+                    fallbackColor: _hex(dish.stripe),
+                    height: 150,
+                    fallbackCaption: dish.caption.of(lang),
+                    semanticLabel: recipe.title.of(lang),
+                  ),
+                  Positioned(
+                    top: 2,
+                    right: 2,
+                    child: BookmarkBadge(
+                      saved: state.isSaved(recipe.id),
+                      onTap: () => state.toggleSaved(recipe.id),
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 10),
               Text(

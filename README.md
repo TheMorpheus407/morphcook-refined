@@ -49,6 +49,13 @@ MorphCook is offline-first and collects no analytics. Website requests and optio
   - JetBrains Mono — `assets/fonts/OFL-JetBrainsMono.txt`
   - Caveat — `assets/fonts/OFL-Caveat.txt`
 
+## Saving recipes
+
+Tap the bookmark icon on any Start View card or featured dish to save it to
+your cookbook without opening the recipe first — the same bookmark in the
+recipe details does the reverse. The Start View keeps its order when you
+return, so the recipes you were comparing stay where you left them.
+
 ## Website imports
 
 In the cookbook, use the link icon to import a recipe URL. Review its ingredients,
