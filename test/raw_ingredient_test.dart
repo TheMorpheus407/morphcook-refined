@@ -111,11 +111,16 @@ void main() {
     expect(rawIndex, isNonNegative);
     await state.toggleShoppingItem(rawIndex);
 
-    final restored = await freshState(store: store);
+    var restored = await freshState(store: store);
     final raw = restored.shoppingList.singleWhere((item) => !item.hasQuantity);
     expect(raw.customName, _rawLine);
     expect(raw.qty, 1);
     expect(raw.checked, isTrue);
+    expect(restored.shoppingHistory, isEmpty);
+
+    // History records the raw row once the checked-off item leaves the list.
+    await restored.clearCheckedShoppingItems();
+    restored = await freshState(store: store);
     expect(
       restored.shoppingHistory.where((item) => !item.hasQuantity),
       hasLength(1),

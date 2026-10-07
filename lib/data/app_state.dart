@@ -687,28 +687,9 @@ class AppState extends ChangeNotifier {
     final aggregated = aggregate(recipes, corpus.dictionary);
     final now = DateTime.now();
     _shoppingList = mergeIntoList(_shoppingList, aggregated, now);
-    // History keeps one record per added line for insights.
-    _shoppingHistory = [
-      ..._shoppingHistory,
-      ...aggregated.map(
-        (a) => ShoppingItem(
-          ingredientId: a.ingredientId,
-          customName: a.customName,
-          qty: a.quantity.amount,
-          unit: a.quantity.unit,
-          hasQuantity: a.hasQuantity,
-          aisle: a.aisle,
-          addedAt: now,
-        ),
-      ),
-    ];
     await _writeJson(
       'shopping_list',
       _shoppingList.map((s) => s.toJson()).toList(),
-    );
-    await _writeJson(
-      'shopping_history',
-      _shoppingHistory.map((s) => s.toJson()).toList(),
     );
     notifyListeners();
   }
@@ -725,8 +706,21 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Insights count an ingredient only once it was checked off; adding or
+  /// deleting unchecked items never reaches the history.
+  Future<void> _archiveCheckedItems(List<ShoppingItem> checked) async {
+    if (checked.isEmpty) return;
+    _shoppingHistory = [..._shoppingHistory, ...checked];
+    await _writeJson(
+      'shopping_history',
+      _shoppingHistory.map((s) => s.toJson()).toList(),
+    );
+  }
+
   Future<void> clearCheckedShoppingItems() async {
+    final checked = _shoppingList.where((s) => s.checked).toList();
     _shoppingList.removeWhere((s) => s.checked);
+    await _archiveCheckedItems(checked);
     await _writeJson(
       'shopping_list',
       _shoppingList.map((s) => s.toJson()).toList(),
@@ -735,7 +729,9 @@ class AppState extends ChangeNotifier {
   }
 
   Future<void> clearShoppingList() async {
+    final checked = _shoppingList.where((s) => s.checked).toList();
     _shoppingList = [];
+    await _archiveCheckedItems(checked);
     await _writeJson('shopping_list', const []);
     notifyListeners();
   }

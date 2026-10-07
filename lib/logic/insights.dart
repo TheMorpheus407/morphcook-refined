@@ -1,7 +1,7 @@
 import '../models/collections.dart';
 
 /// Shopping Insights — computed over the persisted shopping history
-/// (every item ever added to the list, including checked-off ones).
+/// (every item that was checked off and cleared from the list).
 class ShoppingInsights {
   /// Unique ingredient count.
   final int varietyScore;
@@ -18,8 +18,10 @@ class ShoppingInsights {
     required this.seasonalBreakdown,
   });
 
-  factory ShoppingInsights.compute(List<ShoppingItem> history,
-      {int topN = 10}) {
+  factory ShoppingInsights.compute(
+    List<ShoppingItem> history, {
+    int topN = 10,
+  }) {
     final counts = <String, int>{};
     final byMonth = <String, int>{};
     for (final item in history) {

@@ -198,11 +198,16 @@ void main() {
         ((await state.recipeById(recipe.id))!, 1),
       ]);
       expect(state.shoppingList.single.customName, 'Secret spice');
-      expect(state.shoppingHistory.single.customName, 'Secret spice');
 
       final reloaded = AppState(store: state.store, corpus: state.corpus);
       await reloaded.load();
       expect(reloaded.shoppingList.single.customName, 'Secret spice');
+
+      // The free-text line reaches the history once it is checked off and
+      // cleared from the list.
+      await state.toggleShoppingItem(0);
+      await state.clearCheckedShoppingItems();
+      expect(state.shoppingHistory.single.customName, 'Secret spice');
     },
   );
 
@@ -384,11 +389,15 @@ void main() {
     final doener = state.corpus.loadedRecipeById('doener-vegan')!;
     await state.addToShoppingList([(doener, 1.0)]);
     expect(state.shoppingList, isNotEmpty);
-    expect(state.shoppingHistory, isNotEmpty);
+    expect(state.shoppingHistory, isEmpty);
     final before = state.shoppingList.length;
     // Adding the same recipe again merges rather than duplicating lines.
     await state.addToShoppingList([(doener, 1.0)]);
     expect(state.shoppingList.length, before);
+    // History is recorded once checked-off items leave the list.
+    await state.toggleShoppingItem(0);
+    await state.clearCheckedShoppingItems();
+    expect(state.shoppingHistory, isNotEmpty);
   });
 
   test('zero-result searches are logged once as content requests', () async {
