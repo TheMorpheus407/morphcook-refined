@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'dart:typed_data';
+import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -62,6 +64,33 @@ class FakePhotoSearch extends RecipePhotoSearch {
   }
 }
 
+class DelayedPhotoSearch extends FakePhotoSearch {
+  final pending = <RecipePhotoCandidate, Completer<Uint8List>>{};
+
+  @override
+  Future<Uint8List> download(RecipePhotoCandidate candidate) {
+    final completer = pending[candidate];
+    if (completer == null) return super.download(candidate);
+    downloads.add(candidate.credit.title);
+    return completer.future;
+  }
+}
+
+Future<Uint8List> differentPngBytes() async {
+  final recorder = ui.PictureRecorder();
+  Canvas(recorder).drawColor(Colors.red, BlendMode.src);
+  final picture = recorder.endRecording();
+  final image = await picture.toImage(1, 1);
+  try {
+    return (await image.toByteData(
+      format: ui.ImageByteFormat.png,
+    ))!.buffer.asUint8List();
+  } finally {
+    image.dispose();
+    picture.dispose();
+  }
+}
+
 Future<AppState> photoState({bool enabled = false}) async {
   final state = AppState(store: MemoryStore(), corpus: await loadRealCorpus());
   await state.load();
@@ -97,6 +126,84 @@ Future<void> settlePhotos(WidgetTester tester) async {
 
 void main() {
   WidgetController.hitTestWarningShouldBeFatal = true;
+
+  for (final outcome in [
+    'success',
+    'download failure',
+    'decoder failure',
+    'same candidate',
+  ]) {
+    testWidgets('repeated search never reuses old preview: $outcome', (
+      tester,
+    ) async {
+      final state = (await tester.runAsync(() => photoState(enabled: true)))!;
+      final first = candidate('First photo');
+      final next = outcome == 'same candidate'
+          ? first
+          : candidate('Next photo', author: 'Bea');
+      final search = DelayedPhotoSearch()..results = [first];
+      await tester.pumpWidget(
+        app(state, DishDetailScreen(dishId: 'doener', photoSearch: search)),
+      );
+      await settlePhotos(tester);
+      await tester.tap(searchButton);
+      await settlePhotos(tester);
+      final tile = find.byKey(const ValueKey('found-photo-0'));
+      await tester.tap(tile);
+      await tester.pump();
+      expect(tester.widget<FilledButton>(useButton).onPressed, isNotNull);
+
+      final pending = Completer<Uint8List>();
+      search
+        ..results = [next]
+        ..pending[next] = pending;
+      // The search resolves before the next frame: the old tile is reused
+      // without an intermediate frame rendering the empty results list.
+      await tester.tap(find.byKey(const ValueKey('run-photo-search')));
+      await tester.pump();
+      await tester.pump();
+      expect(search.downloads, [first.credit.title, next.credit.title]);
+      expect(
+        tester.widget<InkWell>(tile).onTap,
+        isNull,
+        reason: 'A new result must wait for its own download and decode',
+      );
+      await tester.tap(tile);
+      await tester.pump();
+      expect(tester.widget<FilledButton>(useButton).onPressed, isNull);
+      expect(state.recipeImages, isEmpty);
+
+      if (outcome == 'download failure') {
+        pending.completeError(
+          const RecipePhotoSearchException(RecipePhotoSearchFailure.network),
+        );
+      } else if (outcome == 'decoder failure') {
+        pending.complete(testPngBytes()..[24] = 3);
+      } else {
+        final bytes = (await tester.runAsync(differentPngBytes))!;
+        expect(bytes, isNot(orderedEquals(testPngBytes())));
+        pending.complete(bytes);
+        await settlePhotos(tester);
+        expect(tester.widget<InkWell>(tile).onTap, isNotNull);
+        await tester.tap(tile);
+        await tester.pump();
+        await tester.tap(useButton);
+        await settlePhotos(tester);
+        final stored = state.recipeImages.single;
+        expect(stored.bytes, orderedEquals(bytes));
+        expect(stored.credit, next.credit);
+        expect(search.downloads, hasLength(2));
+        return;
+      }
+      await settlePhotos(tester);
+      expect(find.text(en('photoPreviewFailed')), findsOneWidget);
+      expect(tester.widget<InkWell>(tile).onTap, isNull);
+      await tester.tap(tile);
+      await tester.pump();
+      expect(tester.widget<FilledButton>(useButton).onPressed, isNull);
+      expect(state.recipeImages, isEmpty);
+    });
+  }
 
   testWidgets('decoder failures cannot replace a working photo', (
     tester,

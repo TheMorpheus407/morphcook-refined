@@ -266,9 +266,13 @@ class _RecipePhotoSearchScreenState extends State<RecipePhotoSearchScreen> {
 
   Widget _tile(RecipePhotoCandidate candidate, int index, String lang, S s) {
     final morph = MorphTheme.of(context);
+    final generation = _generation;
     final selected = identical(_selected, candidate);
     final credit = candidate.credit;
     return Semantics(
+      // A new search must not inherit another download's snapshot or frame,
+      // even when the grid updates before an empty-results frame is drawn.
+      key: ValueKey((generation, candidate)),
       button: true,
       selected: selected,
       label: credit.label(lang),
@@ -294,9 +298,17 @@ class _RecipePhotoSearchScreenState extends State<RecipePhotoSearchScreen> {
                 child: FutureBuilder<Uint8List?>(
                   future: _preview(candidate),
                   builder: (context, snapshot) {
+                    // FutureBuilder retains old data while a new future waits.
+                    if (snapshot.connectionState != ConnectionState.done) {
+                      return const Center(
+                        child: SizedBox.square(
+                          dimension: 22,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                      );
+                    }
                     final bytes = snapshot.data;
                     if (bytes != null) {
-                      final generation = _generation;
                       return Image.memory(
                         bytes,
                         fit: BoxFit.cover,
@@ -332,15 +344,7 @@ class _RecipePhotoSearchScreenState extends State<RecipePhotoSearchScreen> {
                         },
                       );
                     }
-                    if (snapshot.connectionState == ConnectionState.done) {
-                      return _unavailable(s);
-                    }
-                    return const Center(
-                      child: SizedBox.square(
-                        dimension: 22,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      ),
-                    );
+                    return _unavailable(s);
                   },
                 ),
               ),
