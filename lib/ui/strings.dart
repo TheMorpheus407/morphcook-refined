@@ -129,6 +129,28 @@ class S {
         'photo storage is full. remove another recipe photo first.',
     'recipeImageRemoveFailed':
         'that photo could not be removed. check available storage and try again.',
+    'onlinePhotos': 'online photos',
+    'imageSearch': 'find recipe photos online',
+    'imageSearchHint':
+        'adds “find photo online” to recipes. nothing is requested until you search. a search sends only its words to Wikimedia Commons, which also sees your IP address. results include author and free-license information and may not show this exact recipe.',
+    'findRecipeImage': 'find photo online',
+    'photoSearchTitle': 'find a photo',
+    'photoSearchQuery': 'search words',
+    'photoSearchButton': 'search',
+    'photoSearchHint':
+        'Photos with free-license information from Wikimedia Commons. They show the dish as someone else made it and may not match this recipe. Searching sends only these words; previews load from Wikimedia. The chosen photo is saved on your device with its credit.',
+    'photoSearchEmpty':
+        'No suitable photos found. Try fewer or English words, such as the dish name.',
+    'photoSearchFailed':
+        'Wikimedia Commons could not be reached. Check your connection and try again.',
+    'photoSearchBusy':
+        'Wikimedia Commons is busy right now. Wait a minute and try again.',
+    'photoPreviewFailed': 'preview unavailable',
+    'useThisPhoto': 'use this photo',
+    'choosePhotoFirst': 'tap a photo to choose it',
+    'photoSearchSaved': 'photo saved for offline use',
+    'onlinePhotoNote': 'online photo · may differ from this recipe',
+    'openPhotoSource': 'open photo source and license',
     'confirmBackupPassword': 'confirm backup password',
     'confirmBackupPasswordHint':
         'enter it again — lost backup passwords cannot be recovered.',
@@ -432,6 +454,28 @@ class S {
         'der Fotospeicher ist voll. entferne zuerst ein anderes Rezeptfoto.',
     'recipeImageRemoveFailed':
         'dieses Foto konnte nicht entfernt werden. prüfe den freien Speicher und versuche es erneut.',
+    'onlinePhotos': 'Online-Fotos',
+    'imageSearch': 'Rezeptfotos online suchen',
+    'imageSearchHint':
+        'fügt Rezepten „Foto online suchen“ hinzu. erst eine Suche stellt Anfragen. sie sendet nur ihre Suchwörter an Wikimedia Commons, das dabei auch deine IP-Adresse sieht. die Ergebnisse enthalten Urheber- und freie Lizenzangaben und zeigen eventuell nicht genau dieses Rezept.',
+    'findRecipeImage': 'Foto online suchen',
+    'photoSearchTitle': 'Foto finden',
+    'photoSearchQuery': 'Suchwörter',
+    'photoSearchButton': 'suchen',
+    'photoSearchHint':
+        'Fotos mit Angaben zu freien Lizenzen von Wikimedia Commons. Sie zeigen das Gericht, wie jemand anderes es gemacht hat, und passen eventuell nicht zu diesem Rezept. Die Suche sendet nur diese Wörter; Vorschauen werden von Wikimedia geladen. Das gewählte Foto wird mit Urheberangabe auf deinem Gerät gespeichert.',
+    'photoSearchEmpty':
+        'Keine passenden Fotos gefunden. Versuche weniger oder englische Wörter, etwa den Namen des Gerichts.',
+    'photoSearchFailed':
+        'Wikimedia Commons ist nicht erreichbar. Prüfe deine Verbindung und versuche es erneut.',
+    'photoSearchBusy':
+        'Wikimedia Commons ist gerade ausgelastet. Warte eine Minute und versuche es erneut.',
+    'photoPreviewFailed': 'Vorschau nicht verfügbar',
+    'useThisPhoto': 'dieses Foto verwenden',
+    'choosePhotoFirst': 'tippe auf ein Foto, um es zu wählen',
+    'photoSearchSaved': 'Foto für offline gespeichert',
+    'onlinePhotoNote': 'Online-Foto · kann vom Rezept abweichen',
+    'openPhotoSource': 'Fotoquelle und Lizenz öffnen',
     'confirmBackupPassword': 'Backup-Passwort bestätigen',
     'confirmBackupPasswordHint':
         'gib es erneut ein — verlorene Backup-Passwörter können nicht wiederhergestellt werden.',

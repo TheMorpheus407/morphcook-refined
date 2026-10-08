@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../data/app_state.dart';
+import '../../logic/import/recipe_photo_search.dart';
 import '../../logic/local_file_bytes.dart';
 import '../../models/dish.dart';
 import '../../models/personal_recipe.dart';
@@ -18,6 +19,7 @@ import 'cook_mode_screen.dart';
 import 'faq_screen.dart';
 import 'guide_sheet.dart';
 import 'personal_recipe_editor_screen.dart';
+import 'recipe_photo_search_screen.dart';
 import 'recipe_sharing_screen.dart';
 
 const _dimensions = ['diet', 'effort', 'calorie'];
@@ -28,11 +30,13 @@ const _dimensions = ['diet', 'effort', 'calorie'];
 class DishDetailScreen extends StatefulWidget {
   final String dishId;
   final Future<List<int>?> Function()? pickImageBytes;
+  final RecipePhotoSearch? photoSearch;
 
   const DishDetailScreen({
     super.key,
     required this.dishId,
     this.pickImageBytes,
+    this.photoSearch,
   });
 
   @override
@@ -220,9 +224,17 @@ class _DishDetailScreenState extends State<DishDetailScreen> {
               fallbackCaption: fallbackCaption.isEmpty ? null : fallbackCaption,
               semanticLabel: recipe.title.of(lang),
             ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
+            Wrap(
+              alignment: WrapAlignment.end,
+              crossAxisAlignment: WrapCrossAlignment.center,
               children: [
+                if (state.profile.imageSearchEnabled)
+                  TextButton.icon(
+                    key: const ValueKey('search-recipe-image'),
+                    onPressed: () => _searchImage(dish, recipe, personal, s),
+                    icon: const Icon(Icons.image_search_outlined, size: 18),
+                    label: Text(s('findRecipeImage')),
+                  ),
                 TextButton.icon(
                   key: const ValueKey('set-recipe-image'),
                   onPressed: () => _chooseImage(recipe, state, s),
@@ -249,6 +261,8 @@ class _DishDetailScreenState extends State<DishDetailScreen> {
                   ),
               ],
             ),
+            if (localImage?.credit case final credit?)
+              _imageCredit(credit, lang, s),
             const SizedBox(height: 4),
             AnimatedSwitcher(
               duration: motion,
@@ -836,21 +850,75 @@ class _DishDetailScreenState extends State<DishDetailScreen> {
       await state.setRecipeImage(recipe.id, bytes);
     } on RecipeImageException catch (error) {
       if (!mounted) return;
-      final message = switch (error.failure) {
-        RecipeImageFailure.tooLarge => s('recipeImageTooLarge'),
-        RecipeImageFailure.dimensionsTooLarge => s(
-          'recipeImageDimensionsTooLarge',
-        ),
-        RecipeImageFailure.unsupportedType => s('recipeImageUnsupported'),
-        RecipeImageFailure.storageLimit => s('recipeImageStorageFull'),
-        RecipeImageFailure.invalidRecipeId => s('recipeImageReadError'),
-      };
-      _toast(message);
+      _toast(s(recipeImageFailureKey(error.failure)));
     } on LocalFileTooLargeException {
       if (mounted) _toast(s('recipeImageTooLarge'));
     } catch (_) {
       if (mounted) _toast(s('recipeImageReadError'));
     }
+  }
+
+  /// Credits a found photo and links its source page, where the license
+  /// terms are published. Device photos have no credit.
+  Widget _imageCredit(RecipeImageCredit credit, String lang, S s) {
+    final morph = MorphTheme.of(context);
+    return Semantics(
+      link: true,
+      hint: s('openPhotoSource'),
+      child: InkWell(
+        key: const ValueKey('recipe-image-credit'),
+        onTap: () async {
+          try {
+            final opened = await launchUrl(
+              credit.sourceUrl,
+              mode: LaunchMode.externalApplication,
+            );
+            if (!opened && mounted) _toast(s('sourceOpenFailed'));
+          } catch (_) {
+            if (mounted) _toast(s('sourceOpenFailed'));
+          }
+        },
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 4),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Text(
+                  '${credit.label(lang)}\n${s('onlinePhotoNote')}',
+                  style: morph.text.mono.copyWith(
+                    fontSize: 11,
+                    color: morph.colors.inkSoft,
+                  ),
+                ),
+              ),
+              Icon(Icons.open_in_new, size: 14, color: morph.colors.inkSoft),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _searchImage(
+    Dish dish,
+    Recipe recipe,
+    PersonalRecipe? personal,
+    S s,
+  ) async {
+    // Commons is mostly described in English; bundled dishes therefore start
+    // with their English name. Personal recipes use the owner's own title.
+    final query = personal != null ? personal.title : dish.name.of('en');
+    final saved = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(
+        builder: (_) => RecipePhotoSearchScreen(
+          recipeId: recipe.id,
+          initialQuery: query,
+          photoSearch: widget.photoSearch,
+        ),
+      ),
+    );
+    if (saved == true && mounted) _toast(s('photoSearchSaved'));
   }
 
   Future<List<int>?> _pickImageFromDevice() async {

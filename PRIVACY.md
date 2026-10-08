@@ -1,6 +1,6 @@
 # MorphCook Privacy Policy
 
-*Effective: 2026-09-07 · Contact: Bootstrap Academy / The Morpheus —
+*Effective: 2026-10-08 · Contact: Bootstrap Academy / The Morpheus —
 via the support email listed on the Play Store page.*
 
 ## The short version
@@ -8,7 +8,8 @@ via the support email listed on the Play Store page.*
 MorphCook is an **offline-first app**. It has no backend, no accounts, no
 analytics, no ads, and no tracking. MorphCook has no collection server and does not sell personal data. Network
 requests made directly by MorphCook happen only when you explicitly load a
-recipe URL or choose to download its photo. The requested website (and any redirect or image host)
+recipe URL, choose to download its photo, or run the optional online photo
+search (off by default). The requested website (and any redirect or image host)
 receives your IP address and the URL requested, under its own privacy policy.
 Your profile and cookbook are never sent with those requests. There are no
 background downloads. Saved recipes and downloaded photos work offline.
@@ -40,6 +41,22 @@ saved in private app storage after you review and save them. Photos are off by
 default. You can remove a photo or delete a personal recipe from its detail page.
 Website dietary claims are retained as unverified text and do not qualify an
 imported recipe for dietary or allergy filtering.
+
+## Online photo search (optional)
+
+The photo search is off by default and can be turned on or off in Settings.
+While it is on, recipe pages offer "find photo online". Only when you open or
+run that search does MorphCook contact **Wikimedia Commons**
+(`commons.wikimedia.org`, with previews from `thumb.wikimedia.org` or
+`upload.wikimedia.org`). Wikimedia receives the search words (by default the
+dish name), the preview addresses and your IP address, under the
+[Wikimedia Foundation privacy policy](https://foundation.wikimedia.org/wiki/Policy:Privacy_policy).
+No profile, cookbook, account or device identifier is sent, and requests go to
+no other host. Previews are not written to storage; only the photo you choose
+is kept. That photo is stored in private app storage together with its title,
+author, license and source page, and that credit stays with the photo in
+backups and recipe shares. Turning the option off stops further searches;
+remove a saved photo from its recipe page.
 
 ## PDF imports and expert assessment notes
 
