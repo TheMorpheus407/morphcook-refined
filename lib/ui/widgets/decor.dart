@@ -181,6 +181,43 @@ class SectionHeader extends StatelessWidget {
   }
 }
 
+/// Independent, keyboard- and screen-reader-accessible card bookmark.
+class BookmarkBadge extends StatelessWidget {
+  final bool saved;
+  final String label;
+  final VoidCallback? onTap;
+
+  const BookmarkBadge({
+    super.key,
+    required this.saved,
+    required this.label,
+    this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final morph = MorphTheme.of(context);
+    return Semantics(
+      container: true,
+      label: label,
+      button: true,
+      selected: saved,
+      onTap: onTap,
+      child: ExcludeSemantics(
+        child: IconButton(
+          tooltip: label,
+          onPressed: onTap,
+          iconSize: 20,
+          icon: Icon(
+            saved ? Icons.bookmark : Icons.bookmark_border,
+            color: saved ? morph.colors.terracotta : morph.colors.ink,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 /// Polaroid-ish card: white frame, striped photo area, handwritten caption,
 /// slight deterministic rotation (level in readable mode).
 class PolaroidCard extends StatelessWidget {
@@ -192,6 +229,9 @@ class PolaroidCard extends StatelessWidget {
   final int rotationSeed;
   final double photoHeight;
   final Widget? photo;
+  final bool saved;
+  final VoidCallback? onBookmarkTap;
+  final String? bookmarkLabel;
 
   const PolaroidCard({
     super.key,
@@ -203,7 +243,10 @@ class PolaroidCard extends StatelessWidget {
     this.rotationSeed = 0,
     this.photoHeight = 110,
     this.photo,
-  });
+    this.saved = false,
+    this.onBookmarkTap,
+    this.bookmarkLabel,
+  }) : assert(onBookmarkTap == null || bookmarkLabel != null);
 
   @override
   Widget build(BuildContext context) {
@@ -238,6 +281,16 @@ class PolaroidCard extends StatelessWidget {
                   children: [
                     photo ??
                         StripedPlaceholder(color: stripe, height: photoHeight),
+                    if (onBookmarkTap != null)
+                      Positioned(
+                        top: 2,
+                        right: 2,
+                        child: BookmarkBadge(
+                          saved: saved,
+                          label: bookmarkLabel!,
+                          onTap: onBookmarkTap,
+                        ),
+                      ),
                     if (badge != null)
                       Positioned(
                         top: 6,
