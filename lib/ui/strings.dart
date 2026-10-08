@@ -132,13 +132,13 @@ class S {
     'onlinePhotos': 'online photos',
     'imageSearch': 'find recipe photos online',
     'imageSearchHint':
-        'adds “find photo online” to recipes. nothing is requested until you search. a search sends only its words to Wikimedia Commons, which also sees your IP address. found photos are freely licensed, credited, and may not show this exact recipe.',
+        'adds “find photo online” to recipes. nothing is requested until you search. a search sends only its words to Wikimedia Commons, which also sees your IP address. results include author and free-license information and may not show this exact recipe.',
     'findRecipeImage': 'find photo online',
     'photoSearchTitle': 'find a photo',
     'photoSearchQuery': 'search words',
     'photoSearchButton': 'search',
     'photoSearchHint':
-        'Freely licensed photos from Wikimedia Commons. They show the dish as someone else made it and may not match this recipe. Searching sends only these words; previews load from Wikimedia. The chosen photo is saved on your device with its credit.',
+        'Photos with free-license information from Wikimedia Commons. They show the dish as someone else made it and may not match this recipe. Searching sends only these words; previews load from Wikimedia. The chosen photo is saved on your device with its credit.',
     'photoSearchEmpty':
         'No suitable photos found. Try fewer or English words, such as the dish name.',
     'photoSearchFailed':
@@ -457,13 +457,13 @@ class S {
     'onlinePhotos': 'Online-Fotos',
     'imageSearch': 'Rezeptfotos online suchen',
     'imageSearchHint':
-        'fügt Rezepten „Foto online suchen“ hinzu. erst eine Suche stellt Anfragen. sie sendet nur ihre Suchwörter an Wikimedia Commons, das dabei auch deine IP-Adresse sieht. gefundene Fotos sind frei lizenziert, mit Urheberangabe, und zeigen eventuell nicht genau dieses Rezept.',
+        'fügt Rezepten „Foto online suchen“ hinzu. erst eine Suche stellt Anfragen. sie sendet nur ihre Suchwörter an Wikimedia Commons, das dabei auch deine IP-Adresse sieht. die Ergebnisse enthalten Urheber- und freie Lizenzangaben und zeigen eventuell nicht genau dieses Rezept.',
     'findRecipeImage': 'Foto online suchen',
     'photoSearchTitle': 'Foto finden',
     'photoSearchQuery': 'Suchwörter',
     'photoSearchButton': 'suchen',
     'photoSearchHint':
-        'Frei lizenzierte Fotos von Wikimedia Commons. Sie zeigen das Gericht, wie jemand anderes es gemacht hat, und passen eventuell nicht zu diesem Rezept. Die Suche sendet nur diese Wörter; Vorschauen werden von Wikimedia geladen. Das gewählte Foto wird mit Urheberangabe auf deinem Gerät gespeichert.',
+        'Fotos mit Angaben zu freien Lizenzen von Wikimedia Commons. Sie zeigen das Gericht, wie jemand anderes es gemacht hat, und passen eventuell nicht zu diesem Rezept. Die Suche sendet nur diese Wörter; Vorschauen werden von Wikimedia geladen. Das gewählte Foto wird mit Urheberangabe auf deinem Gerät gespeichert.',
     'photoSearchEmpty':
         'Keine passenden Fotos gefunden. Versuche weniger oder englische Wörter, etwa den Namen des Gerichts.',
     'photoSearchFailed':

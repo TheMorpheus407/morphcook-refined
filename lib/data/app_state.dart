@@ -272,6 +272,7 @@ class AppState extends ChangeNotifier {
     };
     final addedRecipes = <PersonalRecipe>[];
     final addedImages = <String, RecipeImage>{};
+    var enrichedCredit = false;
 
     for (final incoming in data.recipes) {
       final image = incomingImages[incoming.id];
@@ -286,7 +287,10 @@ class AppState extends ChangeNotifier {
         if (recipeShareContent(existing) == content &&
             (image == null ||
                 existingImage == null ||
-                listEquals(existingImage.bytes, image.bytes))) {
+                (listEquals(existingImage.bytes, image.bytes) &&
+                    (existingImage.credit == null ||
+                        image.credit == null ||
+                        existingImage.credit == image.credit)))) {
           break;
         }
         if (conflict > 0 && image != null) {
@@ -303,6 +307,22 @@ class AppState extends ChangeNotifier {
             : remapSharedRecipe(incoming, targetId);
         nextRecipes[targetId] = copy;
         addedRecipes.add(copy);
+      }
+      final existingImage = nextImages[targetId];
+      if (image != null &&
+          existingImage != null &&
+          existingImage.credit == null &&
+          image.credit != null &&
+          listEquals(existingImage.bytes, image.bytes)) {
+        // Enrich attribution for identical bytes without rewriting the binary.
+        // Keep the local edit date and preserve rollback through metadata only.
+        nextImages[targetId] = RecipeImage(
+          recipeId: targetId,
+          bytes: existingImage.bytes,
+          updatedAt: existingImage.updatedAt,
+          credit: image.credit,
+        );
+        enrichedCredit = true;
       }
       if (image != null && !nextImages.containsKey(targetId)) {
         final copy = targetId == image.recipeId
@@ -333,7 +353,9 @@ class AppState extends ChangeNotifier {
             maxBackupImageBytes) {
       throw const RecipeShareException(RecipeShareFailure.tooLarge);
     }
-    if (addedRecipes.isEmpty && addedImages.isEmpty) return 0;
+    if (addedRecipes.isEmpty && addedImages.isEmpty && !enrichedCredit) {
+      return 0;
+    }
     final now = DateTime.now();
     final nextSaved = [
       ..._saved,
@@ -547,7 +569,7 @@ class AppState extends ChangeNotifier {
           recipeId: item.recipeId,
           bytes: bytes,
           updatedAt: item.updatedAt,
-          credit: item.credit,
+          credit: item.creditFor(bytes),
         );
       } on RecipeImageException {
         // Ignore a corrupt local entry; the striped fallback remains usable.

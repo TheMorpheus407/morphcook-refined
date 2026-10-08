@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
+import 'package:pointycastle/digests/sha256.dart';
+
 const maxRecipeImageBytes = 8 * 1024 * 1024;
 const maxBackupRecipeImages = 100;
 // Keep portable, base64-backed exports within a mobile-safe memory envelope.
@@ -48,7 +50,7 @@ class RecipeImageCredit {
     required this.sourceUrl,
   });
 
-  /// Returns null unless every field is present, bounded and the source page
+  /// Returns null unless required fields are present, bounded and the source page
   /// is an HTTPS link. Text is collapsed to one line for display.
   static RecipeImageCredit? tryCreate({
     required String title,
@@ -154,12 +156,14 @@ class RecipeImageMetadata {
   final String mimeType;
   final DateTime updatedAt;
   final RecipeImageCredit? credit;
+  final String? creditBytesDigest;
 
   const RecipeImageMetadata({
     required this.recipeId,
     required this.mimeType,
     required this.updatedAt,
     this.credit,
+    this.creditBytesDigest,
   });
 
   factory RecipeImageMetadata.fromJson(Map<String, dynamic> json) =>
@@ -168,6 +172,9 @@ class RecipeImageMetadata {
         mimeType: json['mime_type'] as String,
         updatedAt: DateTime.parse(json['updated_at'] as String).toUtc(),
         credit: RecipeImageCredit.tryFromJson(json['credit']),
+        creditBytesDigest: json['credit_bytes_digest'] is String
+            ? json['credit_bytes_digest'] as String
+            : null,
       );
 
   Map<String, dynamic> toJson() => {
@@ -175,8 +182,23 @@ class RecipeImageMetadata {
     'mime_type': mimeType,
     'updated_at': updatedAt.toUtc().toIso8601String(),
     if (credit != null) 'credit': credit!.toJson(),
+    if (creditBytesDigest != null) 'credit_bytes_digest': creditBytesDigest,
   };
+
+  /// New metadata binds credit to its bytes, preventing stale crash recovery.
+  /// Legacy metadata without a digest retains its existing usable credit.
+  RecipeImageCredit? creditFor(List<int> bytes) =>
+      credit != null &&
+          (creditBytesDigest == null ||
+              creditBytesDigest == _imageDigest(bytes))
+      ? credit
+      : null;
 }
+
+String _imageDigest(List<int> bytes) => SHA256Digest()
+    .process(bytes is Uint8List ? bytes : Uint8List.fromList(bytes))
+    .map((byte) => byte.toRadixString(16).padLeft(2, '0'))
+    .join();
 
 /// A local photo override for either a bundled or personal recipe.
 class RecipeImage {
@@ -239,7 +261,7 @@ class RecipeImage {
     mimeType: metadata.mimeType,
     bytes: bytes,
     updatedAt: metadata.updatedAt,
-    credit: metadata.credit,
+    credit: metadata.creditFor(bytes),
   );
 
   factory RecipeImage.fromBackupJson(Map<String, dynamic> json) {
@@ -262,6 +284,7 @@ class RecipeImage {
     mimeType: mimeType,
     updatedAt: updatedAt,
     credit: credit,
+    creditBytesDigest: credit == null ? null : _imageDigest(bytes),
   );
 
   Map<String, dynamic> toBackupJson() => {

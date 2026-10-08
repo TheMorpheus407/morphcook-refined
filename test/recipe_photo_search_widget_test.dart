@@ -38,6 +38,7 @@ class FakePhotoSearch extends RecipePhotoSearch {
     candidate('broken preview', author: null),
   ];
   RecipePhotoSearchFailure? fail;
+  Uint8List? previewBytes;
 
   @override
   Future<List<RecipePhotoCandidate>> search(
@@ -57,7 +58,7 @@ class FakePhotoSearch extends RecipePhotoSearch {
         RecipePhotoSearchFailure.unsupportedImage,
       );
     }
-    return testPngBytes();
+    return previewBytes ?? testPngBytes();
   }
 }
 
@@ -78,15 +79,107 @@ Widget app(AppState state, Widget child) => ChangeNotifierProvider.value(
 Finder get searchButton => find.byKey(const ValueKey('search-recipe-image'));
 Finder get useButton => find.byKey(const ValueKey('use-found-photo'));
 
+// Platform image decoding runs outside the test's fake clock. Await actual
+// image streams so assertions test a displayed preview, not just its download.
+Future<void> settlePhotos(WidgetTester tester) async {
+  await tester.pumpAndSettle();
+  final images = tester.widgetList<Image>(find.byType(Image)).toList();
+  if (images.isNotEmpty) {
+    final context = tester.element(find.byType(Image).first);
+    await tester.runAsync(() async {
+      for (final image in images) {
+        await precacheImage(image.image, context, onError: (_, _) {});
+      }
+    });
+    await tester.pumpAndSettle();
+  }
+}
+
 void main() {
   WidgetController.hitTestWarningShouldBeFatal = true;
+
+  testWidgets('decoder failures cannot replace a working photo', (
+    tester,
+  ) async {
+    final state = (await tester.runAsync(() => photoState(enabled: true)))!;
+    await state.setRecipeImage('doener-vegan', testPngBytes());
+    final broken = testPngBytes()..[24] = 3; // Invalid PNG bit depth.
+    // Header validation accepts this; the platform decoder cannot display it.
+    RecipeImage(
+      recipeId: 'doener-vegan',
+      bytes: broken,
+      updatedAt: DateTime.now(),
+    );
+    final search = FakePhotoSearch()
+      ..results = [candidate('undecodable')]
+      ..previewBytes = broken;
+    await tester.pumpWidget(
+      app(
+        state,
+        RecipePhotoSearchScreen(
+          recipeId: 'doener-vegan',
+          initialQuery: 'doener',
+          photoSearch: search,
+        ),
+      ),
+    );
+    await settlePhotos(tester);
+    expect(find.text(en('photoPreviewFailed')), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('found-photo-0')));
+    await tester.pump();
+    expect(tester.widget<FilledButton>(useButton).onPressed, isNull);
+    expect(
+      state.recipeImageFor('doener-vegan')!.bytes,
+      orderedEquals(testPngBytes()),
+    );
+  });
+
+  testWidgets('search and save controls scroll with a landscape keyboard', (
+    tester,
+  ) async {
+    tester.view
+      ..physicalSize = const Size(690 * 3, 360 * 3)
+      ..devicePixelRatio = 3
+      ..viewInsets = const FakeViewPadding(bottom: 210 * 3);
+    addTearDown(tester.view.reset);
+    final state = (await tester.runAsync(() => photoState(enabled: true)))!;
+    await state.updateProfile(state.profile.copyWith(lang: 'de'));
+    await tester.pumpWidget(
+      app(
+        state,
+        RecipePhotoSearchScreen(
+          recipeId: 'doener-vegan',
+          initialQuery: 'doener',
+          photoSearch: FakePhotoSearch(),
+        ),
+      ),
+    );
+    await settlePhotos(tester);
+    expect(tester.takeException(), isNull);
+    await tester.ensureVisible(find.byKey(const ValueKey('run-photo-search')));
+    await settlePhotos(tester);
+    await tester.tap(find.byKey(const ValueKey('run-photo-search')));
+    await settlePhotos(tester);
+    await tester.scrollUntilVisible(
+      useButton,
+      100,
+      scrollable: find
+          .descendant(
+            of: find.byType(CustomScrollView),
+            matching: find.byType(Scrollable),
+          )
+          .first,
+    );
+    await settlePhotos(tester);
+    expect(tester.takeException(), isNull);
+  });
 
   testWidgets('settings switch enables photo search and persists the choice', (
     tester,
   ) async {
     final state = (await tester.runAsync(photoState))!;
     await tester.pumpWidget(app(state, const Scaffold(body: SettingsScreen())));
-    await tester.pumpAndSettle();
+    await settlePhotos(tester);
 
     final label = find.text(en('imageSearch'));
     await tester.scrollUntilVisible(
@@ -102,13 +195,13 @@ void main() {
     expect(tester.widget<Switch>(toggle).value, isFalse);
 
     await tester.tap(toggle);
-    await tester.pumpAndSettle();
+    await settlePhotos(tester);
     expect(state.profile.imageSearchEnabled, isTrue);
     expect(state.store.loadProfile()?.imageSearchEnabled, isTrue);
     expect(tester.widget<Switch>(toggle).value, isTrue);
 
     await tester.tap(toggle);
-    await tester.pumpAndSettle();
+    await settlePhotos(tester);
     expect(state.store.loadProfile()?.imageSearchEnabled, isFalse);
   });
 
@@ -120,7 +213,7 @@ void main() {
     await tester.pumpWidget(
       app(state, DishDetailScreen(dishId: 'doener', photoSearch: search)),
     );
-    await tester.pumpAndSettle();
+    await settlePhotos(tester);
 
     expect(searchButton, findsNothing);
     expect(find.byKey(const ValueKey('set-recipe-image')), findsOneWidget);
@@ -129,7 +222,7 @@ void main() {
 
     // Enabling it in settings shows the action without contacting anyone.
     await state.updateProfile(state.profile.copyWith(imageSearchEnabled: true));
-    await tester.pumpAndSettle();
+    await settlePhotos(tester);
     expect(searchButton, findsOneWidget);
     expect(search.queries, isEmpty);
   });
@@ -142,10 +235,10 @@ void main() {
     await tester.pumpWidget(
       app(state, DishDetailScreen(dishId: 'doener', photoSearch: search)),
     );
-    await tester.pumpAndSettle();
+    await settlePhotos(tester);
 
     await tester.tap(searchButton);
-    await tester.pumpAndSettle();
+    await settlePhotos(tester);
     expect(find.byType(RecipePhotoSearchScreen), findsOneWidget);
     // Bundled dishes search with their English name.
     expect(search.queries, [state.dishById('doener')!.name.of('en')]);
@@ -168,7 +261,7 @@ void main() {
       findsOneWidget,
     );
     await tester.tap(useButton);
-    await tester.pumpAndSettle();
+    await settlePhotos(tester);
 
     expect(find.byType(RecipePhotoSearchScreen), findsNothing);
     expect(find.text(en('photoSearchSaved')), findsOneWidget);
@@ -186,6 +279,16 @@ void main() {
     );
     expect(find.byKey(const ValueKey('recipe-image-credit')), findsOneWidget);
 
+    // Disabling search retains the saved photo and credit without a request.
+    await state.updateProfile(
+      state.profile.copyWith(imageSearchEnabled: false),
+    );
+    await settlePhotos(tester);
+    expect(searchButton, findsNothing);
+    expect(state.recipeImages.single.credit, candidate('Doener plate').credit);
+    expect(search.queries, hasLength(1));
+    expect(search.downloads, hasLength(2));
+
     // A device photo replaces the found one and removes its credit.
     await tester.pumpWidget(
       app(
@@ -198,9 +301,9 @@ void main() {
         ),
       ),
     );
-    await tester.pumpAndSettle();
+    await settlePhotos(tester);
     await tester.tap(find.byKey(const ValueKey('set-recipe-image')));
-    await tester.pumpAndSettle();
+    await settlePhotos(tester);
     expect(state.recipeImages.single.credit, isNull);
     expect(find.byKey(const ValueKey('recipe-image-credit')), findsNothing);
   });
@@ -220,13 +323,13 @@ void main() {
         ),
       ),
     );
-    await tester.pumpAndSettle();
+    await settlePhotos(tester);
     expect(search.queries, ['Döner Kebab']);
     expect(find.text(en('photoSearchFailed')), findsOneWidget);
 
     search.fail = RecipePhotoSearchFailure.busy;
     await tester.tap(find.byKey(const ValueKey('run-photo-search')));
-    await tester.pumpAndSettle();
+    await settlePhotos(tester);
     expect(find.text(en('photoSearchFailed')), findsNothing);
     expect(find.text(en('photoSearchBusy')), findsOneWidget);
 
@@ -238,14 +341,14 @@ void main() {
       'kebab plate',
     );
     await tester.testTextInput.receiveAction(TextInputAction.search);
-    await tester.pumpAndSettle();
+    await settlePhotos(tester);
     expect(search.queries.last, 'kebab plate');
     expect(find.text(en('photoSearchBusy')), findsNothing);
     expect(find.text(en('photoSearchEmpty')), findsOneWidget);
 
     search.results = [candidate('Kebab plate')];
     await tester.tap(find.byKey(const ValueKey('run-photo-search')));
-    await tester.pumpAndSettle();
+    await settlePhotos(tester);
     expect(search.queries, hasLength(4));
     expect(find.text(en('photoSearchEmpty')), findsNothing);
     expect(find.byKey(const ValueKey('found-photo-0')), findsOneWidget);
@@ -265,9 +368,9 @@ void main() {
         ),
       ),
     );
-    await tester.pumpAndSettle();
+    await settlePhotos(tester);
     await tester.tap(find.byKey(const ValueKey('run-photo-search')));
-    await tester.pumpAndSettle();
+    await settlePhotos(tester);
     expect(search.queries, isEmpty);
     expect(find.text(en('photoSearchEmpty')), findsNothing);
   });
@@ -302,11 +405,11 @@ void main() {
         ),
       ),
     );
-    await tester.pumpAndSettle();
+    await settlePhotos(tester);
     await tester.tap(find.byKey(const ValueKey('found-photo-0')));
     await tester.pump();
     await tester.tap(useButton);
-    await tester.pumpAndSettle();
+    await settlePhotos(tester);
 
     expect(find.byType(RecipePhotoSearchScreen), findsOneWidget);
     expect(find.text(en('recipeImageStorageFull')), findsOneWidget);
@@ -342,15 +445,15 @@ void main() {
     await tester.pumpWidget(
       app(state, DishDetailScreen(dishId: 'doener', photoSearch: search)),
     );
-    await tester.pumpAndSettle();
+    await settlePhotos(tester);
     expect(searchButton, findsOneWidget);
     expect(find.byKey(const ValueKey('remove-recipe-image')), findsOneWidget);
     expect(find.byKey(const ValueKey('recipe-image-credit')), findsOneWidget);
 
     await tester.tap(searchButton);
-    await tester.pumpAndSettle();
+    await settlePhotos(tester);
     await tester.tap(find.byKey(const ValueKey('found-photo-0')));
-    await tester.pumpAndSettle();
+    await settlePhotos(tester);
     expect(find.text(const S('de')('useThisPhoto')), findsOneWidget);
   });
 

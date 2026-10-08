@@ -74,6 +74,18 @@ Future<AppState> _state(MemoryStore store) async {
   return state;
 }
 
+class FailingCreditStore extends MemoryStore {
+  bool failNext = false;
+  @override
+  Future<void> putCollections(Map<String, String> collections) async {
+    if (failNext) {
+      failNext = false;
+      throw StateError('metadata write failed');
+    }
+    await super.putCollections(collections);
+  }
+}
+
 void main() {
   group('Commons response parsing', () {
     test('keeps search ranking, strips HTML and campaign parameters', () {
@@ -134,14 +146,74 @@ void main() {
         },
       }, allowImage: _commonsHosts);
 
-      expect(results.map((r) => r.credit.title), [
-        'Kept.webp',
-        'Anonymous.jpg',
-      ]);
-      expect(results.last.credit.author, isNull);
+      expect(results.map((r) => r.credit.title), ['Kept.webp']);
+    });
+
+    List<RecipePhotoCandidate> parsePages(List<Map<String, dynamic>> pages) =>
+        parseRecipePhotoSearch({
+          'query': {'pages': pages},
+        }, allowImage: _commonsHosts);
+
+    test('new candidates require nonempty authors after HTML cleanup', () {
+      for (final artist in <String?>[null, '  ', '<span></span>']) {
+        expect(
+          parsePages([_page(index: 1, title: 'NoAuthor.jpg', artist: artist)]),
+          isEmpty,
+        );
+      }
+    });
+
+    test('new candidates require recognized free-license metadata', () {
+      for (final license in [
+        'All rights reserved',
+        'CC BY-NC 4.0',
+        'CC BY-ND 4.0',
+        'CC BY-SA 9.0',
+        'Unknown',
+        'CC BY 4.0 / custom',
+      ]) {
+        expect(
+          parsePages([
+            _page(index: 1, title: 'Unsupported.jpg', license: license),
+          ]),
+          isEmpty,
+          reason: license,
+        );
+      }
+      for (final license in [
+        'CC0',
+        'CC0 1.0',
+        for (final family in ['CC BY', 'CC BY-SA'])
+          for (final version in ['1.0', '2.0', '2.5', '3.0', '4.0'])
+            '$family $version',
+      ]) {
+        expect(
+          parsePages([_page(index: 1, title: 'Allowed.jpg', license: license)]),
+          hasLength(1),
+          reason: license,
+        );
+      }
+    });
+
+    test('new candidates require a Commons file source page', () {
+      for (final source in [
+        'https://example.com/file',
+        'https://commons.wikimedia.org/wiki/Main_Page',
+      ]) {
+        expect(
+          parsePages([_page(index: 1, title: 'Foreign.jpg', source: source)]),
+          isEmpty,
+        );
+      }
+    });
+
+    test('rejected candidates do not suppress a valid duplicate preview', () {
       expect(
-        results.last.credit.label('en'),
-        'Photo: Anonymous.jpg · CC BY-SA 4.0 · Wikimedia Commons',
+        parsePages([
+          _page(index: 1, title: 'Duplicate.jpg', license: null),
+          _page(index: 2, title: 'Duplicate.jpg'),
+        ]).single.credit.author,
+        'Ann',
       );
     });
 
@@ -477,6 +549,21 @@ void main() {
       );
     });
 
+    test('legacy stored credit survives without a byte digest', () {
+      final image = RecipeImage(
+        recipeId: 'doener-vegan',
+        bytes: testPngBytes(),
+        updatedAt: DateTime.utc(2026),
+        credit: _credit(),
+      );
+      final legacy = image.metadata.toJson()..remove('credit_bytes_digest');
+      final restored = RecipeImage.fromStored(
+        RecipeImageMetadata.fromJson(legacy),
+        image.bytes,
+      );
+      expect(restored.credit, _credit());
+    });
+
     test('backup JSON keeps the credit; damaged credits keep the photo', () {
       final image = RecipeImage(
         recipeId: 'doener-vegan',
@@ -519,6 +606,175 @@ void main() {
   });
 
   group('stored found photos', () {
+    test(
+      'interrupted replacement never applies stale credit to new bytes',
+      () async {
+        final store = MemoryStore();
+        final state = await _state(store);
+        await state.setRecipeImage(
+          'doener-vegan',
+          testPngBytes(),
+          credit: _credit(),
+        );
+        // Simulate termination after replacing the binary, before metadata write.
+        final replacement = testPngBytes();
+        final changed = [...replacement, 0];
+        final image = RecipeImage(
+          recipeId: 'doener-vegan',
+          bytes: changed,
+          updatedAt: DateTime.now(),
+        );
+        await store.putRecipeImageBytes('doener-vegan', image.bytes);
+        final reloaded = await _state(store);
+        expect(
+          reloaded.recipeImageFor('doener-vegan')!.bytes,
+          orderedEquals(changed),
+        );
+        expect(reloaded.recipeImageFor('doener-vegan')!.credit, isNull);
+        expect(reloaded.buildBackup().recipeImages.single.credit, isNull);
+      },
+    );
+
+    test(
+      'an identical shared photo gains missing credit without another recipe',
+      () async {
+        final sender = await _state(MemoryStore());
+        await sender.toggleSaved('doener-vegan');
+        await sender.setRecipeImage('doener-vegan', testPngBytes());
+        final uncredited = await collectRecipeShare(
+          sender,
+          recipeId: 'doener-vegan',
+          includeImages: true,
+        );
+        final store = MemoryStore();
+        final recipient = await _state(store);
+        expect(await recipient.importSharedRecipes(uncredited), 1);
+        await sender.setRecipeImage(
+          'doener-vegan',
+          testPngBytes(),
+          credit: _credit(),
+        );
+        final credited = await collectRecipeShare(
+          sender,
+          recipeId: 'doener-vegan',
+          includeImages: true,
+        );
+        expect(await recipient.importSharedRecipes(credited), 0);
+        expect(recipient.personalRecipes, hasLength(1));
+        expect(recipient.recipeImages.single.credit, _credit());
+        expect((await _state(store)).recipeImages.single.credit, _credit());
+        expect(await recipient.importSharedRecipes(credited), 0);
+      },
+    );
+
+    test(
+      'conflicting credits get idempotent copies; null and equal credits preserve existing',
+      () async {
+        final sender = await _state(MemoryStore());
+        await sender.setRecipeImage(
+          'doener-vegan',
+          testPngBytes(),
+          credit: _credit(),
+        );
+        final data = await collectRecipeShare(
+          sender,
+          recipeId: 'doener-vegan',
+          includeImages: true,
+        );
+        final recipient = await _state(MemoryStore());
+        await recipient.importSharedRecipes(data);
+        expect(await recipient.importSharedRecipes(data), 0);
+        final noCredit = RecipeShareData(
+          recipes: data.recipes,
+          images: [
+            RecipeImage(
+              recipeId: data.images.single.recipeId,
+              bytes: testPngBytes(),
+              updatedAt: DateTime.now(),
+            ),
+          ],
+        );
+        expect(await recipient.importSharedRecipes(noCredit), 0);
+        expect(recipient.recipeImages.single.credit, _credit());
+        final original = _credit().toJson();
+        for (final change in [
+          {'title': 'Different title'},
+          {'author': 'Bo'},
+          {'license': 'CC BY 4.0'},
+          {'provider': 'Different provider'},
+          {'source_url': 'https://commons.wikimedia.org/wiki/File:Other.jpg'},
+        ]) {
+          final credit = RecipeImageCredit.tryFromJson({
+            ...original,
+            ...change,
+          })!;
+          final changed = RecipeShareData(
+            recipes: data.recipes,
+            images: [
+              RecipeImage(
+                recipeId: data.images.single.recipeId,
+                bytes: testPngBytes(),
+                updatedAt: DateTime.now(),
+                credit: credit,
+              ),
+            ],
+          );
+          expect(
+            await recipient.importSharedRecipes(changed),
+            1,
+            reason: change.toString(),
+          );
+          expect(await recipient.importSharedRecipes(changed), 0);
+          expect(
+            recipient.recipeImages.map((image) => image.credit),
+            contains(credit),
+          );
+        }
+        expect(recipient.personalRecipes, hasLength(6));
+        expect(recipient.recipeImages.first.credit, _credit());
+      },
+    );
+
+    test(
+      'credit enrichment rollback keeps existing binary and metadata',
+      () async {
+        final sender = await _state(MemoryStore());
+        await sender.setRecipeImage('doener-vegan', testPngBytes());
+        final uncredited = await collectRecipeShare(
+          sender,
+          recipeId: 'doener-vegan',
+          includeImages: true,
+        );
+        final store = FailingCreditStore();
+        final recipient = await _state(store);
+        await recipient.importSharedRecipes(uncredited);
+        await sender.setRecipeImage(
+          'doener-vegan',
+          testPngBytes(),
+          credit: _credit(),
+        );
+        final credited = await collectRecipeShare(
+          sender,
+          recipeId: 'doener-vegan',
+          includeImages: true,
+        );
+        store.failNext = true;
+        await expectLater(
+          recipient.importSharedRecipes(credited),
+          throwsStateError,
+        );
+        expect(recipient.recipeImages.single.credit, isNull);
+        final reloaded = await _state(store);
+        expect(
+          reloaded.recipeImages.single.bytes,
+          orderedEquals(testPngBytes()),
+        );
+        expect(reloaded.recipeImages.single.credit, isNull);
+        expect(await recipient.importSharedRecipes(credited), 0);
+        expect(recipient.recipeImages.single.credit, _credit());
+      },
+    );
+
     test('credit survives restart, backup restore and replacement', () async {
       final store = MemoryStore();
       final state = await _state(store);

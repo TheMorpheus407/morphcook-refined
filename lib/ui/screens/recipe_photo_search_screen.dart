@@ -112,9 +112,7 @@ class _RecipePhotoSearchScreenState extends State<RecipePhotoSearchScreen> {
         final generation = _generation;
         try {
           final bytes = await _search.download(candidate);
-          if (mounted && generation == _generation) {
-            setState(() => _loaded[candidate] = bytes);
-          }
+          if (!mounted || generation != _generation) return null;
           return bytes;
         } catch (_) {
           return null;
@@ -158,102 +156,110 @@ class _RecipePhotoSearchScreenState extends State<RecipePhotoSearchScreen> {
     final selected = _selected;
     final ready = selected != null && _loaded.containsKey(selected);
 
+    final keyboardVisible = MediaQuery.viewInsetsOf(context).bottom > 0;
+    final footer = Padding(
+      padding: const EdgeInsets.fromLTRB(20, 4, 20, 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (selected != null)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 6),
+              child: Text(
+                selected.credit.label(lang),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: morph.text.mono.copyWith(fontSize: 11),
+              ),
+            ),
+          FilledButton.icon(
+            key: const ValueKey('use-found-photo'),
+            onPressed: ready && !_saving ? () => _use(s) : null,
+            icon: const Icon(Icons.check),
+            label: Text(
+              selected == null ? s('choosePhotoFirst') : s('useThisPhoto'),
+            ),
+          ),
+        ],
+      ),
+    );
+    final content = CustomScrollView(
+      slivers: [
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 4, 20, 8),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  s('photoSearchHint'),
+                  style: morph.text.mono.copyWith(
+                    fontSize: 12,
+                    color: morph.colors.inkSoft,
+                  ),
+                ),
+                TextField(
+                  key: const ValueKey('photo-search-query'),
+                  controller: _query,
+                  enabled: !_saving,
+                  textInputAction: TextInputAction.search,
+                  maxLength: maxRecipePhotoQueryLength,
+                  onSubmitted: (_) => _run(),
+                  decoration: InputDecoration(
+                    labelText: s('photoSearchQuery'),
+                    counterText: '',
+                    suffixIcon: IconButton(
+                      key: const ValueKey('run-photo-search'),
+                      tooltip: s('photoSearchButton'),
+                      icon: const Icon(Icons.search),
+                      onPressed: _saving ? null : _run,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        if (_searching)
+          const SliverToBoxAdapter(child: LinearProgressIndicator()),
+        if (_failure != null || (_searched && !_searching && _results.isEmpty))
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              child: Text(
+                s(_failure ?? 'photoSearchEmpty'),
+                key: const ValueKey('photo-search-message'),
+              ),
+            ),
+          ),
+        SliverPadding(
+          padding: const EdgeInsets.fromLTRB(20, 4, 20, 12),
+          sliver: SliverGrid.builder(
+            gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+              maxCrossAxisExtent: 220,
+              mainAxisSpacing: 12,
+              crossAxisSpacing: 12,
+              childAspectRatio: 0.78,
+            ),
+            itemCount: _results.length,
+            itemBuilder: (context, index) =>
+                _tile(_results[index], index, lang, s),
+          ),
+        ),
+        if (keyboardVisible) SliverToBoxAdapter(child: footer),
+      ],
+    );
     return Scaffold(
       appBar: AppBar(title: Text(s('photoSearchTitle'))),
       body: SafeArea(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 4, 20, 8),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
+        child: keyboardVisible
+            ? content
+            : Column(
                 children: [
-                  Text(
-                    s('photoSearchHint'),
-                    style: morph.text.mono.copyWith(
-                      fontSize: 12,
-                      color: morph.colors.inkSoft,
-                    ),
-                  ),
-                  TextField(
-                    key: const ValueKey('photo-search-query'),
-                    controller: _query,
-                    enabled: !_saving,
-                    textInputAction: TextInputAction.search,
-                    maxLength: maxRecipePhotoQueryLength,
-                    onSubmitted: (_) => _run(),
-                    decoration: InputDecoration(
-                      labelText: s('photoSearchQuery'),
-                      counterText: '',
-                      suffixIcon: IconButton(
-                        key: const ValueKey('run-photo-search'),
-                        tooltip: s('photoSearchButton'),
-                        icon: const Icon(Icons.search),
-                        onPressed: _saving ? null : _run,
-                      ),
-                    ),
-                  ),
+                  Expanded(child: content),
+                  footer,
                 ],
               ),
-            ),
-            if (_searching) const LinearProgressIndicator(),
-            if (_failure != null ||
-                (_searched && !_searching && _results.isEmpty))
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 12,
-                ),
-                child: Text(
-                  s(_failure ?? 'photoSearchEmpty'),
-                  key: const ValueKey('photo-search-message'),
-                ),
-              ),
-            Expanded(
-              child: GridView.builder(
-                padding: const EdgeInsets.fromLTRB(20, 4, 20, 12),
-                gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                  maxCrossAxisExtent: 220,
-                  mainAxisSpacing: 12,
-                  crossAxisSpacing: 12,
-                  childAspectRatio: 0.78,
-                ),
-                itemCount: _results.length,
-                itemBuilder: (context, index) =>
-                    _tile(_results[index], index, lang, s),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 4, 20, 12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  if (selected != null)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 6),
-                      child: Text(
-                        selected.credit.label(lang),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: morph.text.mono.copyWith(fontSize: 11),
-                      ),
-                    ),
-                  FilledButton.icon(
-                    key: const ValueKey('use-found-photo'),
-                    onPressed: ready && !_saving ? () => _use(s) : null,
-                    icon: const Icon(Icons.check),
-                    label: Text(
-                      selected == null
-                          ? s('choosePhotoFirst')
-                          : s('useThisPhoto'),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }
@@ -290,12 +296,40 @@ class _RecipePhotoSearchScreenState extends State<RecipePhotoSearchScreen> {
                   builder: (context, snapshot) {
                     final bytes = snapshot.data;
                     if (bytes != null) {
+                      final generation = _generation;
                       return Image.memory(
                         bytes,
                         fit: BoxFit.cover,
                         cacheWidth: 480,
                         gaplessPlayback: true,
-                        errorBuilder: (_, __, ___) => _unavailable(s),
+                        // A completed download may still fail platform decoding.
+                        // Enable selection only after a frame is displayed.
+                        frameBuilder: (_, child, frame, _) {
+                          if (frame != null &&
+                              !_loaded.containsKey(candidate)) {
+                            WidgetsBinding.instance.addPostFrameCallback((_) {
+                              if (mounted && generation == _generation) {
+                                setState(() => _loaded[candidate] = bytes);
+                              }
+                            });
+                          }
+                          return child;
+                        },
+                        errorBuilder: (_, __, ___) {
+                          if (_loaded.containsKey(candidate)) {
+                            WidgetsBinding.instance.addPostFrameCallback((_) {
+                              if (mounted && generation == _generation) {
+                                setState(() {
+                                  _loaded.remove(candidate);
+                                  if (identical(_selected, candidate)) {
+                                    _selected = null;
+                                  }
+                                });
+                              }
+                            });
+                          }
+                          return _unavailable(s);
+                        },
                       );
                     }
                     if (snapshot.connectionState == ConnectionState.done) {

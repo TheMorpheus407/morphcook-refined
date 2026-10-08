@@ -9,8 +9,8 @@ Döner, gluten-free Alfredo, keto burger — and your profile decides which
 variant of each dish you see. You keep the whole cookbook.
 
 The app is an offline-first Flutter app (Android + iOS): no backend, no
-accounts, no telemetry, no runtime AI, no network permission. The bilingual
-(EN/DE) recipe corpus ships bundled with the app.
+accounts, no telemetry, no runtime AI. Network access is used only for explicit
+imports and online photo searches. The bilingual (EN/DE) recipe corpus ships bundled with the app.
 
 This repository is the maintained, actively-refined build of MorphCook. It was
 originally produced by Claude Fable 5 as one entry in a
@@ -76,8 +76,9 @@ amounts retain their original text and are explicitly marked as unscaled.
 Settings → online photos → turn on "find recipe photos online" (off by default).
 Recipe pages then offer "find photo online", which searches Wikimedia Commons for
 the dish name. Refine the words, choose a preview and save it for offline use.
-Found photos are freely licensed and may not show the exact recipe; their author,
-license and source page are shown on the recipe page and travel with the photo.
+Results carry supported free-license metadata and may not show the exact recipe;
+Their author, license and source page are shown on the recipe page and travel
+with the photo.
 
 ## Recipe sharing
 

@@ -187,10 +187,14 @@ class RecipePhotoSearch {
 }
 
 const _supportedPhotoMimeTypes = {'image/jpeg', 'image/png', 'image/webp'};
+// Explicit supported metadata labels, without guessing at unknown terms.
+final _supportedPhotoLicense = RegExp(
+  r'^(?:CC BY(?:-SA)? (?:1\.0|2\.0|2\.5|3\.0|4\.0)|CC0(?: 1\.0)?)$',
+);
 
 /// Reads a MediaWiki `formatversion=2` image search response. Results without
-/// a license, a source page or an allowed HTTPS preview are left out, so every
-/// candidate can be credited.
+/// an author, supported license metadata, a Commons source page or an allowed
+/// HTTPS preview are left out, so every new candidate can be credited.
 List<RecipePhotoCandidate> parseRecipePhotoSearch(
   Object? decoded, {
   required bool Function(Uri uri) allowImage,
@@ -224,26 +228,36 @@ List<RecipePhotoCandidate> parseRecipePhotoSearch(
     final imageUrl = _withoutCampaignParameters(Uri.tryParse(preview));
     if (imageUrl == null ||
         !isFetchableHttpUri(imageUrl) ||
-        !allowImage(imageUrl) ||
-        !seen.add(imageUrl)) {
+        !allowImage(imageUrl)) {
       continue;
     }
     final metadata = info['extmetadata'];
     final fields = metadata is Map<String, dynamic>
         ? metadata
         : const <String, dynamic>{};
+    final author = _metadataText(fields['Artist']);
+    final license = _metadataText(fields['LicenseShortName']);
+    final sourceUrl = _withoutCampaignParameters(Uri.tryParse(source));
+    if (author == null ||
+        license == null ||
+        !_supportedPhotoLicense.hasMatch(license) ||
+        sourceUrl == null ||
+        sourceUrl.scheme != 'https' ||
+        sourceUrl.host != 'commons.wikimedia.org' ||
+        !sourceUrl.path.startsWith('/wiki/File:')) {
+      continue;
+    }
     final title = page['title'];
     final credit = RecipeImageCredit.tryCreate(
       title:
           _metadataText(fields['ObjectName']) ??
           (title is String ? title.replaceFirst(RegExp('^File:'), '') : ''),
-      author: _metadataText(fields['Artist']),
-      license: _metadataText(fields['LicenseShortName']) ?? '',
+      author: author,
+      license: license,
       provider: recipePhotoProvider,
-      sourceUrl:
-          _withoutCampaignParameters(Uri.tryParse(source))?.toString() ?? '',
+      sourceUrl: sourceUrl.toString(),
     );
-    if (credit == null) continue;
+    if (credit == null || !seen.add(imageUrl)) continue;
     final index = page['index'];
     ranked.add((
       index is int ? index : position,
