@@ -28,6 +28,11 @@ class _HomeScreenState extends State<HomeScreen> {
   Profile? _variantProfile;
   int _loadGeneration = 0;
 
+  // Featured pick pinned for the session so a refresh after returning from a
+  // dish (or a time-of-day score change) cannot move a card between the
+  // featured slot and its category. Reset on profile change / pull-to-refresh.
+  String? _featuredId;
+
   // Selected browse category; null shows the full sectioned feed.
   String? _category;
 
@@ -38,11 +43,12 @@ class _HomeScreenState extends State<HomeScreen> {
     if (!identical(profile, _variantProfile)) {
       _variantProfile = profile;
       _loaded = false;
+      _featuredId = null;
       _recompute();
     }
   }
 
-  Future<void> _recompute() async {
+  Future<void> _recompute({bool reselectFeatured = false}) async {
     final state = context.read<AppState>();
     final profile = state.profile;
     final generation = ++_loadGeneration;
@@ -55,8 +61,38 @@ class _HomeScreenState extends State<HomeScreen> {
         !identical(profile, state.profile)) {
       return;
     }
+    // Commit the featured pick together with the completed variant map.
+    // Builds during loading must not select from the previous profile/map.
+    final eligibleDishes =
+        state.corpus.dishes.where((dish) => result[dish.id] != null).toList()
+          ..sort((a, b) {
+            final tier = a.frequencyTier.compareTo(b.frequencyTier);
+            return tier != 0 ? tier : a.id.compareTo(b.id);
+          });
+    Dish? featured;
+    for (final dish in eligibleDishes) {
+      if (!reselectFeatured && dish.id == _featuredId) featured = dish;
+    }
+    if (featured == null) {
+      var bestScore = -1;
+      for (final dish in eligibleDishes) {
+        final recipe = result[dish.id];
+        if (recipe == null) continue;
+        final score = state.ranker.totalScore(
+          recipe,
+          state.profile,
+          state.history,
+        );
+        if (score > bestScore) {
+          bestScore = score;
+          featured = dish;
+        }
+      }
+    }
+
     setState(() {
       _best = result;
+      _featuredId = featured?.id;
       _loaded = true;
     });
   }
@@ -74,21 +110,9 @@ class _HomeScreenState extends State<HomeScreen> {
             return tier != 0 ? tier : a.id.compareTo(b.id);
           });
 
-    Dish? featured;
-    var bestScore = -1;
-    for (final dish in visibleDishes) {
-      final recipe = _best[dish.id];
-      if (recipe == null) continue;
-      final score = state.ranker.totalScore(
-        recipe,
-        state.profile,
-        state.history,
-      );
-      if (score > bestScore) {
-        bestScore = score;
-        featured = dish;
-      }
-    }
+    final featured = visibleDishes
+        .where((dish) => dish.id == _featuredId)
+        .firstOrNull;
 
     final showAll = _category == null;
 
@@ -111,7 +135,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return SafeArea(
       child: RefreshIndicator(
         color: MorphTheme.of(context).colors.terracotta,
-        onRefresh: _recompute,
+        onRefresh: () => _recompute(reselectFeatured: true),
         child: ListView(
           padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
           children: [
@@ -303,14 +327,10 @@ class _HomeScreenState extends State<HomeScreen> {
                     fallbackCaption: dish.caption.of(lang),
                     semanticLabel: recipe.title.of(lang),
                   ),
-                  Positioned(
-                    top: 2,
-                    right: 2,
-                    child: BookmarkBadge(
-                      saved: state.isSaved(recipe.id),
-                      label: _bookmarkLabel(recipe, state),
-                      onTap: () => _toggleBookmark(recipe, state),
-                    ),
+                  BookmarkSlot(
+                    saved: state.isSaved(recipe.id),
+                    label: _bookmarkLabel(recipe, state),
+                    onTap: () => _toggleBookmark(recipe, state),
                   ),
                 ],
               ),
