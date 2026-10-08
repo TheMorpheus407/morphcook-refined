@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:morphcook/data/app_state.dart';
+import 'package:morphcook/data/corpus.dart';
 import 'package:morphcook/data/store.dart';
 import 'package:morphcook/models/personal_recipe.dart';
 import 'package:morphcook/models/profile.dart';
@@ -11,8 +12,8 @@ import 'package:provider/provider.dart';
 
 import 'helpers.dart';
 
-// Match the disclosed origin without prescribing prose, widget keys, or a
-// particular AI model that the corpus does not identify.
+// Match AI authorship without requiring widget keys or naming a particular
+// AI model that the corpus does not identify.
 final _englishAi = RegExp(
   r'\bAI\b|artificial intelligence',
   caseSensitive: false,
@@ -26,8 +27,23 @@ final _anyAi = RegExp(
   caseSensitive: false,
 );
 
+// Wait for file reads started by the detail screen on the real event loop.
+// Keep non-core partitions unloaded until the screen actually requests them.
+class _AttributionAssetBundle extends FileAssetBundle {
+  final reads = <Future<String>>[];
+
+  @override
+  Future<String> loadString(String key, {bool cache = true}) {
+    final read = super.loadString(key, cache: cache);
+    reads.add(read);
+    return read;
+  }
+}
+
 Future<AppState> _state(String lang) async {
-  final state = AppState(store: MemoryStore(), corpus: await loadRealCorpus());
+  final corpus = CorpusRepository(bundle: _AttributionAssetBundle());
+  await corpus.initialize();
+  final state = AppState(store: MemoryStore(), corpus: corpus);
   await state.load();
   await state.completeOnboarding(Profile(lang: lang));
   return state;
@@ -38,15 +54,18 @@ Future<void> _openDetail(
   AppState state,
   String dishId,
 ) async {
-  await tester.pumpWidget(
-    ChangeNotifierProvider.value(
-      value: state,
-      child: MaterialApp(
-        theme: morphThemeData(MorphColors.light),
-        home: DishDetailScreen(key: ValueKey(dishId), dishId: dishId),
+  await tester.runAsync(() async {
+    await tester.pumpWidget(
+      ChangeNotifierProvider.value(
+        value: state,
+        child: MaterialApp(
+          theme: morphThemeData(MorphColors.light),
+          home: DishDetailScreen(key: ValueKey(dishId), dishId: dishId),
+        ),
       ),
-    ),
-  );
+    );
+    await Future.wait((state.corpus.bundle as _AttributionAssetBundle).reads);
+  });
   await tester.pumpAndSettle();
 }
 
@@ -94,9 +113,41 @@ void main() {
         ),
         reason: 'The disclosure must not deny AI authorship.',
       );
+      expect(
+        origin,
+        contains(
+          lang == 'de'
+              ? 'Ein Nachkochen durch Menschen ist nicht bestätigt.'
+              : 'Human cooking verification is not provided.',
+        ),
+        reason: 'The disclosure must not imply verified human cooking.',
+      );
       await tester.ensureVisible(disclosure.first);
       await tester.pumpAndSettle();
       expect(disclosure.hitTestable(), findsWidgets);
+    });
+
+    testWidgets('on-demand bundled recipe discloses its origin in $lang', (
+      tester,
+    ) async {
+      final state = (await tester.runAsync(() => _state(lang)))!;
+      addTearDown(state.dispose);
+      final dish = state.dishById('risotto')!;
+      expect(state.corpus.isPartitionLoaded(dish.partitionId), isFalse);
+      expect(
+        dish.recipeIds.map(state.corpus.loadedRecipeById),
+        everyElement(isNull),
+      );
+
+      await _openDetail(tester, state, dish.id);
+
+      expect(state.corpus.isPartitionLoaded(dish.partitionId), isTrue);
+      expect(find.text('bundledRecipeOrigin'), findsNothing);
+      final disclosure = find.text(S(lang)('bundledRecipeOrigin'));
+      expect(disclosure, findsOneWidget);
+      await tester.ensureVisible(disclosure);
+      await tester.pumpAndSettle();
+      expect(disclosure.hitTestable(), findsOneWidget);
     });
   }
 
