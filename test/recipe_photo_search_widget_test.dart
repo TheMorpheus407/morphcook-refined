@@ -76,6 +76,21 @@ class DelayedPhotoSearch extends FakePhotoSearch {
   }
 }
 
+class OrderedPhotoSearch extends DelayedPhotoSearch {
+  final searches = <Completer<List<RecipePhotoCandidate>>>[];
+
+  @override
+  Future<List<RecipePhotoCandidate>> search(
+    String query, {
+    String lang = 'en',
+  }) {
+    queries.add(query);
+    final pending = Completer<List<RecipePhotoCandidate>>();
+    searches.add(pending);
+    return pending.future;
+  }
+}
+
 Future<Uint8List> differentPngBytes() async {
   final recorder = ui.PictureRecorder();
   Canvas(recorder).drawColor(Colors.red, BlendMode.src);
@@ -126,6 +141,206 @@ Future<void> settlePhotos(WidgetTester tester) async {
 
 void main() {
   WidgetController.hitTestWarningShouldBeFatal = true;
+
+  for (final preview in [false, true]) {
+    for (final fails in [false, true]) {
+      testWidgets(
+        'disposed search ignores completion: preview=$preview fails=$fails',
+        (tester) async {
+          final state = (await tester.runAsync(
+            () => photoState(enabled: true),
+          ))!;
+          final search = OrderedPhotoSearch();
+          final photo = candidate('Pending photo');
+          final download = Completer<Uint8List>();
+          search.pending[photo] = download;
+          await tester.pumpWidget(
+            app(
+              state,
+              RecipePhotoSearchScreen(
+                recipeId: 'doener-vegan',
+                initialQuery: 'words',
+                photoSearch: search,
+              ),
+            ),
+          );
+          await tester.pump();
+          if (preview) {
+            search.searches.single.complete([photo]);
+            await tester.pump();
+            await tester.pump();
+            expect(search.downloads, ['Pending photo']);
+          }
+          await tester.pumpWidget(app(state, const SizedBox()));
+          if (preview) {
+            if (fails) {
+              download.completeError(
+                const RecipePhotoSearchException(
+                  RecipePhotoSearchFailure.network,
+                ),
+              );
+            } else {
+              download.complete(testPngBytes());
+            }
+          } else if (fails) {
+            search.searches.single.completeError(
+              const RecipePhotoSearchException(
+                RecipePhotoSearchFailure.network,
+              ),
+            );
+          } else {
+            search.searches.single.complete([photo]);
+          }
+          await tester.pumpAndSettle();
+          expect(tester.takeException(), isNull);
+          expect(state.recipeImages, isEmpty);
+          expect(search.downloads, preview ? ['Pending photo'] : isEmpty);
+        },
+      );
+    }
+  }
+
+  for (final olderFirst in [false, true]) {
+    for (final oldFails in [false, true]) {
+      for (final newFails in [false, true]) {
+        testWidgets(
+          'latest search wins: olderFirst=$olderFirst oldFails=$oldFails newFails=$newFails',
+          (tester) async {
+            final state = (await tester.runAsync(
+              () => photoState(enabled: true),
+            ))!;
+            final search = OrderedPhotoSearch();
+            await tester.pumpWidget(
+              app(
+                state,
+                RecipePhotoSearchScreen(
+                  recipeId: 'doener-vegan',
+                  initialQuery: 'old words',
+                  photoSearch: search,
+                ),
+              ),
+            );
+            await tester.pump();
+            await tester.tap(find.byKey(const ValueKey('run-photo-search')));
+            await tester.pump();
+            expect(search.searches, hasLength(2));
+            void finish(int index, bool fails) {
+              if (fails) {
+                search.searches[index].completeError(
+                  const RecipePhotoSearchException(
+                    RecipePhotoSearchFailure.network,
+                  ),
+                );
+              } else {
+                search.searches[index].complete([
+                  candidate(index == 0 ? 'Old photo' : 'New photo'),
+                ]);
+              }
+            }
+
+            if (olderFirst) {
+              finish(0, oldFails);
+              await tester.pump();
+              expect(search.downloads, isEmpty);
+              expect(find.byType(LinearProgressIndicator), findsOneWidget);
+              expect(find.text(en('photoSearchFailed')), findsNothing);
+              finish(1, newFails);
+            } else {
+              finish(1, newFails);
+              await settlePhotos(tester);
+              finish(0, oldFails);
+            }
+            await settlePhotos(tester);
+            expect(find.byType(LinearProgressIndicator), findsNothing);
+            expect(search.downloads, newFails ? isEmpty : ['New photo']);
+            expect(
+              find.text(en('photoSearchFailed')),
+              newFails ? findsOneWidget : findsNothing,
+            );
+            expect(state.recipeImages, isEmpty);
+            if (!newFails) {
+              await tester.tap(find.byKey(const ValueKey('found-photo-0')));
+              await tester.pump();
+              expect(
+                tester.widget<FilledButton>(useButton).onPressed,
+                isNotNull,
+              );
+            }
+            expect(tester.takeException(), isNull);
+          },
+        );
+      }
+    }
+  }
+
+  for (final oldFinishesFirst in [false, true]) {
+    for (final oldFails in [false, true]) {
+      testWidgets(
+        'stale download stays discarded: oldFinishesFirst=$oldFinishesFirst oldFails=$oldFails',
+        (tester) async {
+          final state = (await tester.runAsync(
+            () => photoState(enabled: true),
+          ))!;
+          final oldPhoto = candidate('Old pending');
+          final newPhoto = candidate('New pending', author: 'Bea');
+          final oldDownload = Completer<Uint8List>();
+          final newDownload = Completer<Uint8List>();
+          final search = DelayedPhotoSearch()
+            ..results = [oldPhoto]
+            ..pending[oldPhoto] = oldDownload
+            ..pending[newPhoto] = newDownload;
+          await tester.pumpWidget(
+            app(state, DishDetailScreen(dishId: 'doener', photoSearch: search)),
+          );
+          await settlePhotos(tester);
+          await tester.tap(searchButton);
+          await tester.pump();
+          await tester.pump(const Duration(milliseconds: 400));
+          search.results = [newPhoto];
+          await tester.tap(find.byKey(const ValueKey('run-photo-search')));
+          await tester.pump();
+          await tester.pump();
+          void finishOld() {
+            if (oldFails) {
+              oldDownload.completeError(
+                const RecipePhotoSearchException(
+                  RecipePhotoSearchFailure.network,
+                ),
+              );
+            } else {
+              oldDownload.complete(testPngBytes());
+            }
+          }
+
+          if (oldFinishesFirst) {
+            finishOld();
+            await tester.pump();
+            expect(
+              tester
+                  .widget<InkWell>(find.byKey(const ValueKey('found-photo-0')))
+                  .onTap,
+              isNull,
+            );
+          }
+          final newBytes = (await tester.runAsync(differentPngBytes))!;
+          newDownload.complete(newBytes);
+          await settlePhotos(tester);
+          if (!oldFinishesFirst) {
+            finishOld();
+            await settlePhotos(tester);
+          }
+          await tester.tap(find.byKey(const ValueKey('found-photo-0')));
+          await tester.pump();
+          await tester.tap(useButton);
+          await settlePhotos(tester);
+          expect(state.recipeImages.single.bytes, orderedEquals(newBytes));
+          expect(state.recipeImages.single.credit, newPhoto.credit);
+          expect(search.downloads, ['Old pending', 'New pending']);
+          expect(tester.takeException(), isNull);
+        },
+      );
+    }
+  }
 
   for (final outcome in [
     'success',

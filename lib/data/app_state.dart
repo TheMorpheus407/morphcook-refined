@@ -920,6 +920,14 @@ class AppState extends ChangeNotifier {
     final oldImageIds = _recipeImages.keys.toSet();
     final nextImageIds = nextRecipeImages.keys.toSet();
     try {
+      if (_recipeImages.values.any((image) => image.credit != null)) {
+        // A restore can overwrite several legacy photos before its collection
+        // write. Bind all existing credits first, including entries whose
+        // bytes have not yet been replaced if the binary batch is interrupted.
+        await store.putCollections({
+          'recipe_image_metadata': oldCollections['recipe_image_metadata']!,
+        });
+      }
       await store.putRecipeImageBytesBatch({
         for (final image in nextRecipeImages.values)
           image.recipeId: image.bytes,
