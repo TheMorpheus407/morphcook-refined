@@ -48,7 +48,7 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  Future<void> _recompute() async {
+  Future<void> _recompute({bool reselectFeatured = false}) async {
     final state = context.read<AppState>();
     final profile = state.profile;
     final generation = ++_loadGeneration;
@@ -61,8 +61,38 @@ class _HomeScreenState extends State<HomeScreen> {
         !identical(profile, state.profile)) {
       return;
     }
+    // Commit the featured pick together with the completed variant map.
+    // Builds during loading must not select from the previous profile/map.
+    final eligibleDishes =
+        state.corpus.dishes.where((dish) => result[dish.id] != null).toList()
+          ..sort((a, b) {
+            final tier = a.frequencyTier.compareTo(b.frequencyTier);
+            return tier != 0 ? tier : a.id.compareTo(b.id);
+          });
+    Dish? featured;
+    for (final dish in eligibleDishes) {
+      if (!reselectFeatured && dish.id == _featuredId) featured = dish;
+    }
+    if (featured == null) {
+      var bestScore = -1;
+      for (final dish in eligibleDishes) {
+        final recipe = result[dish.id];
+        if (recipe == null) continue;
+        final score = state.ranker.totalScore(
+          recipe,
+          state.profile,
+          state.history,
+        );
+        if (score > bestScore) {
+          bestScore = score;
+          featured = dish;
+        }
+      }
+    }
+
     setState(() {
       _best = result;
+      _featuredId = featured?.id;
       _loaded = true;
     });
   }
@@ -80,27 +110,9 @@ class _HomeScreenState extends State<HomeScreen> {
             return tier != 0 ? tier : a.id.compareTo(b.id);
           });
 
-    Dish? featured;
-    for (final dish in visibleDishes) {
-      if (dish.id == _featuredId) featured = dish;
-    }
-    if (featured == null) {
-      var bestScore = -1;
-      for (final dish in visibleDishes) {
-        final recipe = _best[dish.id];
-        if (recipe == null) continue;
-        final score = state.ranker.totalScore(
-          recipe,
-          state.profile,
-          state.history,
-        );
-        if (score > bestScore) {
-          bestScore = score;
-          featured = dish;
-        }
-      }
-      _featuredId = featured?.id;
-    }
+    final featured = visibleDishes
+        .where((dish) => dish.id == _featuredId)
+        .firstOrNull;
 
     final showAll = _category == null;
 
@@ -123,10 +135,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return SafeArea(
       child: RefreshIndicator(
         color: MorphTheme.of(context).colors.terracotta,
-        onRefresh: () {
-          _featuredId = null;
-          return _recompute();
-        },
+        onRefresh: () => _recompute(reselectFeatured: true),
         child: ListView(
           padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
           children: [

@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:ui' show Tristate;
 
 import 'package:flutter/material.dart';
@@ -10,7 +9,6 @@ import 'package:morphcook/data/corpus.dart';
 import 'package:morphcook/data/store.dart';
 import 'package:morphcook/logic/ranking.dart';
 import 'package:morphcook/main.dart';
-import 'package:morphcook/models/collections.dart';
 import 'package:morphcook/models/dish.dart';
 import 'package:morphcook/models/profile.dart';
 import 'package:morphcook/models/recipe.dart';
@@ -30,8 +28,8 @@ class ReversedCorpus extends CorpusRepository {
   List<Dish> get dishes => super.dishes.reversed.toList();
 }
 
-class DelayedVariantState extends AppState {
-  DelayedVariantState({required super.store, required super.corpus});
+class DelayedVariantState extends ClockedAppState {
+  DelayedVariantState({required super.store, required super.corpus, super.now});
 
   Completer<void>? pause;
   bool _paused = false;
@@ -51,13 +49,38 @@ class ClockedAppState extends AppState {
   ClockedAppState({
     required super.store,
     required super.corpus,
-    required DateTime Function() now,
+    DateTime Function()? now,
   }) : _ranker = Ranker(now: now);
 
   final Ranker _ranker;
 
   @override
   Ranker get ranker => _ranker;
+}
+
+String featuredRecipeId(WidgetTester tester) => tester
+    .widget<RecipeCover>(
+      find
+          .descendant(
+            of: find.byType(HomeScreen),
+            matching: find.byType(RecipeCover),
+          )
+          .first,
+    )
+    .recipeId;
+
+Future<Recipe> topRecommendation(AppState state) async {
+  final dishes = state.corpus.dishes.toList()
+    ..sort((a, b) {
+      final tier = a.frequencyTier.compareTo(b.frequencyTier);
+      return tier != 0 ? tier : a.id.compareTo(b.id);
+    });
+  final variants = <Recipe>[];
+  for (final dish in dishes) {
+    final recipe = await state.bestVariant(dish.id);
+    if (recipe != null) variants.add(recipe);
+  }
+  return state.ranker.pickBest(variants, state.profile, state.history)!;
 }
 
 void main() {
@@ -170,8 +193,8 @@ void main() {
       scrolls++;
     }
     expect(
-      scrolls,
-      lessThan(20),
+      filledBookmark.evaluate(),
+      isNotEmpty,
       reason: 'loop must end because the finder matched, not the bound',
     );
 
@@ -272,7 +295,7 @@ void main() {
   });
 
   testWidgets(
-    'featured recommendation still updates across meal times and cooking history',
+    'featured dish stays pinned until refresh across meal times and history',
     (tester) async {
       var now = DateTime(2026, 10, 5, 10);
       final state = (await tester.runAsync(() async {
@@ -287,16 +310,18 @@ void main() {
       }))!;
       await tester.pumpWidget(app(state, const RootShell()));
       await tester.pumpAndSettle();
-      String featuredId() => tester
-          .widget<RecipeCover>(
-            find
-                .descendant(
-                  of: find.byType(HomeScreen),
-                  matching: find.byType(RecipeCover),
-                )
-                .first,
-          )
-          .recipeId;
+      String featuredId() => featuredRecipeId(tester);
+      Future<void> refresh() async {
+        final scrollable = find
+            .descendant(
+              of: find.byType(HomeScreen),
+              matching: find.byType(Scrollable),
+            )
+            .first;
+        await tester.drag(scrollable, const Offset(0, 400));
+        await tester.pumpAndSettle();
+      }
+
       Future<void> openAndReturn() async {
         final dish = state.corpus.dishById(
           state.loadedRecipeById(featuredId())!.dishId,
@@ -316,40 +341,166 @@ void main() {
       }
 
       final morning = featuredId();
+      final morningDish = state.loadedRecipeById(morning)!.dishId;
       now = DateTime(2026, 10, 5, 18);
       await openAndReturn();
-      final evening = featuredId();
       expect(
-        evening,
-        isNot(morning),
-        reason: 'the featured dish remains time-aware',
+        state.loadedRecipeById(featuredId())!.dishId,
+        morningDish,
+        reason: 'detail return preserves the dish across a meal-time change',
       );
-      // An equally ranked alternative with old cooking history earns the
-      // existing staleness bonus. Loading it simulates restored local history.
-      final featured = state.loadedRecipeById(evening)!;
+      final expectedEvening = await topRecommendation(state);
+      expect(expectedEvening.dishId, isNot(morningDish));
+      await refresh();
+      expect(
+        featuredId(),
+        expectedEvening.id,
+        reason: 'pull-to-refresh reselects using the current meal time',
+      );
+
+      final eveningDish = expectedEvening.dishId;
+      final alternative = state.corpus.loadedRecipes.firstWhere(
+        (r) =>
+            r.dishId != eveningDish &&
+            state.matcher.isVisible(r, state.profile) &&
+            state.ranker.totalScore(r, state.profile, []) ==
+                state.ranker.totalScore(expectedEvening, state.profile, []),
+      );
+      await state.logCooked(alternative.id);
+      final later = state.history.single.cookedAt.add(const Duration(days: 40));
+      now = DateTime(later.year, later.month, later.day, 18);
+      await tester.pumpAndSettle();
+      await openAndReturn();
+      expect(
+        state.loadedRecipeById(featuredId())!.dishId,
+        eveningDish,
+        reason: 'history changes and detail return preserve the featured dish',
+      );
+      final expectedHistory = await topRecommendation(state);
+      expect(expectedHistory.id, alternative.id);
+      await refresh();
+      expect(
+        featuredId(),
+        expectedHistory.id,
+        reason: 'pull-to-refresh incorporates cooking history',
+      );
+    },
+  );
+
+  for (final profile in [
+    const Profile(maxTimeMinutes: 90),
+    const Profile(maxTimeMinutes: 15, calorieTarget: 600),
+  ]) {
+    testWidgets(
+      'profile reset ranks completed variants (${profile.maxTimeMinutes} min)',
+      (tester) async {
+        final state = (await tester.runAsync(() async {
+          final state = DelayedVariantState(
+            store: MemoryStore(),
+            corpus: await loadRealCorpus(),
+            now: () => DateTime(2026, 10, 5, 10),
+          );
+          await state.load();
+          await state.completeOnboarding(const Profile());
+          return state;
+        }))!;
+        await tester.pumpWidget(app(state, const Scaffold(body: HomeScreen())));
+        await tester.pumpAndSettle();
+        final oldVariants = <Recipe>[];
+        for (final dish in state.corpus.dishes) {
+          final recipe = await state.bestVariant(dish.id);
+          if (recipe != null) oldVariants.add(recipe);
+        }
+
+        state.pause = Completer<void>();
+        await state.updateProfile(profile);
+        await tester.pumpAndSettle();
+        expect(state._paused, isTrue);
+        expect(find.byType(SkeletonBlock), findsWidgets);
+        final expected = await topRecommendation(state);
+        final stale = state.ranker.pickBest(
+          oldVariants,
+          state.profile,
+          state.history,
+        )!;
+        expect(
+          expected.dishId,
+          isNot(stale.dishId),
+          reason: 'fixture must distinguish current and stale variant rankings',
+        );
+
+        state.pause!.complete();
+        await tester.pumpAndSettle();
+        expect(
+          featuredRecipeId(tester),
+          expected.id,
+          reason: 'the featured pick must use the completed new-profile map',
+        );
+      },
+    );
+  }
+
+  testWidgets(
+    'refresh ranks completed variants despite an intervening rebuild',
+    (tester) async {
+      var now = DateTime(2026, 10, 5, 18);
+      final state = (await tester.runAsync(() async {
+        final state = DelayedVariantState(
+          store: MemoryStore(),
+          corpus: await loadRealCorpus(),
+          now: () => now,
+        );
+        await state.load();
+        await state.completeOnboarding(const Profile());
+        return state;
+      }))!;
+      await tester.pumpWidget(app(state, const Scaffold(body: HomeScreen())));
+      await tester.pumpAndSettle();
+      final before = featuredRecipeId(tester);
+      final featured = state.loadedRecipeById(before)!;
       final alternative = state.corpus.loadedRecipes.firstWhere(
         (r) =>
             r.dishId != featured.dishId &&
             state.matcher.isVisible(r, state.profile) &&
             state.ranker.totalScore(r, state.profile, []) ==
-                state.ranker.totalScore(featured, state.profile, []),
+                state.ranker.totalScore(featured, state.profile, []) &&
+            state.ranker
+                    .pickBest(
+                      state.corpus.loadedRecipes.where(
+                        (v) => v.dishId == r.dishId,
+                      ),
+                      state.profile,
+                      [],
+                    )!
+                    .id !=
+                r.id,
       );
-      await state.store.putCollection(
-        'history',
-        jsonEncode([
-          HistoryEntry(
-            recipeId: alternative.id,
-            cookedAt: now.subtract(const Duration(days: 40)),
-          ).toJson(),
-        ]),
-      );
-      await state.load();
+      // Cooking an equally ranked, nondefault variant long ago changes both
+      // the best variant for its dish and the overall featured recommendation.
+      await state.logCooked(alternative.id);
+      final later = state.history.single.cookedAt.add(const Duration(days: 40));
+      now = DateTime(later.year, later.month, later.day, 18);
       await tester.pumpAndSettle();
-      await openAndReturn();
+      expect(featuredRecipeId(tester), before);
+      final expected = await topRecommendation(state);
+      expect(expected.id, alternative.id);
+
+      state.pause = Completer<void>();
+      final refresh = tester
+          .widget<RefreshIndicator>(find.byType(RefreshIndicator))
+          .onRefresh();
+      await tester.pump();
+      expect(state._paused, isTrue);
+      // A bookmark notification can rebuild Home before the new map arrives.
+      await state.toggleSaved(before);
+      await tester.pump();
+      state.pause!.complete();
+      await tester.pumpAndSettle();
+      await refresh;
       expect(
-        featuredId(),
-        alternative.id,
-        reason: 'history still influences the featured recommendation',
+        featuredRecipeId(tester),
+        expected.id,
+        reason: 'refresh must not repin from the stale map during a rebuild',
       );
     },
   );
@@ -536,13 +687,14 @@ void main() {
   );
 
   testWidgets(
-    'feed order is identical after detail return with unchanged ranking inputs',
+    'feed order is identical after detail return across a meal-time change',
     (tester) async {
+      var now = DateTime(2026, 10, 5, 10);
       final state = (await tester.runAsync(() async {
         final state = ClockedAppState(
           store: MemoryStore(),
           corpus: await loadRealCorpus(),
-          now: () => DateTime(2026, 10, 5, 10),
+          now: () => now,
         );
         await state.load();
         await state.completeOnboarding(const Profile());
@@ -568,6 +720,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.byType(DishDetailScreen), findsOneWidget);
 
+      now = DateTime(2026, 10, 5, 18);
       await tester.pageBack();
       await tester.pumpAndSettle();
       expect(find.byType(HomeScreen), findsOneWidget);

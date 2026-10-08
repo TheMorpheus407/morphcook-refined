@@ -31,9 +31,11 @@ const userManualSections = [
     titleDe: 'Erste Schritte',
     bodyEn:
         'Set your language and preferences during setup or later in Settings. Browse dishes from the home screen or use search. Open a dish to see its recipe and available variants. Save recipes to your Cookbook, organise meals in the plan, and start cook mode from a recipe.\n\n'
+        'The featured dish stays in place while the home screen remains open, including when you return from a recipe or switch tabs. Its variant follows your profile. Pull down on the home screen to choose again using the current time and cooking history. Changing your profile or restarting the app also chooses again.\n\n'
         'The bundled recipes, your saved data, and this manual work offline. Website imports and external actions such as opening a feedback draft need the corresponding connection. Search this manual by a word such as PDF, timer, or backup; tap a heading to read the instructions.',
     bodyDe:
         'Wähle Sprache und Vorlieben bei der Einrichtung oder später in den Einstellungen. Stöbere auf der Startseite oder nutze die Suche. Öffne ein Gericht für sein Rezept und die verfügbaren Varianten. Speichere Rezepte im Kochbuch, organisiere Mahlzeiten im Plan und starte den Kochmodus aus einem Rezept.\n\n'
+        'Das hervorgehobene Gericht bleibt an seinem Platz, solange die Startseite geöffnet ist, auch wenn du von einem Rezept zurückkehrst oder den Tab wechselst. Seine Variante folgt deinem Profil. Ziehe die Startseite nach unten, um anhand der aktuellen Tageszeit und des Kochverlaufs neu auszuwählen. Auch eine Profiländerung oder ein App-Neustart wählt neu aus.\n\n'
         'Die mitgelieferten Rezepte, deine gespeicherten Daten und diese Anleitung funktionieren offline. Website-Importe und externe Aktionen wie das Öffnen eines Feedback-Entwurfs benötigen die entsprechende Verbindung. Suche hier nach einem Wort wie PDF, Timer oder Backup und tippe eine Überschrift an.',
   ),
   ManualSection(
