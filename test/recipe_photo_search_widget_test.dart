@@ -241,6 +241,69 @@ void main() {
     );
   });
 
+  for (final landscape in [false, true]) {
+    testWidgets('query keeps focus when keyboard opens: landscape=$landscape', (
+      tester,
+    ) async {
+      tester.view
+        ..physicalSize = landscape
+            ? const Size(690 * 3, 360 * 3)
+            : const Size(360 * 3, 690 * 3)
+        ..devicePixelRatio = 3;
+      addTearDown(tester.view.reset);
+      final state = (await tester.runAsync(() => photoState(enabled: true)))!;
+      if (landscape) {
+        await state.updateProfile(state.profile.copyWith(lang: 'de'));
+      }
+      final search = FakePhotoSearch()..results = [];
+      await tester.pumpWidget(
+        app(
+          state,
+          RecipePhotoSearchScreen(
+            recipeId: 'doener-vegan',
+            initialQuery: 'doener',
+            photoSearch: search,
+          ),
+        ),
+      );
+      await settlePhotos(tester);
+      final query = find.byKey(const ValueKey('photo-search-query'));
+      await tester.tap(query);
+      await tester.pump();
+      final editable = find.byType(EditableText);
+      final originalState = tester.state<EditableTextState>(editable);
+      expect(originalState.widget.focusNode.hasFocus, isTrue);
+      expect(tester.testTextInput.isVisible, isTrue);
+
+      // A real tap focuses the field before the OS reports keyboard insets.
+      tester.view.viewInsets = const FakeViewPadding(bottom: 210 * 3);
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+      expect(tester.widget<EditableText>(editable).focusNode.hasFocus, isTrue);
+      expect(tester.testTextInput.isVisible, isTrue);
+      expect(tester.state<EditableTextState>(editable), same(originalState));
+      expect(originalState.widget.focusNode.hasFocus, isTrue);
+      // Send text through the existing input connection, without refocusing.
+      tester.testTextInput.updateEditingValue(
+        const TextEditingValue(
+          text: 'kebab plate',
+          selection: TextSelection.collapsed(offset: 11),
+        ),
+      );
+      await tester.pump();
+      expect(tester.widget<TextField>(query).controller!.text, 'kebab plate');
+      await tester.testTextInput.receiveAction(TextInputAction.search);
+      await settlePhotos(tester);
+      expect(search.queries, ['doener', 'kebab plate']);
+
+      tester.view.viewInsets = const FakeViewPadding();
+      await tester.pumpAndSettle();
+      expect(tester.state<EditableTextState>(editable), same(originalState));
+      expect(tester.widget<TextField>(query).controller!.text, 'kebab plate');
+      expect(tester.takeException(), isNull);
+    });
+  }
+
   testWidgets('search and save controls scroll with a landscape keyboard', (
     tester,
   ) async {

@@ -252,14 +252,14 @@ class _RecipePhotoSearchScreenState extends State<RecipePhotoSearchScreen> {
     return Scaffold(
       appBar: AppBar(title: Text(s('photoSearchTitle'))),
       body: SafeArea(
-        child: keyboardVisible
-            ? content
-            : Column(
-                children: [
-                  Expanded(child: content),
-                  footer,
-                ],
-              ),
+        // Keep the query's ancestors mounted as keyboard insets change, so
+        // its focus and active text input connection survive opening it.
+        child: Column(
+          children: [
+            Expanded(child: content),
+            if (!keyboardVisible) footer,
+          ],
+        ),
       ),
     );
   }
