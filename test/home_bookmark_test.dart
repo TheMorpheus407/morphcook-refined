@@ -163,10 +163,17 @@ void main() {
           matching: find.byType(Scrollable),
         )
         .first;
-    for (var i = 0; i < 20 && filledBookmark.evaluate().isEmpty; i++) {
+    var scrolls = 0;
+    while (scrolls < 20 && filledBookmark.evaluate().isEmpty) {
       await tester.drag(homeScrollable, const Offset(0, -600));
       await tester.pumpAndSettle();
+      scrolls++;
     }
+    expect(
+      scrolls,
+      lessThan(20),
+      reason: 'loop must end because the finder matched, not the bound',
+    );
 
     expect(
       filledBookmark,
@@ -573,4 +580,24 @@ void main() {
       );
     },
   );
+
+  testWidgets('PolaroidCard omits the bookmark when onBookmarkTap is null', (
+    tester,
+  ) async {
+    final state = (await tester.runAsync(onboardedState))!;
+    await tester.pumpWidget(
+      app(
+        state,
+        const Scaffold(
+          body: PolaroidCard(
+            stripe: Colors.red,
+            title: 'Soup',
+            caption: 'caption',
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.byType(BookmarkBadge), findsNothing);
+  });
 }

@@ -28,6 +28,11 @@ class _HomeScreenState extends State<HomeScreen> {
   Profile? _variantProfile;
   int _loadGeneration = 0;
 
+  // Featured pick pinned for the session so a refresh after returning from a
+  // dish (or a time-of-day score change) cannot move a card between the
+  // featured slot and its category. Reset on profile change / pull-to-refresh.
+  String? _featuredId;
+
   // Selected browse category; null shows the full sectioned feed.
   String? _category;
 
@@ -38,6 +43,7 @@ class _HomeScreenState extends State<HomeScreen> {
     if (!identical(profile, _variantProfile)) {
       _variantProfile = profile;
       _loaded = false;
+      _featuredId = null;
       _recompute();
     }
   }
@@ -75,19 +81,25 @@ class _HomeScreenState extends State<HomeScreen> {
           });
 
     Dish? featured;
-    var bestScore = -1;
     for (final dish in visibleDishes) {
-      final recipe = _best[dish.id];
-      if (recipe == null) continue;
-      final score = state.ranker.totalScore(
-        recipe,
-        state.profile,
-        state.history,
-      );
-      if (score > bestScore) {
-        bestScore = score;
-        featured = dish;
+      if (dish.id == _featuredId) featured = dish;
+    }
+    if (featured == null) {
+      var bestScore = -1;
+      for (final dish in visibleDishes) {
+        final recipe = _best[dish.id];
+        if (recipe == null) continue;
+        final score = state.ranker.totalScore(
+          recipe,
+          state.profile,
+          state.history,
+        );
+        if (score > bestScore) {
+          bestScore = score;
+          featured = dish;
+        }
       }
+      _featuredId = featured?.id;
     }
 
     final showAll = _category == null;
@@ -111,7 +123,10 @@ class _HomeScreenState extends State<HomeScreen> {
     return SafeArea(
       child: RefreshIndicator(
         color: MorphTheme.of(context).colors.terracotta,
-        onRefresh: _recompute,
+        onRefresh: () {
+          _featuredId = null;
+          return _recompute();
+        },
         child: ListView(
           padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
           children: [
@@ -303,14 +318,10 @@ class _HomeScreenState extends State<HomeScreen> {
                     fallbackCaption: dish.caption.of(lang),
                     semanticLabel: recipe.title.of(lang),
                   ),
-                  Positioned(
-                    top: 2,
-                    right: 2,
-                    child: BookmarkBadge(
-                      saved: state.isSaved(recipe.id),
-                      label: _bookmarkLabel(recipe, state),
-                      onTap: () => _toggleBookmark(recipe, state),
-                    ),
+                  BookmarkSlot(
+                    saved: state.isSaved(recipe.id),
+                    label: _bookmarkLabel(recipe, state),
+                    onTap: () => _toggleBookmark(recipe, state),
                   ),
                 ],
               ),
