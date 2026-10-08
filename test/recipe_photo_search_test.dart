@@ -1,5 +1,7 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:morphcook/data/app_state.dart';
@@ -83,6 +85,20 @@ class FailingCreditStore extends MemoryStore {
       throw StateError('metadata write failed');
     }
     await super.putCollections(collections);
+  }
+}
+
+class PausingImageStore extends MemoryStore {
+  Completer<void>? imageWritten;
+  Completer<void>? resumeWrite;
+
+  @override
+  Future<void> putRecipeImageBytes(String recipeId, Uint8List bytes) async {
+    await super.putRecipeImageBytes(recipeId, bytes);
+    if (imageWritten case final written?) {
+      written.complete();
+      await resumeWrite!.future;
+    }
   }
 }
 
@@ -632,6 +648,70 @@ void main() {
         );
         expect(reloaded.recipeImageFor('doener-vegan')!.credit, isNull);
         expect(reloaded.buildBackup().recipeImages.single.credit, isNull);
+      },
+    );
+
+    test(
+      'legacy credited replacement is safe before its metadata completes',
+      () async {
+        final store = PausingImageStore();
+        final state = await _state(store);
+        await state.setRecipeImage(
+          'doener-vegan',
+          testPngBytes(),
+          credit: _credit(),
+        );
+        final legacy = state.recipeImages.single.metadata.toJson()
+          ..remove('credit_bytes_digest');
+        await store.putCollections({
+          'recipe_image_metadata': jsonEncode([legacy]),
+        });
+        final legacyState = await _state(store);
+        expect(legacyState.recipeImages.single.credit, _credit());
+        store
+          ..imageWritten = Completer<void>()
+          ..resumeWrite = Completer<void>();
+        final replacement = [...testPngBytes(), 0];
+        final saving = legacyState.setRecipeImage('doener-vegan', replacement);
+        addTearDown(() async {
+          store.resumeWrite!.complete();
+          await saving.timeout(const Duration(seconds: 5));
+        });
+        // Stop at the persistence boundary after writing new bytes. Loading a
+        // second state simulates recovery before the final metadata is written.
+        await store.imageWritten!.future.timeout(const Duration(seconds: 5));
+        final recovered = await _state(store);
+        expect(recovered.recipeImages.single.bytes, orderedEquals(replacement));
+        expect(recovered.recipeImages.single.credit, isNull);
+        expect(recovered.buildBackup().recipeImages.single.credit, isNull);
+      },
+    );
+
+    test(
+      'failed attribution binding preserves the previous credited photo',
+      () async {
+        final store = FailingCreditStore();
+        final state = await _state(store);
+        await state.setRecipeImage(
+          'doener-vegan',
+          testPngBytes(),
+          credit: _credit(),
+        );
+        store.failNext = true;
+        await expectLater(
+          state.setRecipeImage('doener-vegan', [...testPngBytes(), 0]),
+          throwsStateError,
+        );
+        expect(state.recipeImages.single.credit, _credit());
+        final recovered = await _state(store);
+        expect(
+          recovered.recipeImages.single.bytes,
+          orderedEquals(testPngBytes()),
+        );
+        expect(recovered.recipeImages.single.credit, _credit());
+        await state.setRecipeImage('doener-vegan', [...testPngBytes(), 0]);
+        expect(state.recipeImages.single.credit, isNull);
+        expect((await _state(store)).recipeImages.single.credit, isNull);
       },
     );
 

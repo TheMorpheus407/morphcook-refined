@@ -622,6 +622,11 @@ class AppState extends ChangeNotifier {
       _recipeImages.values.map((stored) => stored.metadata.toJson()).toList(),
     );
     try {
+      if (previousImage?.credit != null) {
+        // Bind legacy attribution before overwriting bytes, so an interruption
+        // cannot attach an unbound previous credit to the replacement photo.
+        await store.putCollections({'recipe_image_metadata': previousMetadata});
+      }
       await store.putRecipeImageBytes(recipeId, image.bytes);
       await store.putCollections({'recipe_image_metadata': nextMetadata});
     } catch (_) {
