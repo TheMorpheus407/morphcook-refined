@@ -1,3 +1,6 @@
+import 'dart:convert';
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:morphcook/data/app_state.dart';
@@ -171,8 +174,8 @@ void main() {
       // the current text is an unchanged, wholly AI-authored corpus recipe.
       await _openDetail(tester, recipient, copy.dishId);
       final expected = lang == 'de'
-          ? 'Ursprüngliches Rezept: MorphCook-Sammlung · KI-generiert. Ein Nachkochen durch Menschen ist nicht bestätigt.'
-          : 'Original recipe: MorphCook collection · AI-generated. Human cooking verification is not provided.';
+          ? 'Ursprüngliches Rezept (Herkunftsangabe des Absenders, ungeprüft): MorphCook-Sammlung · KI-generiert. Ein Nachkochen durch Menschen ist nicht bestätigt.'
+          : 'Original recipe (sender-supplied origin, unverified): MorphCook collection · AI-generated. Human cooking verification is not provided.';
       final disclosure = find.text(expected);
       expect(disclosure, findsOneWidget);
       await tester.ensureVisible(disclosure);
@@ -213,6 +216,84 @@ void main() {
       await tester.runAsync(() => recipient.savePersonalRecipe(legacy));
       await tester.pumpWidget(const SizedBox());
       await _openDetail(tester, recipient, legacy.dishId);
+      expect(find.textContaining(_anyAi), findsNothing);
+    });
+
+    testWidgets('sender-supplied origin stays qualified in details in $lang', (
+      tester,
+    ) async {
+      final recipient = (await tester.runAsync(() => _state(lang)))!;
+      addTearDown(recipient.dispose);
+      final arbitrary = PersonalRecipe.create(
+        title: 'A sender’s carrot soup',
+        sourceUrl: 'https://example.com/carrot-soup',
+        sourceAuthor: 'Alex Example',
+        timeMinutes: 30,
+        servings: 2,
+        ingredients: [
+          PersonalRecipeIngredient(name: 'carrots', qty: 200, unit: 'g'),
+        ],
+        steps: [PersonalRecipeStep(text: 'Simmer the carrots.')],
+      );
+      // A valid file can claim a bundled origin for arbitrary content. The
+      // importer must preserve the claim without presenting it as verified.
+      final incoming = decodeRecipeShare(
+        Uint8List.fromList(
+          utf8.encode(
+            jsonEncode({
+              'format': recipeShareFormat,
+              'version': recipeShareVersion,
+              'recipes': [
+                {...arbitrary.toJson(), 'bundled_origin': true},
+              ],
+            }),
+          ),
+        ),
+      );
+      await tester.runAsync(() => recipient.importSharedRecipes(incoming));
+      expect(recipient.personalRecipes.single.bundledOrigin, isTrue);
+
+      final expected = lang == 'de'
+          ? 'Ursprüngliches Rezept (Herkunftsangabe des Absenders, ungeprüft): MorphCook-Sammlung · KI-generiert. Ein Nachkochen durch Menschen ist nicht bestätigt.'
+          : 'Original recipe (sender-supplied origin, unverified): MorphCook collection · AI-generated. Human cooking verification is not provided.';
+      for (final edited in [false, true]) {
+        if (edited) {
+          await tester.runAsync(
+            () => recipient.savePersonalRecipe(
+              recipient.personalRecipes.single.copyWith(
+                title: 'My adapted soup',
+                steps: [PersonalRecipeStep(text: 'My own instructions.')],
+              ),
+            ),
+          );
+          await tester.pumpWidget(const SizedBox());
+        }
+        await _openDetail(tester, recipient, arbitrary.dishId);
+        final disclosure = find.text(expected);
+        expect(disclosure, findsOneWidget);
+        await tester.ensureVisible(disclosure);
+        await tester.pumpAndSettle();
+        expect(disclosure.hitTestable(), findsOneWidget);
+        expect(find.text(S(lang)('bundledRecipeOrigin')), findsNothing);
+        expect(
+          find.text('${S(lang)('sourceAuthor')}: Alex Example'),
+          findsOneWidget,
+        );
+        expect(
+          find.text(
+            '${S(lang)('recipeSource')}: https://example.com/carrot-soup',
+          ),
+          findsOneWidget,
+        );
+      }
+
+      final unclassified = PersonalRecipe.fromJson({
+        ...recipient.personalRecipes.single.toJson(),
+        'bundled_origin': false,
+      });
+      await tester.runAsync(() => recipient.savePersonalRecipe(unclassified));
+      await tester.pumpWidget(const SizedBox());
+      await _openDetail(tester, recipient, arbitrary.dishId);
       expect(find.textContaining(_anyAi), findsNothing);
     });
   }

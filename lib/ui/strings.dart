@@ -35,7 +35,7 @@ class S {
     'bundledRecipeOrigin':
         'MorphCook collection · AI-generated recipe. Human cooking verification is not provided.',
     'originalBundledRecipeOrigin':
-        'Original recipe: MorphCook collection · AI-generated. Human cooking verification is not provided.',
+        'Original recipe (sender-supplied origin, unverified): MorphCook collection · AI-generated. Human cooking verification is not provided.',
     "sourceDiet": "diet (website claim, unverified)",
     "ingredientHasQuantity": "use a measured quantity",
     "rawIngredientHint":
@@ -333,7 +333,7 @@ class S {
     'bundledRecipeOrigin':
         'MorphCook-Sammlung · KI-generiertes Rezept. Ein Nachkochen durch Menschen ist nicht bestätigt.',
     'originalBundledRecipeOrigin':
-        'Ursprüngliches Rezept: MorphCook-Sammlung · KI-generiert. Ein Nachkochen durch Menschen ist nicht bestätigt.',
+        'Ursprüngliches Rezept (Herkunftsangabe des Absenders, ungeprüft): MorphCook-Sammlung · KI-generiert. Ein Nachkochen durch Menschen ist nicht bestätigt.',
     "sourceDiet": "Ernährung (Angabe der Webseite, ungeprüft)",
     "ingredientHasQuantity": "abgemessene Menge verwenden",
     "rawIngredientHint":

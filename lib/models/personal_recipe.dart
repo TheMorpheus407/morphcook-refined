@@ -147,8 +147,8 @@ class PersonalRecipe {
   final String? sourceAuthor;
   final String? sourceDiet;
 
-  /// The original recipe came from MorphCook's AI-generated collection.
-  /// Retained after personal edits; does not certify the current content.
+  /// Sender-supplied claim that the original recipe came from MorphCook's
+  /// AI-generated collection. Retained after edits; never verified provenance.
   final bool bundledOrigin;
   final int timeMinutes;
   final int servings;

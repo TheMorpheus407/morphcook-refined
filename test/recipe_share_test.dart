@@ -113,6 +113,63 @@ class _FailingShareStore extends MemoryStore {
 void main() {
   for (final lang in ['en', 'de']) {
     test(
+      'sender-supplied origin stays qualified in readable shares in $lang',
+      () async {
+        final arbitrary = _recipe().toJson()..['bundled_origin'] = true;
+        final incoming = decodeRecipeShare(
+          _encode(_payload(recipes: [arbitrary])),
+        );
+        final recipient = await _state();
+        addTearDown(recipient.dispose);
+        await recipient.importSharedRecipes(incoming);
+
+        final expected = lang == 'de'
+            ? 'Ursprüngliches Rezept (Herkunftsangabe des Absenders, ungeprüft): MorphCook-Sammlung · KI-generiert. Ein Nachkochen durch Menschen ist nicht bestätigt.'
+            : 'Original recipe (sender-supplied origin, unverified): MorphCook collection · AI-generated. Human cooking verification is not provided.';
+        for (final edited in [false, true]) {
+          if (edited) {
+            await recipient.savePersonalRecipe(
+              recipient.personalRecipes.single.copyWith(
+                title: 'My adapted soup',
+                steps: [PersonalRecipeStep(text: 'My own instructions.')],
+              ),
+            );
+          }
+          final reshared = decodeRecipeShare(
+            encodeRecipeShare(await collectRecipeShare(recipient)),
+          );
+          expect(reshared.recipes.single.bundledOrigin, isTrue);
+          final text = recipeShareText(reshared, lang: lang);
+          expect(text, contains(expected));
+          expect(text, contains('https://example.com/soup'));
+          expect(text, contains('A cook'));
+          if (edited) expect(text, contains('My own instructions.'));
+        }
+        final unclassified = decodeRecipeShare(
+          _encode(
+            _payload(
+              recipes: [
+                {...arbitrary, 'bundled_origin': false},
+              ],
+            ),
+          ),
+        );
+        expect(
+          recipeShareText(unclassified, lang: lang),
+          isNot(contains(expected)),
+        );
+        expect(
+          recipeShareText(unclassified, lang: lang),
+          isNot(contains('MorphCook collection')),
+        );
+        expect(
+          recipeShareText(unclassified, lang: lang),
+          isNot(contains('MorphCook-Sammlung')),
+        );
+      },
+    );
+
+    test(
       'bundled origin survives ZIP import, edits, conflicts, backup and re-sharing in $lang',
       () async {
         final sender = await _state();
@@ -188,8 +245,8 @@ void main() {
           text,
           contains(
             lang == 'de'
-                ? 'Ursprüngliches Rezept: MorphCook-Sammlung · KI-generiert. Ein Nachkochen durch Menschen ist nicht bestätigt.'
-                : 'Original recipe: MorphCook collection · AI-generated. Human cooking verification is not provided.',
+                ? 'Ursprüngliches Rezept (Herkunftsangabe des Absenders, ungeprüft): MorphCook-Sammlung · KI-generiert. Ein Nachkochen durch Menschen ist nicht bestätigt.'
+                : 'Original recipe (sender-supplied origin, unverified): MorphCook collection · AI-generated. Human cooking verification is not provided.',
           ),
         );
       },
