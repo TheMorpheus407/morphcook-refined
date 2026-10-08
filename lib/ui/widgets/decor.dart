@@ -218,6 +218,28 @@ class BookmarkBadge extends StatelessWidget {
   }
 }
 
+/// [BookmarkBadge] positioned in the top-right corner of a photo [Stack];
+/// shared by [PolaroidCard] and the featured card.
+class BookmarkSlot extends StatelessWidget {
+  final bool saved;
+  final String label;
+  final VoidCallback? onTap;
+
+  const BookmarkSlot({
+    super.key,
+    required this.saved,
+    required this.label,
+    this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) => Positioned(
+    top: 2,
+    right: 2,
+    child: BookmarkBadge(saved: saved, label: label, onTap: onTap),
+  );
+}
+
 /// Polaroid-ish card: white frame, striped photo area, handwritten caption,
 /// slight deterministic rotation (level in readable mode).
 class PolaroidCard extends StatelessWidget {
@@ -282,14 +304,10 @@ class PolaroidCard extends StatelessWidget {
                     photo ??
                         StripedPlaceholder(color: stripe, height: photoHeight),
                     if (onBookmarkTap != null)
-                      Positioned(
-                        top: 2,
-                        right: 2,
-                        child: BookmarkBadge(
-                          saved: saved,
-                          label: bookmarkLabel!,
-                          onTap: onBookmarkTap,
-                        ),
+                      BookmarkSlot(
+                        saved: saved,
+                        label: bookmarkLabel!,
+                        onTap: onBookmarkTap,
                       ),
                     if (badge != null)
                       Positioned(

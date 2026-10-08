@@ -60,9 +60,11 @@ MorphCook is offline-first and collects no analytics. Website requests and optio
 Tap the bookmark icon on any Start View card or featured dish to save it to
 your cookbook without opening the recipe first. Tap it again to remove that
 variant; the bookmark in recipe details uses the same saved state. Dishes
-with the same frequency tier have a consistent order. The featured dish can
-still change with the time of day or cooking history, moving cards between
-the featured position and their category.
+with the same frequency tier have a consistent order. The featured dish stays
+in place while the home screen remains open, including across tab switches and
+returns from recipe details. Its variant still follows your profile. Changing
+your profile or pulling down to refresh picks a featured dish using the current
+time and cooking history; restarting the app also starts a new selection.
 
 ## Website imports
 
