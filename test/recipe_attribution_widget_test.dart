@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:morphcook/data/app_state.dart';
 import 'package:morphcook/data/corpus.dart';
 import 'package:morphcook/data/store.dart';
+import 'package:morphcook/logic/sharing/recipe_share.dart';
 import 'package:morphcook/models/personal_recipe.dart';
 import 'package:morphcook/models/profile.dart';
 import 'package:morphcook/ui/screens/dish_detail_screen.dart';
@@ -149,6 +150,71 @@ void main() {
       await tester.pumpAndSettle();
       expect(disclosure.hitTestable(), findsOneWidget);
     });
+
+    testWidgets('shared bundled copy discloses its original AI origin in $lang', (
+      tester,
+    ) async {
+      final sender = (await tester.runAsync(() => _state(lang)))!;
+      final recipient = (await tester.runAsync(() => _state(lang)))!;
+      addTearDown(sender.dispose);
+      addTearDown(recipient.dispose);
+      final shared = (await tester.runAsync(
+        () async => decodeRecipeShare(
+          encodeRecipeShare(
+            await collectRecipeShare(sender, recipeId: 'doener-vegan'),
+          ),
+        ),
+      ))!;
+      await tester.runAsync(() => recipient.importSharedRecipes(shared));
+      final copy = recipient.personalRecipes.single;
+      // Personal edits must not erase the original authorship or imply that
+      // the current text is an unchanged, wholly AI-authored corpus recipe.
+      await _openDetail(tester, recipient, copy.dishId);
+      final expected = lang == 'de'
+          ? 'Ursprüngliches Rezept: MorphCook-Sammlung · KI-generiert. Ein Nachkochen durch Menschen ist nicht bestätigt.'
+          : 'Original recipe: MorphCook collection · AI-generated. Human cooking verification is not provided.';
+      final disclosure = find.text(expected);
+      expect(disclosure, findsOneWidget);
+      await tester.ensureVisible(disclosure);
+      await tester.pumpAndSettle();
+      expect(disclosure.hitTestable(), findsOneWidget);
+      expect(find.text(S(lang)('bundledRecipeOrigin')), findsNothing);
+
+      await tester.tap(find.byKey(const ValueKey('edit-personal-recipe')));
+      await tester.pumpAndSettle();
+      await tester.enterText(
+        find.byKey(const ValueKey('recipe-title')),
+        'My adapted döner',
+      );
+      final save = find.byKey(const ValueKey('save-personal-recipe'));
+      await tester.scrollUntilVisible(
+        save,
+        400,
+        scrollable: find
+            .descendant(
+              of: find.byType(ListView),
+              matching: find.byType(Scrollable),
+            )
+            .first,
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(save);
+      await tester.pumpAndSettle();
+      expect(recipient.personalRecipes.single.title, 'My adapted döner');
+      await tester.drag(find.byType(ListView), const Offset(0, 1000));
+      await tester.pumpAndSettle();
+      expect(disclosure, findsOneWidget);
+
+      // Older bundled shares have the same ID but no origin metadata. Do not
+      // infer provenance from that ID or from recipe text.
+      final legacy = PersonalRecipe.fromJson(
+        copy.toJson()..remove('bundled_origin'),
+      );
+      await tester.runAsync(() => recipient.savePersonalRecipe(legacy));
+      await tester.pumpWidget(const SizedBox());
+      await _openDetail(tester, recipient, legacy.dishId);
+      expect(find.textContaining(_anyAi), findsNothing);
+    });
   }
 
   testWidgets('bundled recipe keeps its origin when switching variants', (
@@ -200,45 +266,49 @@ void main() {
     await tester.pump(const Duration(seconds: 2));
   });
 
-  testWidgets(
-    'personal recipes retain supplied authorship without bundled AI attribution',
-    (tester) async {
-      final state = (await tester.runAsync(() => _state('en')))!;
-      addTearDown(state.dispose);
+  for (final lang in ['en', 'de']) {
+    testWidgets(
+      'personal recipes retain supplied authorship without bundled AI attribution in $lang',
+      (tester) async {
+        final state = (await tester.runAsync(() => _state(lang)))!;
+        addTearDown(state.dispose);
 
-      for (final imported in [false, true]) {
-        final recipe = PersonalRecipe.create(
-          title: imported ? 'Imported carrot soup' : 'My carrot soup',
-          sourceUrl: imported ? 'https://example.com/carrot-soup' : null,
-          sourceAuthor: imported ? 'Alex Example' : null,
-          timeMinutes: 30,
-          servings: 2,
-          ingredients: [
-            PersonalRecipeIngredient(name: 'carrots', qty: 200, unit: 'g'),
-          ],
-          steps: [PersonalRecipeStep(text: 'Simmer the carrots.')],
-        );
-        await tester.runAsync(() => state.savePersonalRecipe(recipe));
-        await _openDetail(tester, state, recipe.dishId);
-
-        expect(find.text(recipe.title), findsWidgets);
-        expect(
-          find.textContaining(_anyAi),
-          findsNothing,
-          reason: 'Personal recipes must not inherit the bundled AI origin.',
-        );
-        if (imported) {
-          final author = find.text('${S('en')('sourceAuthor')}: Alex Example');
-          final source = find.text(
-            '${S('en')('recipeSource')}: https://example.com/carrot-soup',
+        for (final imported in [false, true]) {
+          final recipe = PersonalRecipe.create(
+            title: imported ? 'Imported carrot soup' : 'My carrot soup',
+            sourceUrl: imported ? 'https://example.com/carrot-soup' : null,
+            sourceAuthor: imported ? 'Alex Example' : null,
+            timeMinutes: 30,
+            servings: 2,
+            ingredients: [
+              PersonalRecipeIngredient(name: 'carrots', qty: 200, unit: 'g'),
+            ],
+            steps: [PersonalRecipeStep(text: 'Simmer the carrots.')],
           );
-          expect(author, findsOneWidget);
-          expect(source, findsOneWidget);
-          await tester.ensureVisible(author);
-          await tester.pumpAndSettle();
-          expect(author.hitTestable(), findsOneWidget);
+          await tester.runAsync(() => state.savePersonalRecipe(recipe));
+          await _openDetail(tester, state, recipe.dishId);
+
+          expect(find.text(recipe.title), findsWidgets);
+          expect(
+            find.textContaining(_anyAi),
+            findsNothing,
+            reason: 'Personal recipes must not inherit the bundled AI origin.',
+          );
+          if (imported) {
+            final author = find.text(
+              '${S(lang)('sourceAuthor')}: Alex Example',
+            );
+            final source = find.text(
+              '${S(lang)('recipeSource')}: https://example.com/carrot-soup',
+            );
+            expect(author, findsOneWidget);
+            expect(source, findsOneWidget);
+            await tester.ensureVisible(author);
+            await tester.pumpAndSettle();
+            expect(author.hitTestable(), findsOneWidget);
+          }
         }
-      }
-    },
-  );
+      },
+    );
+  }
 }

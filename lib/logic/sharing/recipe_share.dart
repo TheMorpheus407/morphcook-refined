@@ -5,6 +5,7 @@ import '../../data/app_state.dart';
 import '../../models/personal_recipe.dart';
 import '../../models/recipe_image.dart';
 import '../../models/recipe_share.dart';
+import '../../ui/strings.dart';
 import 'recipe_share_archive.dart';
 
 export '../../models/recipe_share.dart';
@@ -43,6 +44,7 @@ Future<RecipeShareData> collectRecipeShare(
         id: sharedPersonalRecipeId('morphcook-bundled:$id:$lang'),
         title: bundled.title.of(lang),
         description: bundled.intro.of(lang),
+        bundledOrigin: true,
         timeMinutes: bundled.timeMinutes,
         servings: bundled.servings,
         ingredients: [
@@ -189,6 +191,9 @@ String recipeShareText(RecipeShareData data, {required String lang}) {
       '${recipe.timeMinutes} min · ${recipe.servings} ${de ? 'Portionen' : 'servings'}',
     );
     if (recipe.description.isNotEmpty) output.writeln(recipe.description);
+    if (recipe.bundledOrigin) {
+      output.writeln(S(lang)('originalBundledRecipeOrigin'));
+    }
     if (recipe.sourceUrl != null) {
       output.writeln('${de ? 'Quelle' : 'Source'}: ${recipe.sourceUrl}');
     }

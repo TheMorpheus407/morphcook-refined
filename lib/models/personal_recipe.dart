@@ -146,6 +146,10 @@ class PersonalRecipe {
   final String? sourceUrl;
   final String? sourceAuthor;
   final String? sourceDiet;
+
+  /// The original recipe came from MorphCook's AI-generated collection.
+  /// Retained after personal edits; does not certify the current content.
+  final bool bundledOrigin;
   final int timeMinutes;
   final int servings;
   final List<PersonalRecipeIngredient> ingredients;
@@ -160,6 +164,7 @@ class PersonalRecipe {
     this.sourceUrl,
     this.sourceAuthor,
     this.sourceDiet,
+    required this.bundledOrigin,
     required this.timeMinutes,
     required this.servings,
     required this.ingredients,
@@ -175,6 +180,7 @@ class PersonalRecipe {
     String? sourceUrl,
     String? sourceAuthor,
     String? sourceDiet,
+    bool bundledOrigin = false,
     required int timeMinutes,
     required int servings,
     required List<PersonalRecipeIngredient> ingredients,
@@ -189,6 +195,7 @@ class PersonalRecipe {
       sourceUrl: _trimToNull(sourceUrl),
       sourceAuthor: _trimToNull(sourceAuthor),
       sourceDiet: _trimToNull(sourceDiet),
+      bundledOrigin: bundledOrigin,
       timeMinutes: timeMinutes,
       servings: servings,
       ingredients: List.unmodifiable(ingredients),
@@ -206,6 +213,7 @@ class PersonalRecipe {
     String? sourceUrl,
     String? sourceAuthor,
     String? sourceDiet,
+    bool bundledOrigin = false,
     required int timeMinutes,
     required int servings,
     required List<PersonalRecipeIngredient> ingredients,
@@ -220,6 +228,7 @@ class PersonalRecipe {
       sourceUrl: sourceUrl,
       sourceAuthor: sourceAuthor,
       sourceDiet: sourceDiet,
+      bundledOrigin: bundledOrigin,
       timeMinutes: timeMinutes,
       servings: servings,
       ingredients: ingredients,
@@ -236,6 +245,7 @@ class PersonalRecipe {
     sourceUrl: json['source_url'] as String?,
     sourceAuthor: json['source_author'] as String?,
     sourceDiet: json['source_diet'] as String?,
+    bundledOrigin: json['bundled_origin'] as bool? ?? false,
     timeMinutes: (json['time_minutes'] as num).round(),
     servings: (json['servings'] as num).round(),
     ingredients: (json['ingredients'] as List)
@@ -259,6 +269,7 @@ class PersonalRecipe {
     if (sourceUrl != null) 'source_url': sourceUrl,
     if (sourceAuthor != null) 'source_author': sourceAuthor,
     if (sourceDiet != null) 'source_diet': sourceDiet,
+    if (bundledOrigin) 'bundled_origin': true,
     'time_minutes': timeMinutes,
     'servings': servings,
     'ingredients': ingredients.map((i) => i.toJson()).toList(),
@@ -285,6 +296,7 @@ class PersonalRecipe {
     sourceUrl: sourceUrl ?? this.sourceUrl,
     sourceAuthor: sourceAuthor ?? this.sourceAuthor,
     sourceDiet: sourceDiet ?? this.sourceDiet,
+    bundledOrigin: bundledOrigin,
     timeMinutes: timeMinutes ?? this.timeMinutes,
     servings: servings ?? this.servings,
     ingredients: ingredients ?? this.ingredients,

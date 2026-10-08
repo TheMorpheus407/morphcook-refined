@@ -268,10 +268,14 @@ class _DishDetailScreenState extends State<DishDetailScreen> {
                       color: morph.colors.inkSoft,
                     ),
                   ),
-                  if (personal == null) ...[
+                  if (personal == null || personal.bundledOrigin) ...[
                     const SizedBox(height: 8),
                     Text(
-                      s('bundledRecipeOrigin'),
+                      s(
+                        personal == null
+                            ? 'bundledRecipeOrigin'
+                            : 'originalBundledRecipeOrigin',
+                      ),
                       style: morph.text.mono.copyWith(
                         fontSize: 12,
                         color: morph.colors.inkSoft,
