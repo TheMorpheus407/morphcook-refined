@@ -34,7 +34,12 @@ flutter build apk --release
 For reproducible F-Droid builds the Flutter SDK is pinned as a git submodule
 (`submodules/flutter`, currently 3.41.9). A normal clone ignores it; the
 F-Droid buildserver initializes it and builds with that exact toolchain. Local
-development can just use your system Flutter.
+development can use your system Flutter with the submodule uninitialized.
+If you initialized the submodule to check the pinned SDK, return to the normal
+local checkout with `git submodule deinit -- submodules/flutter` before running
+app checks with your system SDK. This requires a clean submodule and preserves
+its exact git pin. Otherwise, root-level analysis also traverses the SDK's
+independent development and test packages, which are not app dependencies.
 
 ## Privacy
 
