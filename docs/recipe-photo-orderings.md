@@ -6,6 +6,8 @@ These tables cover the behavioural findings from PR #10 review rounds. Each row 
 
 Each restart row runs all eight combinations of replace/merge, legacy/current credit metadata, and credited/device replacement. Each test pauses a real persistence call, reloads another AppState, checks the recovered photo and its next backup, then completes the write and checks publication. Tests are in `test/recipe_photo_restore_ordering_test.dart`.
 
+The dedicated replace-cleanup cases include an old-only credited photo and an incoming-only photo. They check the actual binary keys after deletion, restoration of the deleted photo and credit after a cleanup failure, removal of the incoming-only binary during rollback, and successful retry. Both legacy and current credit metadata are covered.
+
 | Event ordering | Intended photo behaviour after restart | Regression name (all parameter combinations) |
 |---|---|---|
 | Restore → binding → restart | Old bytes and old credit. | `restore restart after binding: merge=$merge legacy=$legacy credited=$credited` |
@@ -22,6 +24,8 @@ Each restart row runs all eight combinations of replace/merge, legacy/current cr
 | Restore → profile → exception → rollback → restart → retry | Previous bytes/credit/profile restored; retry succeeds. | `restore failure after profile rolls back: merge=$merge` |
 | Restore → onboarding → exception → rollback → restart → retry | Previous bytes/credit/profile restored; retry succeeds. | `restore failure after onboarding rolls back: merge=$merge` |
 | Restore → cleanup → exception → rollback → restart → retry | Previous bytes/credit/profile restored; retry succeeds. | `restore failure after cleanup rolls back: merge=$merge` |
+| Replace → cleanup deletes old-only photo → restart → completion | Only incoming photo binaries remain; recovered photos and exported credits match the incoming backup. Memory publishes after completion. | `replace cleanup deletes obsolete photo: legacy=$legacy` |
+| Replace → cleanup deletes old-only photo → exception → rollback → restart → retry | Deleted old bytes/credit are restored, incoming-only binary is removed, and memory/export remain unchanged. Retry deletes the obsolete photo and saves the incoming photos/credits. | `replace cleanup failure restores deleted photo: legacy=$legacy` |
 
 ## Searches, selection and keyboard
 

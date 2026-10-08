@@ -13,6 +13,7 @@ import 'helpers.dart';
 
 const _id = 'doener-vegan';
 const _otherId = 'doener-classic';
+const _incomingId = 'pad-thai-vegan';
 
 RecipeImageCredit _credit(String author) => RecipeImageCredit.tryCreate(
   title: '$author photo',
@@ -30,6 +31,7 @@ class _RestoreStore extends MemoryStore {
   final reached = Completer<void>();
   final resume = Completer<void>();
   final events = <String>[];
+  final cleanupBatches = <List<String>>[];
 
   Future<void> _after(String event) async {
     events.add(event);
@@ -77,7 +79,9 @@ class _RestoreStore extends MemoryStore {
 
   @override
   Future<void> removeRecipeImageBytesBatch(Iterable<String> ids) async {
-    await super.removeRecipeImageBytesBatch(ids);
+    final batch = ids.toList();
+    cleanupBatches.add(batch);
+    await super.removeRecipeImageBytesBatch(batch);
     await _after('cleanup');
   }
 }
@@ -111,7 +115,11 @@ Future<AppState> _seed(_RestoreStore store, {required bool legacy}) async {
   return _load(store);
 }
 
-BackupData _backup(AppState state, {required bool credited}) => BackupData(
+BackupData _backup(
+  AppState state, {
+  required bool credited,
+  List<String> ids = const [_id, _otherId],
+}) => BackupData(
   profile: const Profile(name: 'Restored'),
   saved: state.saved,
   mealPlan: state.mealPlan,
@@ -119,7 +127,7 @@ BackupData _backup(AppState state, {required bool credited}) => BackupData(
   shoppingHistory: state.shoppingHistory,
   contentRequests: state.contentRequests,
   recipeImages: [
-    for (final id in [_id, _otherId])
+    for (final id in ids)
       RecipeImage(
         recipeId: id,
         bytes: [...testPngBytes(), 0],
@@ -150,6 +158,98 @@ void _expectPhoto(
 }
 
 void main() {
+  for (final legacy in [false, true]) {
+    test('replace cleanup deletes obsolete photo: legacy=$legacy', () async {
+      final store = _RestoreStore();
+      final state = await _seed(store, legacy: legacy);
+      final original = state.buildBackup().toJson(DateTime.utc(2026));
+      store.pauseAfter = 'cleanup';
+      final restoring = state.applyBackup(
+        _backup(state, credited: true, ids: [_id, _incomingId]),
+        merge: false,
+      );
+      addTearDown(() async {
+        if (!store.resume.isCompleted) store.resume.complete();
+        await restoring.timeout(const Duration(seconds: 5));
+      });
+      await store.reached.future.timeout(const Duration(seconds: 5));
+      expect(store.cleanupBatches, [
+        [_otherId],
+      ]);
+      expect(
+        store.loadRecipeImageBytes().keys,
+        unorderedEquals([_id, _incomingId]),
+      );
+      expect(state.buildBackup().toJson(DateTime.utc(2026)), original);
+      final recovered = await _load(store);
+      expect(recovered.recipeImageFor(_otherId), isNull);
+      for (final id in [_id, _incomingId]) {
+        _expectPhoto(recovered, id, replaced: true, credit: _credit('New'));
+      }
+      store.resume.complete();
+      await restoring;
+      expect(
+        state.buildBackup().toJson(DateTime.utc(2026)),
+        recovered.buildBackup().toJson(DateTime.utc(2026)),
+      );
+    });
+
+    test(
+      'replace cleanup failure restores deleted photo: legacy=$legacy',
+      () async {
+        final store = _RestoreStore();
+        final state = await _seed(store, legacy: legacy);
+        final original = state.buildBackup().toJson(DateTime.utc(2026));
+        final incoming = _backup(
+          state,
+          credited: true,
+          ids: [_id, _incomingId],
+        );
+        store.failAfter = 'cleanup';
+        await expectLater(
+          state.applyBackup(incoming, merge: false),
+          throwsStateError,
+        );
+        expect(store.cleanupBatches, [
+          [_otherId],
+          [_incomingId],
+        ]);
+        final restoredBytes = store.loadRecipeImageBytes();
+        expect(restoredBytes.keys, unorderedEquals([_id, _otherId]));
+        for (final id in [_id, _otherId]) {
+          expect(restoredBytes[id], orderedEquals(testPngBytes()));
+          _expectPhoto(state, id, replaced: false, credit: _credit('Old'));
+        }
+        expect(state.recipeImageFor(_incomingId), isNull);
+        expect(state.buildBackup().toJson(DateTime.utc(2026)), original);
+        final recovered = await _load(store);
+        expect(recovered.recipeImageFor(_incomingId), isNull);
+        expect(recovered.buildBackup().toJson(DateTime.utc(2026)), original);
+        for (final id in [_id, _otherId]) {
+          _expectPhoto(recovered, id, replaced: false, credit: _credit('Old'));
+        }
+
+        await state.applyBackup(incoming, merge: false);
+        expect(store.cleanupBatches.last, [_otherId]);
+        expect(
+          store.loadRecipeImageBytes().keys,
+          unorderedEquals([_id, _incomingId]),
+        );
+        final retried = await _load(store);
+        expect(retried.recipeImageFor(_otherId), isNull);
+        expect(state.recipeImageFor(_otherId), isNull);
+        for (final id in [_id, _incomingId]) {
+          _expectPhoto(retried, id, replaced: true, credit: _credit('New'));
+          _expectPhoto(state, id, replaced: true, credit: _credit('New'));
+        }
+        expect(
+          retried.buildBackup().toJson(DateTime.utc(2026)),
+          state.buildBackup().toJson(DateTime.utc(2026)),
+        );
+      },
+    );
+  }
+
   for (final merge in [false, true]) {
     for (final legacy in [false, true]) {
       for (final credited in [false, true]) {
