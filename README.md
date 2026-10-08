@@ -32,9 +32,14 @@ flutter build apk --release
 ```
 
 For reproducible F-Droid builds the Flutter SDK is pinned as a git submodule
-(`submodules/flutter`, currently 3.38.3). A normal clone ignores it; the
+(`submodules/flutter`, currently 3.41.9). A normal clone ignores it; the
 F-Droid buildserver initializes it and builds with that exact toolchain. Local
-development can just use your system Flutter.
+development can use your system Flutter with the submodule uninitialized.
+If you initialized the submodule to check the pinned SDK, return to the normal
+local checkout with `git submodule deinit -- submodules/flutter` before running
+app checks with your system SDK. This requires a clean submodule and preserves
+its exact git pin. Otherwise, root-level analysis also traverses the SDK's
+independent development and test packages, which are not app dependencies.
 
 ## Privacy
 
@@ -48,6 +53,15 @@ MorphCook is offline-first and collects no analytics. Website requests and optio
   - Playfair Display — `assets/fonts/OFL-PlayfairDisplay.txt`
   - JetBrains Mono — `assets/fonts/OFL-JetBrainsMono.txt`
   - Caveat — `assets/fonts/OFL-Caveat.txt`
+
+## Saving recipes
+
+Tap the bookmark icon on any Start View card or featured dish to save it to
+your cookbook without opening the recipe first. Tap it again to remove that
+variant; the bookmark in recipe details uses the same saved state. Dishes
+with the same frequency tier have a consistent order. The featured dish can
+still change with the time of day or cooking history, moving cards between
+the featured position and their category.
 
 ## Website imports
 
