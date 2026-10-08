@@ -83,6 +83,7 @@ Future<RecipeShareData> collectRecipeShare(
           recipeId: recipe.id,
           bytes: image.bytes,
           updatedAt: image.updatedAt,
+          credit: image.credit,
         ),
       );
     }
@@ -184,6 +185,10 @@ RecipeShareData decodeRecipeShare(Uint8List bytes) {
 /// Human-readable companion for messaging apps and recipients without MorphCook.
 String recipeShareText(RecipeShareData data, {required String lang}) {
   final de = lang == 'de';
+  final credits = {
+    for (final image in data.images)
+      if (image.credit != null) image.recipeId: image.credit!,
+  };
   final output = StringBuffer('MorphCook\n\n');
   for (final recipe in data.recipes) {
     output.writeln(recipe.title);
@@ -206,6 +211,9 @@ String recipeShareText(RecipeShareData data, {required String lang}) {
       output.writeln(
         '${de ? 'Ernährung (ungeprüft)' : 'Diet (unverified)'}: ${recipe.sourceDiet}',
       );
+    }
+    if (credits[recipe.id] case final credit?) {
+      output.writeln('${credit.label(lang)} · ${credit.sourceUrl}');
     }
     output.writeln('\n${de ? 'Zutaten' : 'Ingredients'}:');
     for (final ingredient in recipe.ingredients) {

@@ -311,6 +311,7 @@ class AppState extends ChangeNotifier {
                 recipeId: targetId,
                 bytes: image.bytes,
                 updatedAt: image.updatedAt,
+                credit: image.credit,
               );
         nextImages[targetId] = copy;
         addedImages[targetId] = copy;
@@ -546,6 +547,7 @@ class AppState extends ChangeNotifier {
           recipeId: item.recipeId,
           bytes: bytes,
           updatedAt: item.updatedAt,
+          credit: item.credit,
         );
       } on RecipeImageException {
         // Ignore a corrupt local entry; the striped fallback remains usable.
@@ -556,10 +558,13 @@ class AppState extends ChangeNotifier {
 
   RecipeImage? recipeImageFor(String recipeId) => _recipeImages[recipeId];
 
+  /// Stores a photo override. [credit] attributes a photo found through the
+  /// online image search; replacing it with a device photo clears the credit.
   Future<RecipeImage> setRecipeImage(
     String recipeId,
     List<int> bytes, {
     DateTime? updatedAt,
+    RecipeImageCredit? credit,
   }) async {
     if (await recipeById(recipeId) == null) {
       throw ArgumentError.value(recipeId, 'recipeId', 'unknown recipe');
@@ -568,6 +573,7 @@ class AppState extends ChangeNotifier {
       recipeId: recipeId,
       bytes: bytes,
       updatedAt: updatedAt ?? DateTime.now(),
+      credit: credit,
     );
     final previousBytes = _recipeImages[recipeId]?.bytes.length ?? 0;
     final totalBytes =

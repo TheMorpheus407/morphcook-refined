@@ -51,6 +51,8 @@ what's inside:
 
 optional website imports let you save a recipe link and its photo for offline use.
 loading a link contacts that website; photos download only when selected.
+an optional, off-by-default photo search finds freely licensed, credited
+dish photos on wikimedia commons, only when you search.
 no accounts, ads or tracking. your profile and cookbook stay on your device
 unless you choose to export them.
 ```
@@ -89,6 +91,8 @@ Was drin ist:
 
 Optionale Webseiten-Importe speichern Rezepte und auf Wunsch Fotos offline.
 Beim Laden eines Rezepts oder eines gewählten Fotos wird die jeweilige Website kontaktiert.
+Eine optionale, standardmäßig ausgeschaltete Fotosuche findet frei lizenzierte
+Gerichtfotos mit Urheberangabe auf Wikimedia Commons – nur, wenn du suchst.
 Keine Konten, Werbung oder Tracking. Profil und Kochbuch bleiben auf deinem
 Gerät, bis du sie selbst exportierst.
 ```
@@ -108,6 +112,9 @@ Gerät, bis du sie selbst exportierst.
   processed locally. There is no developer collection server or analytics SDK.
   Explicit URL/photo imports contact the chosen website, exposing its requested
   URL and the device's IP address. `INTERNET` is required for that feature.
+  The optional photo search (off by default) sends only the typed search words
+  to Wikimedia Commons, which receives the device's IP address; previews load
+  from Wikimedia, and only a photo the user chooses is stored with its credit.
   Exports and feedback drafts go only to the recipient/browser chosen by the
   user. The updated privacy policy describes these actions; the app never
   automatically uploads its private collections.

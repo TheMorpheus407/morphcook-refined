@@ -25,17 +25,141 @@ class RecipeImageException implements Exception {
   String toString() => 'RecipeImageException: ${failure.name}';
 }
 
+const maxRecipeImageCreditLength = 300;
+const maxRecipeImageCreditUrlLength = 2048;
+
+/// Attribution for a photo found through the optional online image search.
+///
+/// Photos the owner picks from their device have no credit. A found photo
+/// keeps its author, license and source page wherever the photo travels
+/// (backups and recipe shares), so the license terms remain visible.
+class RecipeImageCredit {
+  final String title;
+  final String? author;
+  final String license;
+  final String provider;
+  final Uri sourceUrl;
+
+  RecipeImageCredit._({
+    required this.title,
+    required this.author,
+    required this.license,
+    required this.provider,
+    required this.sourceUrl,
+  });
+
+  /// Returns null unless every field is present, bounded and the source page
+  /// is an HTTPS link. Text is collapsed to one line for display.
+  static RecipeImageCredit? tryCreate({
+    required String title,
+    String? author,
+    required String license,
+    required String provider,
+    required String sourceUrl,
+  }) {
+    String? clean(String? value) {
+      if (value == null) return null;
+      final text = value.replaceAll(RegExp(r'\s+'), ' ').trim();
+      if (text.isEmpty) return null;
+      if (text.length <= maxRecipeImageCreditLength) return text;
+      var end = maxRecipeImageCreditLength - 1;
+      // Never split a surrogate pair (for example an emoji) in two.
+      final last = text.codeUnitAt(end - 1);
+      if (last >= 0xD800 && last <= 0xDBFF) end--;
+      return '${text.substring(0, end).trimRight()}…';
+    }
+
+    final cleanTitle = clean(title);
+    final cleanLicense = clean(license);
+    final cleanProvider = clean(provider);
+    final source = sourceUrl.length > maxRecipeImageCreditUrlLength
+        ? null
+        : Uri.tryParse(sourceUrl.trim());
+    if (cleanTitle == null ||
+        cleanLicense == null ||
+        cleanProvider == null ||
+        source == null ||
+        source.scheme != 'https' ||
+        source.host.isEmpty ||
+        source.userInfo.isNotEmpty) {
+      return null;
+    }
+    return RecipeImageCredit._(
+      title: cleanTitle,
+      author: clean(author),
+      license: cleanLicense,
+      provider: cleanProvider,
+      sourceUrl: source,
+    );
+  }
+
+  /// Older or damaged entries without a usable credit keep their photo; only
+  /// the credit is dropped instead of rejecting a whole backup or share.
+  static RecipeImageCredit? tryFromJson(Object? json) {
+    if (json is! Map<String, dynamic>) return null;
+    final title = json['title'];
+    final author = json['author'];
+    final license = json['license'];
+    final provider = json['provider'];
+    final sourceUrl = json['source_url'];
+    if (title is! String ||
+        (author != null && author is! String) ||
+        license is! String ||
+        provider is! String ||
+        sourceUrl is! String) {
+      return null;
+    }
+    return tryCreate(
+      title: title,
+      author: author as String?,
+      license: license,
+      provider: provider,
+      sourceUrl: sourceUrl,
+    );
+  }
+
+  /// One line naming the photo, its author, license and provider.
+  String label(String lang) => [
+    '${lang == 'de' ? 'Foto' : 'Photo'}: $title',
+    if (author != null) author!,
+    license,
+    provider,
+  ].join(' · ');
+
+  Map<String, dynamic> toJson() => {
+    'title': title,
+    if (author != null) 'author': author,
+    'license': license,
+    'provider': provider,
+    'source_url': sourceUrl.toString(),
+  };
+
+  @override
+  bool operator ==(Object other) =>
+      other is RecipeImageCredit &&
+      other.title == title &&
+      other.author == author &&
+      other.license == license &&
+      other.provider == provider &&
+      other.sourceUrl == sourceUrl;
+
+  @override
+  int get hashCode => Object.hash(title, author, license, provider, sourceUrl);
+}
+
 /// Metadata stored in the regular JSON collection; bytes live separately in
 /// app-private binary storage to avoid base64 overhead during normal use.
 class RecipeImageMetadata {
   final String recipeId;
   final String mimeType;
   final DateTime updatedAt;
+  final RecipeImageCredit? credit;
 
   const RecipeImageMetadata({
     required this.recipeId,
     required this.mimeType,
     required this.updatedAt,
+    this.credit,
   });
 
   factory RecipeImageMetadata.fromJson(Map<String, dynamic> json) =>
@@ -43,12 +167,14 @@ class RecipeImageMetadata {
         recipeId: json['recipe_id'] as String,
         mimeType: json['mime_type'] as String,
         updatedAt: DateTime.parse(json['updated_at'] as String).toUtc(),
+        credit: RecipeImageCredit.tryFromJson(json['credit']),
       );
 
   Map<String, dynamic> toJson() => {
     'recipe_id': recipeId,
     'mime_type': mimeType,
     'updated_at': updatedAt.toUtc().toIso8601String(),
+    if (credit != null) 'credit': credit!.toJson(),
   };
 }
 
@@ -59,11 +185,15 @@ class RecipeImage {
   final Uint8List bytes;
   final DateTime updatedAt;
 
+  /// Present only for photos found through the online image search.
+  final RecipeImageCredit? credit;
+
   RecipeImage._({
     required this.recipeId,
     required this.mimeType,
     required this.bytes,
     required this.updatedAt,
+    required this.credit,
   });
 
   factory RecipeImage({
@@ -71,6 +201,7 @@ class RecipeImage {
     required List<int> bytes,
     String? mimeType,
     required DateTime updatedAt,
+    RecipeImageCredit? credit,
   }) {
     if (!RegExp(r'^[A-Za-z0-9._-]{1,200}$').hasMatch(recipeId)) {
       throw const RecipeImageException(RecipeImageFailure.invalidRecipeId);
@@ -96,6 +227,7 @@ class RecipeImage {
       mimeType: detected,
       bytes: copy.asUnmodifiableView(),
       updatedAt: updatedAt.toUtc(),
+      credit: credit,
     );
   }
 
@@ -107,6 +239,7 @@ class RecipeImage {
     mimeType: metadata.mimeType,
     bytes: bytes,
     updatedAt: metadata.updatedAt,
+    credit: metadata.credit,
   );
 
   factory RecipeImage.fromBackupJson(Map<String, dynamic> json) {
@@ -120,6 +253,7 @@ class RecipeImage {
       mimeType: json['mime_type'] as String,
       bytes: base64Decode(encoded),
       updatedAt: DateTime.parse(json['updated_at'] as String),
+      credit: RecipeImageCredit.tryFromJson(json['credit']),
     );
   }
 
@@ -127,6 +261,7 @@ class RecipeImage {
     recipeId: recipeId,
     mimeType: mimeType,
     updatedAt: updatedAt,
+    credit: credit,
   );
 
   Map<String, dynamic> toBackupJson() => {

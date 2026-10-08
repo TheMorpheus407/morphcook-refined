@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
@@ -7,6 +6,7 @@ import 'package:html/parser.dart' as html_parser;
 
 import '../../models/personal_recipe.dart';
 import '../../models/recipe_image.dart';
+import 'bounded_http.dart';
 
 const maxWebsiteRecipePageBytes = 2 * 1024 * 1024;
 
@@ -91,106 +91,38 @@ class WebsiteRecipeImporter {
     return result.bytes;
   }
 
-  Future<_Downloaded> _download(Uri initialUri, {required bool image}) async {
-    _validateUri(initialUri);
-    final limit = image ? maxImageBytes : maxPageBytes;
-    if (limit <= 0 || timeout <= Duration.zero || maxRedirects < 0) {
-      throw ArgumentError('invalid website import limits');
-    }
-    final client = (clientFactory ?? HttpClient.new)();
-    client.connectionTimeout = timeout;
-    client.userAgent = 'MorphCook/1.0 (user-requested recipe import)';
+  Future<BoundedHttpResponse> _download(Uri uri, {required bool image}) async {
     try {
-      return await (() async {
-        var uri = initialUri;
-        for (var redirects = 0; ; redirects++) {
-          _validateUri(uri);
-          final request = await client.getUrl(uri);
-          request.followRedirects = false;
-          request.headers.set(
-            HttpHeaders.acceptHeader,
-            image
-                ? 'image/jpeg,image/png,image/webp'
-                : 'text/html,application/xhtml+xml',
-          );
-          final response = await request.close();
-          if (const [301, 302, 303, 307, 308].contains(response.statusCode)) {
-            final location = response.headers.value(HttpHeaders.locationHeader);
-            if (location == null || redirects >= maxRedirects) {
-              throw const WebsiteRecipeImportException(
-                WebsiteRecipeImportFailure.network,
-              );
-            }
-            uri = uri.resolve(location);
-            _validateUri(uri);
-            // Do not drain an unbounded redirect body before proceeding.
-            await response.listen((_) {}).cancel();
-            continue;
-          }
-          if (response.statusCode != HttpStatus.ok) {
-            throw const WebsiteRecipeImportException(
-              WebsiteRecipeImportFailure.network,
-            );
-          }
-          final contentType = response.headers.contentType;
-          final mime = contentType?.mimeType;
-          if (!image &&
-              mime != null &&
-              !const ['text/html', 'application/xhtml+xml'].contains(mime)) {
-            throw const WebsiteRecipeImportException(
-              WebsiteRecipeImportFailure.unsupportedPage,
-            );
-          }
-          if (response.contentLength > limit) {
-            throw const WebsiteRecipeImportException(
-              WebsiteRecipeImportFailure.tooLarge,
-            );
-          }
-          final bytes = BytesBuilder(copy: false);
-          await for (final chunk in response) {
-            if (bytes.length + chunk.length > limit) {
-              throw const WebsiteRecipeImportException(
-                WebsiteRecipeImportFailure.tooLarge,
-              );
-            }
-            bytes.add(chunk);
-          }
-          return _Downloaded(bytes.takeBytes(), uri, contentType?.charset);
-        }
-      })().timeout(timeout);
-    } on TimeoutException {
-      throw const WebsiteRecipeImportException(
-        WebsiteRecipeImportFailure.timeout,
+      return await boundedHttpGet(
+        uri,
+        maxBytes: image ? maxImageBytes : maxPageBytes,
+        timeout: timeout,
+        maxRedirects: maxRedirects,
+        userAgent: 'MorphCook/1.0 (user-requested recipe import)',
+        accept: image
+            ? 'image/jpeg,image/png,image/webp'
+            : 'text/html,application/xhtml+xml',
+        allowedMimeTypes: image
+            ? null
+            : const {'text/html', 'application/xhtml+xml'},
+        clientFactory: clientFactory,
       );
-    } on WebsiteRecipeImportException {
-      rethrow;
-    } on FormatException {
-      throw const WebsiteRecipeImportException(
-        WebsiteRecipeImportFailure.invalidUrl,
-      );
-    } on IOException {
-      throw const WebsiteRecipeImportException(
-        WebsiteRecipeImportFailure.network,
-      );
-    } finally {
-      client.close(force: true);
+    } on BoundedHttpException catch (error) {
+      throw WebsiteRecipeImportException(switch (error.failure) {
+        BoundedHttpFailure.invalidUrl => WebsiteRecipeImportFailure.invalidUrl,
+        BoundedHttpFailure.network ||
+        BoundedHttpFailure.busy => WebsiteRecipeImportFailure.network,
+        BoundedHttpFailure.timeout => WebsiteRecipeImportFailure.timeout,
+        BoundedHttpFailure.tooLarge => WebsiteRecipeImportFailure.tooLarge,
+        BoundedHttpFailure.unsupportedType =>
+          WebsiteRecipeImportFailure.unsupportedPage,
+      });
     }
   }
 }
 
-class _Downloaded {
-  final Uint8List bytes;
-  final Uri uri;
-  final String? charset;
-
-  const _Downloaded(this.bytes, this.uri, this.charset);
-}
-
 void _validateUri(Uri uri) {
-  if (!const ['http', 'https'].contains(uri.scheme) ||
-      uri.host.isEmpty ||
-      uri.userInfo.isNotEmpty ||
-      uri.toString().length > 4096) {
+  if (!isFetchableHttpUri(uri)) {
     throw const WebsiteRecipeImportException(
       WebsiteRecipeImportFailure.invalidUrl,
     );

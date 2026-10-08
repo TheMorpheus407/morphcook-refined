@@ -274,6 +274,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
             hint: s('quickTapSettingHint'),
           ),
 
+          SectionHeader(title: s('onlinePhotos')),
+          _switchRow(
+            s('imageSearch'),
+            profile.imageSearchEnabled,
+            (v) => state.updateProfile(profile.copyWith(imageSearchEnabled: v)),
+            hint: s('imageSearchHint'),
+          ),
+
           SectionHeader(title: s('backup')),
           _linkRow(
             Icons.ios_share,

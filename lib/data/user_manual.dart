@@ -31,10 +31,10 @@ const userManualSections = [
     titleDe: 'Erste Schritte',
     bodyEn:
         'Set your language and preferences during setup or later in Settings. Browse dishes from the home screen or use search. Open a dish to see its recipe and available variants. Save recipes to your Cookbook, organise meals in the plan, and start cook mode from a recipe.\n\n'
-        'The bundled recipes, your saved data, and this manual work offline. Website imports and external actions such as opening a feedback draft need the corresponding connection. Search this manual by a word such as PDF, timer, or backup; tap a heading to read the instructions.',
+        'The bundled recipes, your saved data, and this manual work offline. Website imports, the optional online photo search, and external actions such as opening a feedback draft need the corresponding connection. Search this manual by a word such as PDF, timer, or backup; tap a heading to read the instructions.',
     bodyDe:
         'Wähle Sprache und Vorlieben bei der Einrichtung oder später in den Einstellungen. Stöbere auf der Startseite oder nutze die Suche. Öffne ein Gericht für sein Rezept und die verfügbaren Varianten. Speichere Rezepte im Kochbuch, organisiere Mahlzeiten im Plan und starte den Kochmodus aus einem Rezept.\n\n'
-        'Die mitgelieferten Rezepte, deine gespeicherten Daten und diese Anleitung funktionieren offline. Website-Importe und externe Aktionen wie das Öffnen eines Feedback-Entwurfs benötigen die entsprechende Verbindung. Suche hier nach einem Wort wie PDF, Timer oder Backup und tippe eine Überschrift an.',
+        'Die mitgelieferten Rezepte, deine gespeicherten Daten und diese Anleitung funktionieren offline. Website-Importe, die optionale Online-Fotosuche und externe Aktionen wie das Öffnen eines Feedback-Entwurfs benötigen die entsprechende Verbindung. Suche hier nach einem Wort wie PDF, Timer oder Backup und tippe eine Überschrift an.',
   ),
   ManualSection(
     id: 'profile',
@@ -68,6 +68,17 @@ const userManualSections = [
     bodyDe:
         'Erstelle im Kochbuch mit der Schaltfläche für ein neues Rezept ein eigenes Rezept. Gib Titel, Dauer, Portionen, Zutaten mit Menge und Einheit oder Originaltext sowie Kochschritte ein. Schritte können Timer haben. Speichere das Rezept und öffne es unter Meine Rezepte zum Kochen, Bearbeiten oder Löschen.\n\n'
         'Ein optionales Foto wird lokal für die Offline-Nutzung gespeichert. Importierte Angaben sind Entwürfe: Prüfe Mengen, Einheiten, Zeiten und Portionen vor dem Speichern. Fotos werden wie geliefert gespeichert und können eingebettete Metadaten enthalten; prüfe ein Bild, bevor du es beim Teilen oder im Backup weitergibst.',
+  ),
+  ManualSection(
+    id: 'photo-search',
+    titleEn: 'Find recipe photos online',
+    titleDe: 'Rezeptfotos online finden',
+    bodyEn:
+        'This option is off by default. Turn on "find recipe photos online" in Settings to add "find photo online" next to the photo buttons of every recipe. Tapping it searches Wikimedia Commons for the dish name. Change the search words to refine the results, tap a preview to choose it, and confirm with "use this photo". The chosen photo replaces any current photo and is stored locally for offline use.\n\n'
+        'Searches happen only when you open or run them. They send the search words, not your profile or cookbook, and Wikimedia sees your IP address. Photos are freely licensed and show the dish as someone else made it, so they may not match the recipe. The recipe page shows each found photo\'s author and license; tap the credit to open its source page. The credit stays with the photo in backups and shares. Turning the option off hides the search; saved photos stay until you remove them.',
+    bodyDe:
+        'Diese Option ist standardmäßig aus. Schalte in den Einstellungen „Rezeptfotos online suchen“ ein, damit neben den Foto-Schaltflächen jedes Rezepts „Foto online suchen“ erscheint. Ein Tippen sucht auf Wikimedia Commons nach dem Namen des Gerichts. Ändere die Suchwörter, um die Ergebnisse zu verfeinern, tippe auf eine Vorschau und bestätige mit „dieses Foto verwenden“. Das gewählte Foto ersetzt ein vorhandenes Foto und wird lokal für die Offline-Nutzung gespeichert.\n\n'
+        'Suchen finden nur statt, wenn du sie öffnest oder startest. Sie senden die Suchwörter, nicht dein Profil oder Kochbuch, und Wikimedia sieht deine IP-Adresse. Die Fotos sind frei lizenziert und zeigen das Gericht, wie jemand anderes es gemacht hat; sie passen deshalb eventuell nicht zum Rezept. Die Rezeptseite zeigt Urheber und Lizenz jedes gefundenen Fotos; tippe darauf, um seine Quellseite zu öffnen. Die Angabe bleibt beim Foto, auch in Backups und beim Teilen. Wenn du die Option ausschaltest, verschwindet die Suche; gespeicherte Fotos bleiben, bis du sie entfernst.',
   ),
   ManualSection(
     id: 'website',

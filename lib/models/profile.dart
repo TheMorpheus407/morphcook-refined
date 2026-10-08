@@ -28,6 +28,10 @@ class Profile {
   /// still available as an explicit preference for people who enjoy it.
   final bool readableText;
 
+  /// Opt-in online photo search for recipes. Off by default: MorphCook makes
+  /// no image requests until the owner enables this and starts a search.
+  final bool imageSearchEnabled;
+
   const Profile({
     this.name = '',
     this.lang = 'en',
@@ -43,6 +47,7 @@ class Profile {
     this.quickNextTapEnabled = false,
     this.themeMode = 'system',
     this.readableText = true,
+    this.imageSearchEnabled = false,
   });
 
   /// Tolerance around [calorieTarget] within which a recipe still matches.
@@ -66,6 +71,7 @@ class Profile {
     bool? quickNextTapEnabled,
     String? themeMode,
     bool? readableText,
+    bool? imageSearchEnabled,
   }) => Profile(
     name: name ?? this.name,
     lang: lang ?? this.lang,
@@ -87,6 +93,7 @@ class Profile {
     quickNextTapEnabled: quickNextTapEnabled ?? this.quickNextTapEnabled,
     themeMode: themeMode ?? this.themeMode,
     readableText: readableText ?? this.readableText,
+    imageSearchEnabled: imageSearchEnabled ?? this.imageSearchEnabled,
   );
 
   Map<String, dynamic> toJson() => {
@@ -104,6 +111,7 @@ class Profile {
     'quick_next_tap_enabled': quickNextTapEnabled,
     'theme_mode': themeMode,
     'readable_text': readableText,
+    'image_search_enabled': imageSearchEnabled,
     'typography_version': _typographyVersion,
   };
 
@@ -130,6 +138,7 @@ class Profile {
       readableText: typographyVersion < _typographyVersion
           ? true
           : json['readable_text'] as bool? ?? true,
+      imageSearchEnabled: json['image_search_enabled'] as bool? ?? false,
     );
   }
 }

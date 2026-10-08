@@ -29,5 +29,7 @@ Was drin ist:
 
 Optionale Webseiten-Importe speichern Rezepte und auf Wunsch Fotos offline.
 Beim Laden eines Rezepts oder eines gewählten Fotos wird die jeweilige Website kontaktiert.
+Eine optionale, standardmäßig ausgeschaltete Fotosuche findet frei lizenzierte
+Gerichtfotos mit Urheberangabe auf Wikimedia Commons – nur, wenn du suchst.
 Keine Konten, Werbung oder Tracking. Profil und Kochbuch bleiben auf deinem
 Gerät, bis du sie selbst exportierst.
