@@ -2,9 +2,11 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:archive/archive.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:morphcook/data/app_state.dart';
 import 'package:morphcook/data/store.dart';
+import 'package:morphcook/logic/backup/backup_service.dart';
 import 'package:morphcook/logic/cook/cook_controller.dart';
 import 'package:morphcook/logic/sharing/recipe_share.dart';
 import 'package:morphcook/models/personal_recipe.dart';
@@ -109,6 +111,190 @@ class _FailingShareStore extends MemoryStore {
 }
 
 void main() {
+  for (final lang in ['en', 'de']) {
+    test(
+      'sender-supplied origin stays qualified in readable shares in $lang',
+      () async {
+        final arbitrary = _recipe().toJson()..['bundled_origin'] = true;
+        final incoming = decodeRecipeShare(
+          _encode(_payload(recipes: [arbitrary])),
+        );
+        final recipient = await _state();
+        addTearDown(recipient.dispose);
+        await recipient.importSharedRecipes(incoming);
+
+        final expected = lang == 'de'
+            ? 'Ursprüngliches Rezept (Herkunftsangabe des Absenders, ungeprüft): MorphCook-Sammlung · KI-generiert. Ein Nachkochen durch Menschen ist nicht bestätigt.'
+            : 'Original recipe (sender-supplied origin, unverified): MorphCook collection · AI-generated. Human cooking verification is not provided.';
+        for (final edited in [false, true]) {
+          if (edited) {
+            await recipient.savePersonalRecipe(
+              recipient.personalRecipes.single.copyWith(
+                title: 'My adapted soup',
+                steps: [PersonalRecipeStep(text: 'My own instructions.')],
+              ),
+            );
+          }
+          final reshared = decodeRecipeShare(
+            encodeRecipeShare(await collectRecipeShare(recipient)),
+          );
+          expect(reshared.recipes.single.bundledOrigin, isTrue);
+          final text = recipeShareText(reshared, lang: lang);
+          expect(text, contains(expected));
+          expect(text, contains('https://example.com/soup'));
+          expect(text, contains('A cook'));
+          if (edited) expect(text, contains('My own instructions.'));
+        }
+        final unclassified = decodeRecipeShare(
+          _encode(
+            _payload(
+              recipes: [
+                {...arbitrary, 'bundled_origin': false},
+              ],
+            ),
+          ),
+        );
+        expect(
+          recipeShareText(unclassified, lang: lang),
+          isNot(contains(expected)),
+        );
+        expect(
+          recipeShareText(unclassified, lang: lang),
+          isNot(contains('MorphCook collection')),
+        );
+        expect(
+          recipeShareText(unclassified, lang: lang),
+          isNot(contains('MorphCook-Sammlung')),
+        );
+      },
+    );
+
+    test(
+      'bundled origin survives ZIP import, edits, conflicts, backup and re-sharing in $lang',
+      () async {
+        final sender = await _state();
+        final recipient = await _state();
+        addTearDown(sender.dispose);
+        addTearDown(recipient.dispose);
+        await sender.updateProfile(Profile(lang: lang));
+        final shared = await collectRecipeShare(
+          sender,
+          recipeId: 'doener-vegan',
+        );
+        final json = encodeRecipeShare(shared);
+        expect(shared.recipes.single.toJson()['bundled_origin'], isTrue);
+        final archive = Archive()
+          ..addFile(ArchiveFile.bytes('morphcook-recipes.json', json))
+          ..addFile(
+            ArchiveFile.string(
+              'recipes.txt',
+              recipeShareText(shared, lang: lang),
+            ),
+          );
+        final incoming = decodeRecipeShare(
+          ZipEncoder().encodeBytes(archive, level: 0),
+        );
+        // Force the importer to remap the ID without overwriting local content.
+        final local = incoming.recipes.single.copyWith(
+          title: 'My existing version',
+        );
+        await recipient.savePersonalRecipe(local);
+        expect(await recipient.importSharedRecipes(incoming), 1);
+        expect(await recipient.importSharedRecipes(incoming), 0);
+        final copy = recipient.personalRecipes.singleWhere(
+          (r) => r.id != local.id,
+        );
+        expect(copy.toJson()['bundled_origin'], isTrue);
+        expect(recipient.personalRecipeById(local.id)!.title, local.title);
+        final reopened = AppState(
+          store: recipient.store,
+          corpus: recipient.corpus,
+        );
+        addTearDown(reopened.dispose);
+        await reopened.load();
+        await reopened.savePersonalRecipe(
+          reopened
+              .personalRecipeById(copy.id)!
+              .copyWith(
+                title: 'My adapted recipe',
+                steps: [PersonalRecipeStep(text: 'My own instructions.')],
+              ),
+        );
+        final restored = await _state();
+        addTearDown(restored.dispose);
+        final backup = BackupService.export(
+          reopened.buildBackup(),
+          includePlainGzip: false,
+        );
+        await restored.applyBackup(
+          BackupService.import(backup.jsonFile),
+          merge: false,
+        );
+        final reshared = decodeRecipeShare(
+          encodeRecipeShare(
+            await collectRecipeShare(restored, recipeId: copy.id),
+          ),
+        );
+        expect(reshared.recipes.single.toJson()['bundled_origin'], isTrue);
+        expect(
+          reshared.recipes.single.steps.single.text,
+          'My own instructions.',
+        );
+        final text = recipeShareText(reshared, lang: lang);
+        expect(
+          text,
+          contains(
+            lang == 'de'
+                ? 'Ursprüngliches Rezept (Herkunftsangabe des Absenders, ungeprüft): MorphCook-Sammlung · KI-generiert. Ein Nachkochen durch Menschen ist nicht bestätigt.'
+                : 'Original recipe (sender-supplied origin, unverified): MorphCook collection · AI-generated. Human cooking verification is not provided.',
+          ),
+        );
+      },
+    );
+  }
+
+  test(
+    'legacy and website shares stay unclassified, malformed origin is rejected',
+    () async {
+      final legacy = _recipe().toJson()..remove('bundled_origin');
+      final incoming = decodeRecipeShare(_encode(_payload(recipes: [legacy])));
+      final recipient = await _state();
+      addTearDown(recipient.dispose);
+      await recipient.importSharedRecipes(incoming);
+      final shared = await collectRecipeShare(recipient);
+      expect(
+        shared.recipes.single.toJson().containsKey('bundled_origin'),
+        isFalse,
+      );
+      expect(shared.recipes.single.sourceAuthor, 'A cook');
+      expect(shared.recipes.single.sourceUrl, 'https://example.com/soup');
+      for (final lang in ['en', 'de']) {
+        expect(
+          recipeShareText(shared, lang: lang),
+          isNot(contains('AI-generated')),
+        );
+        expect(
+          recipeShareText(shared, lang: lang),
+          isNot(contains('KI-generiert')),
+        );
+      }
+      for (final invalid in ['true', 1, {}]) {
+        expect(
+          () => decodeRecipeShare(
+            _encode(
+              _payload(
+                recipes: [
+                  {...legacy, 'bundled_origin': invalid},
+                ],
+              ),
+            ),
+          ),
+          throwsA(isA<RecipeShareException>()),
+        );
+      }
+    },
+  );
+
   test(
     'structurally dense cookbooks within model limits remain importable',
     () {

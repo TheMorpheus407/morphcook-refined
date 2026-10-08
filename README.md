@@ -20,7 +20,7 @@ been developed by hand since.
 ## Build
 
 ```sh
-flutter pub get
+flutter pub get --enforce-lockfile
 flutter test
 flutter run
 ```
@@ -34,7 +34,8 @@ flutter build apk --release
 For reproducible F-Droid builds the Flutter SDK is pinned as a git submodule
 (`submodules/flutter`, currently 3.41.9). A normal clone ignores it; the
 F-Droid buildserver initializes it and builds with that exact toolchain. Local
-development can use your system Flutter with the submodule uninitialized.
+development can use system Flutter 3.41.9 with the submodule uninitialized,
+so dependency resolution matches the committed lockfile.
 If you initialized the submodule to check the pinned SDK, return to the normal
 local checkout with `git submodule deinit -- submodules/flutter` before running
 app checks with your system SDK. This requires a clean submodule and preserves
