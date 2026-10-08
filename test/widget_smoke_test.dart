@@ -76,7 +76,7 @@ void main() {
     await tester.tap(
       find.descendant(
         of: firstGridCard,
-        matching: find.byType(GestureDetector),
+        matching: find.text(tester.widget<PolaroidCard>(firstGridCard).title),
       ),
     );
     await tester.pumpAndSettle();

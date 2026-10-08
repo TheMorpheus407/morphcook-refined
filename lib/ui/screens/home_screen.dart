@@ -4,6 +4,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../data/app_state.dart';
 import '../../models/dish.dart';
+import '../../models/profile.dart';
 import '../../models/recipe.dart';
 import '../strings.dart';
 import '../theme.dart';
@@ -24,23 +25,36 @@ class _HomeScreenState extends State<HomeScreen> {
   // dishId -> the user's best visible variant (null = no variant passes).
   Map<String, Recipe?> _best = {};
   bool _loaded = false;
+  Profile? _variantProfile;
+  int _loadGeneration = 0;
 
   // Selected browse category; null shows the full sectioned feed.
   String? _category;
 
   @override
-  void initState() {
-    super.initState();
-    _recompute();
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final profile = context.watch<AppState>().profile;
+    if (!identical(profile, _variantProfile)) {
+      _variantProfile = profile;
+      _loaded = false;
+      _recompute();
+    }
   }
 
   Future<void> _recompute() async {
     final state = context.read<AppState>();
+    final profile = state.profile;
+    final generation = ++_loadGeneration;
     final result = <String, Recipe?>{};
     for (final dish in state.corpus.dishes) {
       result[dish.id] = await state.bestVariant(dish.id);
     }
-    if (!mounted) return;
+    if (!mounted ||
+        generation != _loadGeneration ||
+        !identical(profile, state.profile)) {
+      return;
+    }
     setState(() {
       _best = result;
       _loaded = true;
@@ -214,7 +228,8 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           onTap: () => _openDish(dish),
           saved: state.isSaved(recipe.id),
-          onBookmarkTap: () => state.toggleSaved(recipe.id),
+          bookmarkLabel: _bookmarkLabel(recipe, state),
+          onBookmarkTap: () => _toggleBookmark(recipe, state),
         );
       },
     );
@@ -293,7 +308,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     right: 2,
                     child: BookmarkBadge(
                       saved: state.isSaved(recipe.id),
-                      onTap: () => state.toggleSaved(recipe.id),
+                      label: _bookmarkLabel(recipe, state),
+                      onTap: () => _toggleBookmark(recipe, state),
                     ),
                   ),
                 ],
@@ -365,6 +381,16 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       child: Text(morph.cased(text), style: morph.text.label(size: 9)),
     );
+  }
+
+  String _bookmarkLabel(Recipe recipe, AppState state) =>
+      '${S(state.lang)(state.isSaved(recipe.id) ? 'removeFromCookbook' : 'saveToCookbook')}: ${recipe.title.of(state.lang)}';
+
+  void _toggleBookmark(Recipe recipe, AppState state) {
+    // A profile write can precede its notification. Never save the old variant
+    // during that interval or while a replacement feed is loading.
+    if (!_loaded || !identical(_variantProfile, state.profile)) return;
+    state.toggleSaved(recipe.id);
   }
 
   void _openDish(Dish dish) {

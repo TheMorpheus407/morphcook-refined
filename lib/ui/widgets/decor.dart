@@ -1,4 +1,3 @@
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
 import '../theme.dart';
@@ -182,34 +181,37 @@ class SectionHeader extends StatelessWidget {
   }
 }
 
-/// Tap target for saving a recipe straight from a card. Uses a
-/// [RawGestureDetector] (not GestureDetector/InkWell) so cards keep exactly
-/// one GestureDetector — their own — and the bookmark wins the tap arena
-/// instead of bubbling to the card's detail navigation.
+/// Independent, keyboard- and screen-reader-accessible card bookmark.
 class BookmarkBadge extends StatelessWidget {
   final bool saved;
+  final String label;
   final VoidCallback? onTap;
 
-  const BookmarkBadge({super.key, required this.saved, this.onTap});
+  const BookmarkBadge({
+    super.key,
+    required this.saved,
+    required this.label,
+    this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
     final morph = MorphTheme.of(context);
-    return RawGestureDetector(
-      behavior: HitTestBehavior.opaque,
-      gestures: {
-        TapGestureRecognizer:
-            GestureRecognizerFactoryWithHandlers<TapGestureRecognizer>(
-              () => TapGestureRecognizer(),
-              (recognizer) => recognizer.onTap = onTap,
-            ),
-      },
-      child: Padding(
-        padding: const EdgeInsets.all(6),
-        child: Icon(
-          saved ? Icons.bookmark : Icons.bookmark_border,
-          size: 20,
-          color: saved ? morph.colors.terracotta : morph.colors.ink,
+    return Semantics(
+      container: true,
+      label: label,
+      button: true,
+      selected: saved,
+      onTap: onTap,
+      child: ExcludeSemantics(
+        child: IconButton(
+          tooltip: label,
+          onPressed: onTap,
+          iconSize: 20,
+          icon: Icon(
+            saved ? Icons.bookmark : Icons.bookmark_border,
+            color: saved ? morph.colors.terracotta : morph.colors.ink,
+          ),
         ),
       ),
     );
@@ -229,6 +231,7 @@ class PolaroidCard extends StatelessWidget {
   final Widget? photo;
   final bool saved;
   final VoidCallback? onBookmarkTap;
+  final String? bookmarkLabel;
 
   const PolaroidCard({
     super.key,
@@ -242,7 +245,8 @@ class PolaroidCard extends StatelessWidget {
     this.photo,
     this.saved = false,
     this.onBookmarkTap,
-  });
+    this.bookmarkLabel,
+  }) : assert(onBookmarkTap == null || bookmarkLabel != null);
 
   @override
   Widget build(BuildContext context) {
@@ -283,6 +287,7 @@ class PolaroidCard extends StatelessWidget {
                         right: 2,
                         child: BookmarkBadge(
                           saved: saved,
+                          label: bookmarkLabel!,
                           onTap: onBookmarkTap,
                         ),
                       ),

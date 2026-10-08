@@ -52,9 +52,11 @@ MorphCook is offline-first and collects no analytics. Website requests and optio
 ## Saving recipes
 
 Tap the bookmark icon on any Start View card or featured dish to save it to
-your cookbook without opening the recipe first — the same bookmark in the
-recipe details does the reverse. The Start View keeps its order when you
-return, so the recipes you were comparing stay where you left them.
+your cookbook without opening the recipe first. Tap it again to remove that
+variant; the bookmark in recipe details uses the same saved state. Dishes
+with the same frequency tier have a consistent order. The featured dish can
+still change with the time of day or cooking history, moving cards between
+the featured position and their category.
 
 ## Website imports
 
