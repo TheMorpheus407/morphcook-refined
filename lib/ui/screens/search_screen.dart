@@ -30,7 +30,6 @@ class _SearchScreenState extends State<SearchScreen> {
   PaginationController<Recipe>? _pager;
   Timer? _debounce;
   String _query = '';
-  bool _zeroLogged = false;
   int _searchGeneration = 0;
 
   static const _filterableTags = [
@@ -78,16 +77,7 @@ class _SearchScreenState extends State<SearchScreen> {
         _categoryFilter,
         state.corpus.categoryOfRecipe);
 
-    if (results.isEmpty && _query.trim().isNotEmpty && !_zeroLogged) {
-      // Content-gap logging: zero-result queries are recorded locally and
-      // exported with backups to inform corpus priorities.
-      _zeroLogged = true;
-      await state.logContentRequest(_query);
-    } else if (results.isNotEmpty) {
-      _zeroLogged = false;
-    }
-
-    // A queued content-request write may finish after another query/filter.
+    // Only the current query may replace the visible results.
     if (!mounted || generation != _searchGeneration) return;
     final old = _pager;
     final pager = PaginationController<Recipe>(
@@ -99,6 +89,15 @@ class _SearchScreenState extends State<SearchScreen> {
     setState(() => _pager = pager);
     old?.dispose();
     await pager.loadMore();
+
+    if (!mounted || generation != _searchGeneration) return;
+    if (results.isEmpty && _query.trim().isNotEmpty) {
+      // Local logging never blocks visible results. AppState deduplicates
+      // successful writes; a later search can silently retry a failed write.
+      try {
+        await state.logContentRequest(_query);
+      } catch (_) {}
+    }
   }
 
   @override

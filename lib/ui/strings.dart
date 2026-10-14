@@ -163,8 +163,7 @@ class S {
     'backupImportFailed': 'the backup could not be restored safely.',
     'searchHint': 'search dishes, ingredients, moods…',
     'searchEmpty': 'no recipes found for',
-    'searchEmptyNote':
-        'we wrote it down — your wish helps us decide what to cook up next.',
+    'searchEmptyNote': 'try another dish or fewer filters.',
     'filters': 'filters',
     'diet': 'diet',
     'effort': 'effort',
@@ -198,7 +197,9 @@ class S {
     'done': 'done',
     'finishCooking': 'finish',
     'cookedIt': 'that\'s dinner. well done.',
-    'cookAgainNote': 'logged to your history.',
+    'cookAgainNote': 'tap done to save this meal to your history.',
+    'collectionSaveFailed':
+        'Your change could not be saved. Check free storage and try again.',
     'backToRecipe': 'back to the recipe',
     'quickTapHint': 'tap anywhere on the step to go forward',
     'addToList': 'add to shopping list',
@@ -495,8 +496,7 @@ class S {
         'das Backup konnte nicht sicher wiederhergestellt werden.',
     'searchHint': 'Gerichte, Zutaten, Stimmungen…',
     'searchEmpty': 'keine Rezepte gefunden für',
-    'searchEmptyNote':
-        'wir haben es notiert — dein Wunsch hilft uns beim nächsten Kochbuch-Update.',
+    'searchEmptyNote': 'versuche ein anderes Gericht oder weniger Filter.',
     'filters': 'Filter',
     'diet': 'Ernährung',
     'effort': 'Aufwand',
@@ -530,7 +530,10 @@ class S {
     'done': 'fertig',
     'finishCooking': 'fertig',
     'cookedIt': 'das war\'s. gut gemacht.',
-    'cookAgainNote': 'in deiner Historie vermerkt.',
+    'cookAgainNote':
+        'tippe auf fertig, um dieses Essen in deiner Historie zu speichern.',
+    'collectionSaveFailed':
+        'Deine Änderung konnte nicht gespeichert werden. Prüfe den freien Speicher und versuche es erneut.',
     'backToRecipe': 'zurück zum Rezept',
     'quickTapHint': 'tippe irgendwo auf den Schritt, um weiterzugehen',
     'addToList': 'auf die Einkaufsliste',

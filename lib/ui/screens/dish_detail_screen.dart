@@ -11,6 +11,7 @@ import '../../models/dish.dart';
 import '../../models/personal_recipe.dart';
 import '../../models/recipe.dart';
 import '../../models/recipe_image.dart';
+import '../collection_edit.dart';
 import '../strings.dart';
 import '../theme.dart';
 import '../widgets/decor.dart';
@@ -780,7 +781,12 @@ class _DishDetailScreenState extends State<DishDetailScreen> {
   }
 
   Future<void> _addToShoppingList(Recipe recipe, AppState state, S s) async {
-    await state.addToShoppingList([(recipe, 1.0)]);
+    if (!await saveCollectionEdit(
+      context,
+      () => state.addToShoppingList([(recipe, 1.0)]),
+    )) {
+      return;
+    }
     if (!mounted) return;
     ScaffoldMessenger.of(
       context,

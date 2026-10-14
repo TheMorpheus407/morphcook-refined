@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../data/app_state.dart';
 import '../../models/collections.dart';
 import '../../models/recipe.dart';
+import '../collection_edit.dart';
 import '../strings.dart';
 import '../theme.dart';
 import '../widgets/recipe_row.dart';
@@ -167,8 +168,10 @@ class _MealPlanScreenState extends State<MealPlanScreen> {
     final recipe = recipeId == null ? null : state.loadedRecipeById(recipeId);
 
     final cell = DragTarget<String>(
-      onAcceptWithDetails: (details) =>
-          state.moveMeal(_weekKey, details.data, slotKey),
+      onAcceptWithDetails: (details) => saveCollectionEdit(
+        context,
+        () => state.moveMeal(_weekKey, details.data, slotKey),
+      ),
       builder: (context, candidates, _) {
         final highlighted = candidates.isNotEmpty;
         return GestureDetector(
@@ -282,7 +285,10 @@ class _MealPlanScreenState extends State<MealPlanScreen> {
     if (!mounted || action == null) return;
 
     if (action == 'remove') {
-      await state.clearMeal(_weekKey, slotKey);
+      await saveCollectionEdit(
+        context,
+        () => state.clearMeal(_weekKey, slotKey),
+      );
       return;
     }
 
@@ -307,7 +313,12 @@ class _MealPlanScreenState extends State<MealPlanScreen> {
       );
     }
     if (picked != null) {
-      await state.assignMeal(_weekKey, slotKey, picked.id);
+      if (!mounted) return;
+      final recipe = picked;
+      await saveCollectionEdit(
+        context,
+        () => state.assignMeal(_weekKey, slotKey, recipe.id),
+      );
     }
   }
 
@@ -358,7 +369,13 @@ class _MealPlanScreenState extends State<MealPlanScreen> {
       if (recipe != null) recipes.add((recipe, 1.0));
     }
     if (recipes.isEmpty) return;
-    await state.addToShoppingList(recipes);
+    if (!mounted) return;
+    if (!await saveCollectionEdit(
+      context,
+      () => state.addToShoppingList(recipes),
+    )) {
+      return;
+    }
     if (!mounted) return;
     ScaffoldMessenger.of(
       context,

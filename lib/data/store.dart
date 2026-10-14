@@ -19,6 +19,7 @@ abstract class PersistenceStore {
   /// Collections are stored as JSON strings under a key.
   String? getCollection(String key);
   Future<void> putCollection(String key, String jsonText);
+  Future<void> removeCollection(String key);
   Future<void> putCollections(Map<String, String> collections);
   Map<String, Uint8List> loadRecipeImageBytes();
   Future<void> putRecipeImageBytes(String recipeId, Uint8List bytes);
@@ -77,6 +78,9 @@ class HiveStore implements PersistenceStore {
   Future<void> putCollection(String key, String jsonText) async {
     await _box.put(key, jsonText);
   }
+
+  @override
+  Future<void> removeCollection(String key) => _box.delete(key);
 
   @override
   Future<void> putCollections(Map<String, String> collections) =>
@@ -148,6 +152,11 @@ class MemoryStore implements PersistenceStore {
   @override
   Future<void> putCollection(String key, String jsonText) async {
     _collections[key] = jsonText;
+  }
+
+  @override
+  Future<void> removeCollection(String key) async {
+    _collections.remove(key);
   }
 
   @override

@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../data/app_state.dart';
 import '../../logic/units.dart';
+import '../collection_edit.dart';
 import '../strings.dart';
 import '../theme.dart';
 import '../widgets/decor.dart';
@@ -36,13 +37,15 @@ class ShoppingListScreen extends StatelessWidget {
             IconButton(
               tooltip: s('clearChecked'),
               icon: const Icon(Icons.remove_done, size: 20),
-              onPressed: state.clearCheckedShoppingItems,
+              onPressed: () =>
+                  saveCollectionEdit(context, state.clearCheckedShoppingItems),
             ),
           if (items.isNotEmpty)
             IconButton(
               tooltip: s('clearAll'),
               icon: const Icon(Icons.delete_outline, size: 20),
-              onPressed: state.clearShoppingList,
+              onPressed: () =>
+                  saveCollectionEdit(context, state.clearShoppingList),
             ),
         ],
       ),
@@ -86,7 +89,8 @@ class ShoppingListScreen extends StatelessWidget {
         state.corpus.dictionary.byId(item.ingredientId)?.name.of(lang) ??
         item.ingredientId;
     return InkWell(
-      onTap: () => state.toggleShoppingItem(item),
+      onTap: () =>
+          saveCollectionEdit(context, () => state.toggleShoppingItem(item)),
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 6),
         child: Row(

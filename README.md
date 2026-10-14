@@ -70,6 +70,12 @@ Bookmarks appear only after storage confirms the update. If saving or removing
 a bookmark fails, the app reports the storage error and keeps the previous
 visible state; the same button can retry the requested change.
 
+Collection edits also publish only after storage confirmation. Failed shopping,
+meal-plan and cooking-history saves show an English/German error and can be
+retried. Search remains usable if its local empty-query log cannot be saved.
+[Collection save checks](docs/collection-write-failures.md) describe the recovery
+behavior and the limits of best-effort rollback.
+
 ## Website imports
 
 In the cookbook, use the link icon to import a recipe URL. Review its ingredients,
