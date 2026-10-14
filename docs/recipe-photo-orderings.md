@@ -1,6 +1,22 @@
 # Recipe photo event ordering checks
 
-These tables cover the behavioural findings from PR #10 review rounds. Each row has a targeted regression. Async results belong to the latest search generation; persisted attribution belongs to its exact photo bytes. A crash may recover a partial backup without misattributing replacement photos. Full-backup atomicity is outside this feature.
+These tables cover the behavioural findings from PR #10 and the shared mutation ordering in PR #11. Each row has a targeted regression. Async results belong to the latest search generation; persisted attribution belongs to its exact photo bytes. A crash may recover a partial backup without misattributing replacement photos. Full-backup atomicity is outside this feature.
+
+## Overlapping photo mutations
+
+Tests in `test/recipe_photo_write_ordering_test.dart` pause a photo binary write and request another mutation before releasing it. Saves, removals, shared imports, backup restore, personal-recipe deletion, reset and expert assessments share one queue. Later mutations take their snapshots after the preceding operation has completed or rolled back. These checks inspect memory, restart, backup contents and stored binary keys.
+
+| Event ordering | Intended behaviour | Regression name |
+|---|---|---|
+| Save → second save → first succeeds or fails | Preserve the second photo and credit; a failed first save propagates its error and leaves the queue usable. | `overlapping photo writes preserve later save: fails=$fails` |
+| Save → removal of the same photo | Finish saving before removing the photo and its binary. | `removal requested during a save removes its completed photo` |
+| Save → shared import → first succeeds or fails | Wait for completion/rollback, then retain the local recipe and import the incoming recipe/photo/credit. | `import waits for a photo save and rollback: fails=$fails` |
+| Save → backup merge → first succeeds or fails | Merge the completed local photo, or its rolled-back absence, with the incoming recipe/photo/credit and profile. | `merge waits for a photo save and rollback: fails=$fails` |
+| Save → backup replacement → first succeeds or fails | Replace with incoming recipes/photos/credits and profile; remove the old-only photo binary. | `replace waits for a photo save and rollback: fails=$fails` |
+| Save → deletion of its personal recipe → first succeeds or fails | Delete the recipe after completion/rollback; remove its photo, metadata and binary. | `delete waits for a photo save and rollback: fails=$fails` |
+| Save → reset → first succeeds or fails | Reset after completion/rollback; clear recipes, photos, binaries and profile/onboarding state. | `reset waits for a photo save and rollback: fails=$fails` |
+
+All 13 cases fail against the pre-fix base `ddb9f16`. Bypassing the shared queue only for imports, restore, deletion and reset keeps the original three cases passing and fails all ten additional cases.
 
 ## Restore and merge
 
