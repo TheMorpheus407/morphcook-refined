@@ -406,11 +406,18 @@ class _HomeScreenState extends State<HomeScreen> {
   String _bookmarkLabel(Recipe recipe, AppState state) =>
       '${S(state.lang)(state.isSaved(recipe.id) ? 'removeFromCookbook' : 'saveToCookbook')}: ${recipe.title.of(state.lang)}';
 
-  void _toggleBookmark(Recipe recipe, AppState state) {
+  Future<void> _toggleBookmark(Recipe recipe, AppState state) async {
     // Never save a variant computed for another profile or while a replacement
     // feed is loading.
     if (!_loaded || !identical(_variantProfile, state.profile)) return;
-    state.toggleSaved(recipe.id);
+    try {
+      await state.toggleSaved(recipe.id);
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(S(state.lang)('bookmarkSaveFailed'))),
+      );
+    }
   }
 
   void _openDish(Dish dish) {

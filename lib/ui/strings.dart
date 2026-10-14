@@ -78,6 +78,8 @@ class S {
     'cookbookHint': 'save a version you love, or write down one of your own.',
     'saved': 'saved',
     'save': 'save',
+    'bookmarkSaveFailed':
+        'could not update your cookbook. check available storage and try again.',
     'saveToCookbook': 'save to cookbook',
     'removeFromCookbook': 'remove from cookbook',
     'myRecipes': 'my recipes',
@@ -406,6 +408,8 @@ class S {
         'speichere deine Lieblingsversion oder schreib dein eigenes Rezept auf.',
     'saved': 'gespeichert',
     'save': 'speichern',
+    'bookmarkSaveFailed':
+        'Dein Kochbuch konnte nicht aktualisiert werden. Prüfe den freien Speicher und versuche es erneut.',
     'saveToCookbook': 'im Kochbuch speichern',
     'removeFromCookbook': 'aus dem Kochbuch entfernen',
     'myRecipes': 'meine Rezepte',

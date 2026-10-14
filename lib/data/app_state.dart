@@ -167,14 +167,25 @@ class AppState extends ChangeNotifier {
       _queueMutation(() => _toggleSaved(recipeId));
 
   Future<void> _toggleSaved(String recipeId) async {
+    final next = List<SavedRecipe>.of(_saved);
     if (isSaved(recipeId)) {
-      _saved.removeWhere((s) => s.recipeId == recipeId);
+      next.removeWhere((s) => s.recipeId == recipeId);
     } else {
       // A queued tap may outlive deletion, backup replacement or reset.
       if (await recipeById(recipeId) == null) return;
-      _saved.add(SavedRecipe(recipeId: recipeId, savedAt: DateTime.now()));
+      next.add(SavedRecipe(recipeId: recipeId, savedAt: DateTime.now()));
     }
-    await _writeJson('saved', _saved.map((s) => s.toJson()).toList());
+    try {
+      await _writeJson('saved', next.map((s) => s.toJson()).toList());
+    } catch (_) {
+      // A store may have written before reporting failure. Complete rollback
+      // before the next queued mutation, without publishing a phantom entry.
+      try {
+        await _writeJson('saved', _saved.map((s) => s.toJson()).toList());
+      } catch (_) {}
+      rethrow;
+    }
+    _saved = next;
     notifyListeners();
   }
 
