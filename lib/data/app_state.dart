@@ -743,13 +743,58 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
+  // Keep published snapshots intact until all writes are confirmed. Rollback
+  // also covers stores that persist a value before reporting a failure.
+  Future<void> _persistCollections(
+    Map<String, Object> next,
+    Map<String, Object> previous,
+  ) async {
+    try {
+      for (final entry in next.entries) {
+        await _writeJson(entry.key, entry.value);
+      }
+    } catch (_) {
+      for (final entry in previous.entries) {
+        try {
+          await _writeJson(entry.key, entry.value);
+        } catch (_) {}
+      }
+      rethrow;
+    }
+  }
+
+  MealPlanData _copyMealPlan() => {
+    for (final entry in _mealPlan.entries)
+      entry.key: Map<String, String>.of(entry.value),
+  };
+
+  Future<void> _persistMealPlan(MealPlanData next) async {
+    await _persistCollections({'meal_plan': next}, {'meal_plan': _mealPlan});
+    _mealPlan = next;
+  }
+
+  Future<void> _persistShoppingList(List<ShoppingItem> next) async {
+    await _persistCollections(
+      {'shopping_list': next.map((s) => s.toJson()).toList()},
+      {'shopping_list': _shoppingList.map((s) => s.toJson()).toList()},
+    );
+    _shoppingList = next;
+  }
+
   // ---- history ----
 
   Future<void> logCooked(String recipeId) => _queueMutation(() async {
     // A queued action may outlive deletion, replacement or reset.
     if (await recipeById(recipeId) == null) return;
-    _history.add(HistoryEntry(recipeId: recipeId, cookedAt: DateTime.now()));
-    await _writeJson('history', _history.map((h) => h.toJson()).toList());
+    final next = [
+      ..._history,
+      HistoryEntry(recipeId: recipeId, cookedAt: DateTime.now()),
+    ];
+    await _persistCollections(
+      {'history': next.map((h) => h.toJson()).toList()},
+      {'history': _history.map((h) => h.toJson()).toList()},
+    );
+    _history = next;
     notifyListeners();
   });
 
@@ -759,28 +804,31 @@ class AppState extends ChangeNotifier {
       _queueMutation(() async {
         // A queued action may outlive deletion, replacement or reset.
         if (await recipeById(recipeId) == null) return;
-        _mealPlan.putIfAbsent(weekKey, () => {})[slot] = recipeId;
-        await _writeJson('meal_plan', _mealPlan);
+        final next = _copyMealPlan();
+        next.putIfAbsent(weekKey, () => {})[slot] = recipeId;
+        await _persistMealPlan(next);
         notifyListeners();
       });
 
   Future<void> clearMeal(String weekKey, String slot) =>
       _queueMutation(() async {
-        _mealPlan[weekKey]?.remove(slot);
-        if (_mealPlan[weekKey]?.isEmpty ?? false) _mealPlan.remove(weekKey);
-        await _writeJson('meal_plan', _mealPlan);
+        final next = _copyMealPlan();
+        next[weekKey]?.remove(slot);
+        if (next[weekKey]?.isEmpty ?? false) next.remove(weekKey);
+        await _persistMealPlan(next);
         notifyListeners();
       });
 
   Future<void> moveMeal(String weekKey, String fromSlot, String toSlot) =>
       _queueMutation(() async {
-        final week = _mealPlan[weekKey];
+        final next = _copyMealPlan();
+        final week = next[weekKey];
         if (week == null || !week.containsKey(fromSlot)) return;
         final moving = week.remove(fromSlot)!;
         final displaced = week[toSlot];
         week[toSlot] = moving;
         if (displaced != null) week[fromSlot] = displaced;
-        await _writeJson('meal_plan', _mealPlan);
+        await _persistMealPlan(next);
         notifyListeners();
       });
 
@@ -790,9 +838,9 @@ class AppState extends ChangeNotifier {
       _queueMutation(() async {
         final aggregated = aggregate(recipes, corpus.dictionary);
         final now = DateTime.now();
-        _shoppingList = mergeIntoList(_shoppingList, aggregated, now);
+        final nextList = mergeIntoList(_shoppingList, aggregated, now);
         // History keeps one record per added line for insights.
-        _shoppingHistory = [
+        final nextHistory = [
           ..._shoppingHistory,
           ...aggregated.map(
             (a) => ShoppingItem(
@@ -806,14 +854,20 @@ class AppState extends ChangeNotifier {
             ),
           ),
         ];
-        await _writeJson(
-          'shopping_list',
-          _shoppingList.map((s) => s.toJson()).toList(),
+        await _persistCollections(
+          {
+            'shopping_list': nextList.map((s) => s.toJson()).toList(),
+            'shopping_history': nextHistory.map((s) => s.toJson()).toList(),
+          },
+          {
+            'shopping_list': _shoppingList.map((s) => s.toJson()).toList(),
+            'shopping_history': _shoppingHistory
+                .map((s) => s.toJson())
+                .toList(),
+          },
         );
-        await _writeJson(
-          'shopping_history',
-          _shoppingHistory.map((s) => s.toJson()).toList(),
-        );
+        _shoppingList = nextList;
+        _shoppingHistory = nextHistory;
         notifyListeners();
       });
 
@@ -825,28 +879,21 @@ class AppState extends ChangeNotifier {
           (current) => identical(current.identity, item.identity),
         );
         if (index < 0) return;
-        _shoppingList[index] = _shoppingList[index].copyWith(
+        final next = List<ShoppingItem>.of(_shoppingList);
+        next[index] = next[index].copyWith(
           checked: !_shoppingList[index].checked,
         );
-        await _writeJson(
-          'shopping_list',
-          _shoppingList.map((s) => s.toJson()).toList(),
-        );
+        await _persistShoppingList(next);
         notifyListeners();
       });
 
   Future<void> clearCheckedShoppingItems() => _queueMutation(() async {
-    _shoppingList.removeWhere((s) => s.checked);
-    await _writeJson(
-      'shopping_list',
-      _shoppingList.map((s) => s.toJson()).toList(),
-    );
+    await _persistShoppingList(_shoppingList.where((s) => !s.checked).toList());
     notifyListeners();
   });
 
   Future<void> clearShoppingList() => _queueMutation(() async {
-    _shoppingList = [];
-    await _writeJson('shopping_list', const []);
+    await _persistShoppingList([]);
     notifyListeners();
   });
 
@@ -855,8 +902,12 @@ class AppState extends ChangeNotifier {
   Future<void> logContentRequest(String query) => _queueMutation(() async {
     final q = query.trim().toLowerCase();
     if (q.isEmpty || _contentRequests.contains(q)) return;
-    _contentRequests.add(q);
-    await _writeJson('content_requests', _contentRequests);
+    final next = [..._contentRequests, q];
+    await _persistCollections(
+      {'content_requests': next},
+      {'content_requests': _contentRequests},
+    );
+    _contentRequests = next;
   });
 
   // ---- cook progress ----
