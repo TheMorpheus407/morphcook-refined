@@ -80,6 +80,14 @@ void main() {
             find.text('${S(lang)('searchEmpty')} "zzzzmissingdish"'),
             findsOneWidget,
           );
+          expect(
+            find.text(
+              lang == 'en'
+                  ? 'try another dish or fewer filters.'
+                  : 'versuche ein anderes Gericht oder weniger Filter.',
+            ),
+            findsOneWidget,
+          );
           expect(state.contentRequests, isEmpty);
           await tester.enterText(find.byType(TextField), 'zzzzmissingdish ');
           await tester.pump(const Duration(milliseconds: 300));
@@ -152,7 +160,10 @@ void main() {
       await tester.pumpAndSettle();
       expect(state.contentRequests, isEmpty);
       expect(find.byType(RecipeRow), findsNothing);
-      expect(find.text('${S(lang)('searchEmpty')} "zzzzmissingdish"'), findsOneWidget);
+      expect(
+        find.text('${S(lang)('searchEmpty')} "zzzzmissingdish"'),
+        findsOneWidget,
+      );
       await tester.enterText(find.byType(TextField), 'lasag');
       await tester.pump(const Duration(milliseconds: 300));
       await tester.pumpAndSettle();
