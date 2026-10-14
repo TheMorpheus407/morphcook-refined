@@ -134,6 +134,8 @@ class S {
     'imageSearchHint':
         'adds “find photo online” to recipes. nothing is requested until you search. a search sends only its words to Wikimedia Commons, which also sees your IP address. results include author and free-license information and may not show this exact recipe.',
     'findRecipeImage': 'find photo online',
+    'photoSearchDisabled':
+        'photo search is off. enable it in settings to search again.',
     'photoSearchTitle': 'find a photo',
     'photoSearchQuery': 'search words',
     'photoSearchButton': 'search',
@@ -460,6 +462,8 @@ class S {
     'imageSearchHint':
         'fügt Rezepten „Foto online suchen“ hinzu. erst eine Suche stellt Anfragen. sie sendet nur ihre Suchwörter an Wikimedia Commons, das dabei auch deine IP-Adresse sieht. die Ergebnisse enthalten Urheber- und freie Lizenzangaben und zeigen eventuell nicht genau dieses Rezept.',
     'findRecipeImage': 'Foto online suchen',
+    'photoSearchDisabled':
+        'Die Fotosuche ist aus. Aktiviere sie in den Einstellungen, um wieder zu suchen.',
     'photoSearchTitle': 'Foto finden',
     'photoSearchQuery': 'Suchwörter',
     'photoSearchButton': 'suchen',

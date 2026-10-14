@@ -55,6 +55,41 @@ class _RecipePhotoSearchScreenState extends State<RecipePhotoSearchScreen> {
   String? _failure;
   bool _saving = false;
   int _generation = 0;
+  AppState? _appState;
+
+  bool get _enabled => context.read<AppState>().profile.imageSearchEnabled;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final state = context.watch<AppState>();
+    if (identical(state, _appState)) return;
+    if (_appState != null) {
+      _appState!.removeListener(_profileChanged);
+      _clearSearch();
+    }
+    _appState = state;
+    state.addListener(_profileChanged);
+    _profileChanged();
+  }
+
+  void _clearSearch() {
+    ++_generation;
+    _searching = false;
+    _searched = false;
+    _failure = null;
+    _results = [];
+    _previews.clear();
+    _loaded.clear();
+    _selected = null;
+  }
+
+  void _profileChanged() {
+    if (!mounted || _appState!.profile.imageSearchEnabled) return;
+    // Listen synchronously so even off/on changes between frames invalidate
+    // old results before they can create fresh preview requests.
+    setState(_clearSearch);
+  }
 
   @override
   void initState() {
@@ -64,13 +99,14 @@ class _RecipePhotoSearchScreenState extends State<RecipePhotoSearchScreen> {
 
   @override
   void dispose() {
+    _appState?.removeListener(_profileChanged);
     _query.dispose();
     super.dispose();
   }
 
   Future<void> _run() async {
     final words = normalizeRecipePhotoQuery(_query.text);
-    if (words.isEmpty || _saving) return;
+    if (!_enabled || words.isEmpty || _saving) return;
     final generation = ++_generation;
     final lang = context.read<AppState>().lang;
     setState(() {
@@ -85,7 +121,7 @@ class _RecipePhotoSearchScreenState extends State<RecipePhotoSearchScreen> {
     try {
       results = await _search.search(words, lang: lang);
     } catch (error) {
-      if (mounted && generation == _generation) {
+      if (mounted && generation == _generation && _enabled) {
         setState(() {
           _searching = false;
           _searched = true;
@@ -98,7 +134,7 @@ class _RecipePhotoSearchScreenState extends State<RecipePhotoSearchScreen> {
       }
       return;
     }
-    if (!mounted || generation != _generation) return;
+    if (!mounted || generation != _generation || !_enabled) return;
     setState(() {
       _searching = false;
       _searched = true;
@@ -107,22 +143,24 @@ class _RecipePhotoSearchScreenState extends State<RecipePhotoSearchScreen> {
   }
 
   /// Previews load lazily as tiles become visible; failures stay per tile.
-  Future<Uint8List?> _preview(RecipePhotoCandidate candidate) =>
-      _previews.putIfAbsent(candidate, () async {
-        final generation = _generation;
-        try {
-          final bytes = await _search.download(candidate);
-          if (!mounted || generation != _generation) return null;
-          return bytes;
-        } catch (_) {
-          return null;
-        }
-      });
+  Future<Uint8List?> _preview(RecipePhotoCandidate candidate) {
+    if (!_enabled) return Future.value(null);
+    return _previews.putIfAbsent(candidate, () async {
+      final generation = _generation;
+      try {
+        final bytes = await _search.download(candidate);
+        if (!mounted || generation != _generation || !_enabled) return null;
+        return bytes;
+      } catch (_) {
+        return null;
+      }
+    });
+  }
 
   Future<void> _use(S s) async {
     final candidate = _selected;
     final bytes = candidate == null ? null : _loaded[candidate];
-    if (candidate == null || bytes == null || _saving) return;
+    if (!_enabled || candidate == null || bytes == null || _saving) return;
     setState(() => _saving = true);
     try {
       await context.read<AppState>().setRecipeImage(
@@ -151,7 +189,9 @@ class _RecipePhotoSearchScreenState extends State<RecipePhotoSearchScreen> {
   @override
   Widget build(BuildContext context) {
     final morph = MorphTheme.of(context);
-    final lang = context.watch<AppState>().lang;
+    final state = context.watch<AppState>();
+    final lang = state.lang;
+    final enabled = state.profile.imageSearchEnabled;
     final s = S(lang);
     final selected = _selected;
     final ready = selected != null && _loaded.containsKey(selected);
@@ -174,7 +214,7 @@ class _RecipePhotoSearchScreenState extends State<RecipePhotoSearchScreen> {
             ),
           FilledButton.icon(
             key: const ValueKey('use-found-photo'),
-            onPressed: ready && !_saving ? () => _use(s) : null,
+            onPressed: enabled && ready && !_saving ? () => _use(s) : null,
             icon: const Icon(Icons.check),
             label: Text(
               selected == null ? s('choosePhotoFirst') : s('useThisPhoto'),
@@ -198,10 +238,15 @@ class _RecipePhotoSearchScreenState extends State<RecipePhotoSearchScreen> {
                     color: morph.colors.inkSoft,
                   ),
                 ),
+                if (!enabled)
+                  Text(
+                    s('photoSearchDisabled'),
+                    key: const ValueKey('photo-search-disabled'),
+                  ),
                 TextField(
                   key: const ValueKey('photo-search-query'),
                   controller: _query,
-                  enabled: !_saving,
+                  enabled: enabled && !_saving,
                   textInputAction: TextInputAction.search,
                   maxLength: maxRecipePhotoQueryLength,
                   onSubmitted: (_) => _run(),
@@ -212,7 +257,7 @@ class _RecipePhotoSearchScreenState extends State<RecipePhotoSearchScreen> {
                       key: const ValueKey('run-photo-search'),
                       tooltip: s('photoSearchButton'),
                       icon: const Icon(Icons.search),
-                      onPressed: _saving ? null : _run,
+                      onPressed: enabled && !_saving ? _run : null,
                     ),
                   ),
                 ),
@@ -270,9 +315,16 @@ class _RecipePhotoSearchScreenState extends State<RecipePhotoSearchScreen> {
     final selected = identical(_selected, candidate);
     final credit = candidate.credit;
     // Both touch and assistive technology select only decoded, idle previews.
-    final VoidCallback? select = _saving || !_loaded.containsKey(candidate)
+    final VoidCallback? select =
+        !_enabled || _saving || !_loaded.containsKey(candidate)
         ? null
-        : () => setState(() => _selected = candidate);
+        : () {
+            if (_enabled &&
+                generation == _generation &&
+                _loaded.containsKey(candidate)) {
+              setState(() => _selected = candidate);
+            }
+          };
     return Semantics(
       // A new search must not inherit another download's snapshot or frame,
       // even when the grid updates before an empty-results frame is drawn.
@@ -323,7 +375,9 @@ class _RecipePhotoSearchScreenState extends State<RecipePhotoSearchScreen> {
                           if (frame != null &&
                               !_loaded.containsKey(candidate)) {
                             WidgetsBinding.instance.addPostFrameCallback((_) {
-                              if (mounted && generation == _generation) {
+                              if (mounted &&
+                                  generation == _generation &&
+                                  _enabled) {
                                 setState(() => _loaded[candidate] = bytes);
                               }
                             });
@@ -333,7 +387,9 @@ class _RecipePhotoSearchScreenState extends State<RecipePhotoSearchScreen> {
                         errorBuilder: (_, __, ___) {
                           if (_loaded.containsKey(candidate)) {
                             WidgetsBinding.instance.addPostFrameCallback((_) {
-                              if (mounted && generation == _generation) {
+                              if (mounted &&
+                                  generation == _generation &&
+                                  _enabled) {
                                 setState(() {
                                   _loaded.remove(candidate);
                                   if (identical(_selected, candidate)) {

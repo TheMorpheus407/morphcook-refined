@@ -49,6 +49,24 @@ The dedicated replace-cleanup cases include an old-only credited photo and an in
 
 ## Searches, selection and keyboard
 
+`test/recipe_photo_optout_test.dart` checks that disabling online photos clears
+an open search immediately, including off/on changes between frames. Pending
+searches cannot start previews; pending preview downloads cannot restore a tile,
+selection or credit. Already decoded selections are discarded too. Retained
+touch and accessibility callbacks must still belong to the current search and
+decoded preview when invoked. Both retained-tile cases fail on submitted PR #16
+head `8bace73` before that callback check. Re-enabling alone makes no request;
+an explicit new search remains usable. English and German disabled messages are
+checked in widgets, including the message disappearing on re-enable without a
+request. The shared locale-key test includes `photoSearchDisabled` and rejects
+an English fallback in German. Pending-preview cases cover both successful and
+failed completions with opt-out held or off/on before a frame; a fresh explicit
+search can decode and select the same candidate afterward. These six preview
+and disabled-message cases fail with the pre-PR screen `ea9ecdd` and pass on
+submitted head `8bace73`; they cover existing guards rather than an additional
+behavioural fix. These use fake network services and Flutter callbacks;
+TalkBack and VoiceOver device acceptance remains unverified.
+
 | Event ordering | Intended behaviour | Regression in `test/recipe_photo_search_widget_test.dart` |
 |---|---|---|
 | Two overlapping searches; older completes first=false, older fails=false, newer fails=false | Only the newer search controls results/error/loading. Older success triggers no preview. Newer success permits selection only after its preview decodes. | `latest search wins: olderFirst=false oldFails=false newFails=false` |

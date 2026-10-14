@@ -96,3 +96,8 @@ Settings includes the offline EN/DE manual, feedback drafts and license notices.
 Recipe details let you request and privately record attributed expert assessments.
 The app does not supply professional reviews or verify credentials. Notes travel
 only in full backups, with a warning when the assessed recipe changes.
+
+Turning online photo search off also disables an already open search screen.
+It discards pending results and previews; re-enabling the option requires a new
+explicit search. Requests already in flight may finish, but their results no
+longer start preview downloads or become selectable after opt-out.
