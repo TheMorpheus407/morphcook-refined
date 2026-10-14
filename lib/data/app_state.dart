@@ -135,8 +135,8 @@ class AppState extends ChangeNotifier {
   // ---- profile ----
 
   Future<void> updateProfile(Profile profile) async {
-    _profile = profile;
     await store.saveProfile(profile);
+    _profile = profile;
     notifyListeners();
   }
 

@@ -407,8 +407,8 @@ class _HomeScreenState extends State<HomeScreen> {
       '${S(state.lang)(state.isSaved(recipe.id) ? 'removeFromCookbook' : 'saveToCookbook')}: ${recipe.title.of(state.lang)}';
 
   void _toggleBookmark(Recipe recipe, AppState state) {
-    // A profile write can precede its notification. Never save the old variant
-    // during that interval or while a replacement feed is loading.
+    // Never save a variant computed for another profile or while a replacement
+    // feed is loading.
     if (!_loaded || !identical(_variantProfile, state.profile)) return;
     state.toggleSaved(recipe.id);
   }
