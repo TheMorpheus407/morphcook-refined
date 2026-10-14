@@ -109,7 +109,7 @@ void main() {
     await state.addToShoppingList([(personal.asRecipe(), 3.0)]);
     final rawIndex = state.shoppingList.indexWhere((item) => !item.hasQuantity);
     expect(rawIndex, isNonNegative);
-    await state.toggleShoppingItem(rawIndex);
+    await state.toggleShoppingItem(state.shoppingList[rawIndex]);
 
     final restored = await freshState(store: store);
     final raw = restored.shoppingList.singleWhere((item) => !item.hasQuantity);

@@ -798,17 +798,23 @@ class AppState extends ChangeNotifier {
         notifyListeners();
       });
 
-  Future<void> toggleShoppingItem(int index) => _queueMutation(() async {
-    if (index < 0 || index >= _shoppingList.length) return;
-    _shoppingList[index] = _shoppingList[index].copyWith(
-      checked: !_shoppingList[index].checked,
-    );
-    await _writeJson(
-      'shopping_list',
-      _shoppingList.map((s) => s.toJson()).toList(),
-    );
-    notifyListeners();
-  });
+  Future<void> toggleShoppingItem(ShoppingItem item) =>
+      _queueMutation(() async {
+        // Resolve the displayed row after earlier removals/merges finish. A row
+        // removed by clear/reset/restore must not target its replacement.
+        final index = _shoppingList.indexWhere(
+          (current) => identical(current.identity, item.identity),
+        );
+        if (index < 0) return;
+        _shoppingList[index] = _shoppingList[index].copyWith(
+          checked: !_shoppingList[index].checked,
+        );
+        await _writeJson(
+          'shopping_list',
+          _shoppingList.map((s) => s.toJson()).toList(),
+        );
+        notifyListeners();
+      });
 
   Future<void> clearCheckedShoppingItems() => _queueMutation(() async {
     _shoppingList.removeWhere((s) => s.checked);

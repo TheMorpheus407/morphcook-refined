@@ -1,10 +1,12 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:morphcook/data/app_state.dart';
 import 'package:morphcook/data/store.dart';
 import 'package:morphcook/logic/backup/backup_service.dart';
 import 'package:morphcook/models/profile.dart';
+import 'package:morphcook/models/collections.dart';
 
 import 'helpers.dart';
 import 'recipe_photo_write_ordering_test.dart' show personalRecipe;
@@ -42,7 +44,7 @@ Future<void> _edit(AppState state, String edit) => switch (edit) {
   'clear meal' => state.clearMeal('2026-W42', 'mon'),
   'move meal' => state.moveMeal('2026-W42', 'mon', 'tue'),
   'shopping add' => state.addToShoppingList([(makeRecipe(), 1.0)]),
-  'shopping toggle' => state.toggleShoppingItem(0),
+  'shopping toggle' => state.toggleShoppingItem(state.shoppingList[0]),
   'shopping clear checked' => state.clearCheckedShoppingItems(),
   'shopping clear' => state.clearShoppingList(),
   'request' => state.logContentRequest('new dish'),
@@ -75,6 +77,154 @@ void _expectEdit(AppState state, String edit) {
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+  test('queued toggles keep identical unscaled rows distinct', () async {
+    final store = _PausedCollectionsStore();
+    final now = DateTime(2026, 10, 15);
+    final rows = List.generate(
+      3,
+      (_) => ShoppingItem(
+        ingredientId: 'custom:salt',
+        customName: 'salt to taste',
+        qty: 0,
+        unit: 'piece',
+        hasQuantity: false,
+        aisle: 'other',
+        addedAt: now,
+      ),
+    );
+    await store.putCollection(
+      'shopping_list',
+      jsonEncode(rows.map((row) => row.toJson()).toList()),
+    );
+    final state = AppState(store: store, corpus: await loadRealCorpus());
+    addTearDown(state.dispose);
+    await state.load();
+    final tapped = state.shoppingList[1];
+    final untouched = state.shoppingList[2];
+    await state.toggleShoppingItem(state.shoppingList[0]);
+    store.armed = true;
+    final first = state.applyBackup(_backup, merge: true);
+    addTearDown(() async {
+      if (!store.release.isCompleted) store.release.complete();
+      await first;
+    });
+    await store.entered.future.timeout(const Duration(seconds: 5));
+    final clearing = state.clearCheckedShoppingItems();
+    final toggling = state.toggleShoppingItem(tapped);
+    store.release.complete();
+    await Future.wait([first, clearing, toggling]);
+    expect(state.shoppingList[0].identity, same(tapped.identity));
+    expect(state.shoppingList[1].identity, same(untouched.identity));
+    final reloaded = AppState(store: store, corpus: state.corpus);
+    addTearDown(reloaded.dispose);
+    await reloaded.load();
+    for (final snapshot in [state, reloaded]) {
+      expect(snapshot.shoppingList.map((row) => row.checked), [true, false]);
+      expect(snapshot.shoppingList.every((row) => !row.hasQuantity), isTrue);
+    }
+  });
+
+  for (final rowCount in [2, 3]) {
+    test(
+      'queued toggle follows tapped row after removal ($rowCount rows)',
+      () async {
+        final store = _PausedCollectionsStore();
+        final state = AppState(store: store, corpus: await loadRealCorpus());
+        addTearDown(state.dispose);
+        await state.load();
+        await state.addToShoppingList([
+          (
+            makeRecipe(
+              ingredientIds: ['garlic', 'onion', if (rowCount == 3) 'tomato'],
+            ),
+            1.0,
+          ),
+        ]);
+        await state.toggleShoppingItem(state.shoppingList[0]);
+        final tapped = state.shoppingList[1].ingredientId;
+        store.armed = true;
+        final first = state.applyBackup(_backup, merge: true);
+        addTearDown(() async {
+          if (!store.release.isCompleted) store.release.complete();
+          await first;
+        });
+        await store.entered.future.timeout(const Duration(seconds: 5));
+        final clearing = state.clearCheckedShoppingItems();
+        final toggling = state.toggleShoppingItem(state.shoppingList[1]);
+        store.release.complete();
+        await Future.wait([first, clearing, toggling]);
+        final reloaded = AppState(store: store, corpus: state.corpus);
+        addTearDown(reloaded.dispose);
+        await reloaded.load();
+        for (final snapshot in [state, reloaded]) {
+          expect(
+            snapshot.shoppingList
+                .where((item) => item.checked)
+                .map((item) => item.ingredientId),
+            [tapped],
+          );
+        }
+      },
+    );
+  }
+
+  for (final change in [
+    'merge quantity',
+    'double toggle',
+    'clear and re-add',
+    'replace',
+    'reset',
+  ]) {
+    test('queued toggle preserves row identity across $change', () async {
+      final store = _PausedCollectionsStore();
+      final state = AppState(store: store, corpus: await loadRealCorpus());
+      addTearDown(state.dispose);
+      await state.load();
+      final recipe = makeRecipe();
+      await state.addToShoppingList([(recipe, 1.0)]);
+      final tapped = state.shoppingList.single;
+      store.armed = true;
+      final first = state.applyBackup(_backup, merge: true);
+      addTearDown(() async {
+        if (!store.release.isCompleted) store.release.complete();
+        await first;
+      });
+      await store.entered.future.timeout(const Duration(seconds: 5));
+      final pending = <Future<void>>[first];
+      switch (change) {
+        case 'merge quantity':
+          pending.add(state.addToShoppingList([(recipe, 2.0)]));
+        case 'double toggle':
+          pending.add(state.toggleShoppingItem(tapped));
+        case 'clear and re-add':
+          pending.add(state.clearShoppingList());
+          pending.add(state.addToShoppingList([(recipe, 1.0)]));
+        case 'replace':
+          pending.add(state.applyBackup(_backup, merge: false));
+          pending.add(state.addToShoppingList([(recipe, 1.0)]));
+        case 'reset':
+          pending.add(state.resetEverything());
+          pending.add(state.addToShoppingList([(recipe, 1.0)]));
+      }
+      pending.add(state.toggleShoppingItem(tapped));
+      store.release.complete();
+      await Future.wait(pending);
+      final reloaded = AppState(store: store, corpus: state.corpus);
+      addTearDown(reloaded.dispose);
+      await reloaded.load();
+      for (final snapshot in [state, reloaded]) {
+        expect(
+          snapshot.shoppingList.single.checked,
+          change == 'merge quantity',
+        );
+        expect(
+          snapshot.shoppingList.single.qty,
+          change == 'merge quantity' ? 3 : 1,
+        );
+      }
+    });
+  }
+
   for (final operation in ['merge', 'delete']) {
     for (final fails in [false, true]) {
       for (final edit in [
@@ -100,7 +250,7 @@ void main() {
           if (edit.startsWith('shopping') && edit != 'shopping add') {
             await state.addToShoppingList([(makeRecipe(), 1.0)]);
             if (edit == 'shopping clear checked') {
-              await state.toggleShoppingItem(0);
+              await state.toggleShoppingItem(state.shoppingList[0]);
             }
           }
           store.armed = true;
