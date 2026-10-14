@@ -8,6 +8,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../data/app_state.dart';
+import '../../models/profile.dart';
 import '../../logic/backup/backup_service.dart';
 import '../../logic/backup/crypto.dart';
 import '../../logic/local_file_bytes.dart';
@@ -39,7 +40,11 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   final _ingredientQuery = TextEditingController();
+  final _nameController = TextEditingController();
+  bool _nameHasDraft = false;
+  int _nameDraftRevision = 0;
   late final Future<void> _startupCleanup;
+  bool _restoringBackup = false;
 
   MorphThemeData get _morph => MorphTheme.of(context);
 
@@ -50,8 +55,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final state = context.watch<AppState>();
+    if (!_nameHasDraft) _showName(state.profile.name);
+  }
+
+  @override
   void dispose() {
     _ingredientQuery.dispose();
+    _nameController.dispose();
     super.dispose();
   }
 
@@ -64,7 +77,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final profile = state.profile;
     final ontology = state.corpus.ontology;
 
-    return SafeArea(
+    final content = SafeArea(
       child: ListView(
         padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
         children: [
@@ -73,11 +86,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
           SectionHeader(title: s('profile')),
           TextFormField(
-            initialValue: profile.name,
+            enabled: !_restoringBackup,
+            controller: _nameController,
             style: morph.text.mono.copyWith(fontSize: 13),
             decoration: _underline(s('yourName')),
-            onFieldSubmitted: (v) =>
-                state.updateProfile(profile.copyWith(name: v.trim())),
+            onChanged: (_) {
+              _nameHasDraft = true;
+              _nameDraftRevision++;
+            },
+            onFieldSubmitted: (v) => _submitName(state, v),
           ),
           const SizedBox(height: 14),
           Row(
@@ -87,13 +104,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
               MonoChip(
                 label: 'english',
                 selected: lang == 'en',
-                onTap: () => state.updateProfile(profile.copyWith(lang: 'en')),
+                onTap: () => _editProfile(
+                  state,
+                  (profile) => profile.copyWith(lang: 'en'),
+                ),
               ),
               const SizedBox(width: 8),
               MonoChip(
                 label: 'deutsch',
                 selected: lang == 'de',
-                onTap: () => state.updateProfile(profile.copyWith(lang: 'de')),
+                onTap: () => _editProfile(
+                  state,
+                  (profile) => profile.copyWith(lang: 'de'),
+                ),
               ),
             ],
           ),
@@ -111,9 +134,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   selected: profile.avoidFlags.contains(compound.id),
                   onTap: () => _toggleSet(
                     state,
-                    profile.avoidFlags,
+                    (profile) => profile.avoidFlags,
                     compound.id,
-                    (set) => profile.copyWith(avoidFlags: set),
+                    (profile, set) => profile.copyWith(avoidFlags: set),
                   ),
                 ),
               for (final flag in ontology.containsFlags)
@@ -122,9 +145,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   selected: profile.avoidFlags.contains(flag.id),
                   onTap: () => _toggleSet(
                     state,
-                    profile.avoidFlags,
+                    (profile) => profile.avoidFlags,
                     flag.id,
-                    (set) => profile.copyWith(avoidFlags: set),
+                    (profile, set) => profile.copyWith(avoidFlags: set),
                   ),
                 ),
             ],
@@ -161,9 +184,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   selected: profile.requiredAttributes.contains(label),
                   onTap: () => _toggleSet(
                     state,
-                    profile.requiredAttributes,
+                    (profile) => profile.requiredAttributes,
                     label,
-                    (set) => profile.copyWith(requiredAttributes: set),
+                    (profile, set) => profile.copyWith(requiredAttributes: set),
                   ),
                 ),
             ],
@@ -177,8 +200,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
             max: 1000,
             divisions: 14,
             display: (v) => v == null ? s('noLimit') : '${v.round()} kcal',
-            onChanged: (v) => state.updateProfile(
-              v == null
+            onChanged: (v) => _editProfile(
+              state,
+              (profile) => v == null
                   ? profile.copyWith(clearCalorieTarget: true)
                   : profile.copyWith(calorieTarget: v.round()),
             ),
@@ -191,8 +215,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
             divisions: 15,
             display: (v) =>
                 v == null ? s('noLimit') : '${v.round()} ${s('minutes')}',
-            onChanged: (v) => state.updateProfile(
-              v == null
+            onChanged: (v) => _editProfile(
+              state,
+              (profile) => v == null
                   ? profile.copyWith(clearMaxTime: true)
                   : profile.copyWith(maxTimeMinutes: v.round()),
             ),
@@ -208,8 +233,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 MonoChip(
                   label: ontology.nameOf(effort, lang),
                   selected: profile.preferredEffort == effort,
-                  onTap: () => state.updateProfile(
-                    profile.copyWith(preferredEffort: effort),
+                  onTap: () => _editProfile(
+                    state,
+                    (profile) => profile.copyWith(preferredEffort: effort),
                   ),
                 ),
             ],
@@ -218,7 +244,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
           _switchRow(
             s('showVariantTags'),
             profile.showVariantTags,
-            (v) => state.updateProfile(profile.copyWith(showVariantTags: v)),
+            (v) => _editProfile(
+              state,
+              (profile) => profile.copyWith(showVariantTags: v),
+            ),
           ),
 
           SectionHeader(title: s('accessibility')),
@@ -230,14 +259,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
               (s('themeDark'), 'dark'),
             ],
             selected: profile.themeMode,
-            onSelected: (mode) =>
-                state.updateProfile(profile.copyWith(themeMode: mode)),
+            onSelected: (mode) => _editProfile(
+              state,
+              (profile) => profile.copyWith(themeMode: mode),
+            ),
           ),
           const SizedBox(height: 8),
           _switchRow(
             s('readableText'),
             profile.readableText,
-            (v) => state.updateProfile(profile.copyWith(readableText: v)),
+            (v) => _editProfile(
+              state,
+              (profile) => profile.copyWith(readableText: v),
+            ),
             hint: s('readableTextHint'),
           ),
           const SizedBox(height: 8),
@@ -253,8 +287,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
               true => 'on',
               false => 'off',
             },
-            onSelected: (v) => state.updateProfile(
-              v == 'system'
+            onSelected: (v) => _editProfile(
+              state,
+              (profile) => v == 'system'
                   ? profile.copyWith(clearReduceMotion: true)
                   : profile.copyWith(reduceMotion: v == 'on'),
             ),
@@ -263,14 +298,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
           _switchRow(
             s('visualAlert'),
             profile.visualAlertEnabled,
-            (v) => state.updateProfile(profile.copyWith(visualAlertEnabled: v)),
+            (v) => _editProfile(
+              state,
+              (profile) => profile.copyWith(visualAlertEnabled: v),
+            ),
             hint: s('visualAlertHint'),
           ),
           _switchRow(
             s('quickTap'),
             profile.quickNextTapEnabled,
-            (v) =>
-                state.updateProfile(profile.copyWith(quickNextTapEnabled: v)),
+            (v) => _editProfile(
+              state,
+              (profile) => profile.copyWith(quickNextTapEnabled: v),
+            ),
             hint: s('quickTapSettingHint'),
           ),
 
@@ -278,7 +318,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
           _switchRow(
             s('imageSearch'),
             profile.imageSearchEnabled,
-            (v) => state.updateProfile(profile.copyWith(imageSearchEnabled: v)),
+            (v) => _editProfile(
+              state,
+              (profile) => profile.copyWith(imageSearchEnabled: v),
+            ),
             hint: s('imageSearchHint'),
           ),
 
@@ -319,16 +362,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
           _linkRow(
             Icons.menu_book_outlined,
             lang == 'de' ? 'Bedienungsanleitung' : 'User manual',
-            () => Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const UserManualScreen()),
-            ),
+            () => Navigator.of(
+              context,
+            ).push(MaterialPageRoute(builder: (_) => const UserManualScreen())),
           ),
           _linkRow(
             Icons.feedback_outlined,
             'Feedback',
-            () => Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const FeedbackScreen()),
-            ),
+            () => Navigator.of(
+              context,
+            ).push(MaterialPageRoute(builder: (_) => const FeedbackScreen())),
           ),
 
           SectionHeader(title: s('aboutSupport')),
@@ -336,7 +379,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
           _linkRow(
             Icons.description_outlined,
             lang == 'de' ? 'Lizenzen' : 'Licenses',
-            () => showLicensePage(context: context, applicationName: 'MorphCook'),
+            () =>
+                showLicensePage(context: context, applicationName: 'MorphCook'),
           ),
 
           const SizedBox(height: 18),
@@ -348,6 +392,31 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
         ],
       ),
+    );
+    return Stack(
+      children: [
+        ExcludeFocus(
+          excluding: _restoringBackup,
+          child: ExcludeSemantics(
+            excluding: _restoringBackup,
+            child: AbsorbPointer(absorbing: _restoringBackup, child: content),
+          ),
+        ),
+        if (_restoringBackup)
+          Positioned.fill(
+            child: ColoredBox(
+              color: morph.colors.paper.withValues(alpha: 0.88),
+              child: Center(
+                child: Semantics(
+                  liveRegion: true,
+                  child: CircularProgressIndicator(
+                    semanticsLabel: s('backupRestoring'),
+                  ),
+                ),
+              ),
+            ),
+          ),
+      ],
     );
   }
 
@@ -364,15 +433,51 @@ class _SettingsScreenState extends State<SettingsScreen> {
     ),
   );
 
+  void _showName(String name) {
+    if (_nameController.text != name) _nameController.text = name;
+  }
+
+  Future<void> _submitName(AppState state, String value) async {
+    final revision = _nameDraftRevision;
+    final saved = await _editProfile(
+      state,
+      (profile) => profile.copyWith(name: value.trim()),
+    );
+    // Publication of an earlier submission must not replace newer typing,
+    // even if that draft happens to match the previously persisted name.
+    if (saved && mounted && revision == _nameDraftRevision) {
+      _nameHasDraft = false;
+      _showName(state.profile.name);
+    }
+  }
+
+  Future<bool> _editProfile(
+    AppState state,
+    Profile Function(Profile) edit,
+  ) async {
+    // Also reject keyboard submissions and callbacks already in flight when
+    // restore began. Blocked edits are never replayed against imported data.
+    if (_restoringBackup) return false;
+    try {
+      await state.editProfile(edit);
+      return true;
+    } catch (_) {
+      _toast(S(state.lang)('obSaveFailed'));
+      return false;
+    }
+  }
+
   void _toggleSet(
     AppState state,
-    Set<String> current,
+    Set<String> Function(Profile) current,
     String id,
-    dynamic Function(Set<String>) update,
+    Profile Function(Profile, Set<String>) update,
   ) {
-    final next = Set<String>.from(current);
-    next.contains(id) ? next.remove(id) : next.add(id);
-    state.updateProfile(update(next) as dynamic);
+    _editProfile(state, (profile) {
+      final next = Set<String>.from(current(profile));
+      next.contains(id) ? next.remove(id) : next.add(id);
+      return update(profile, next);
+    });
   }
 
   Widget _specificAvoidance(AppState state, S s, String lang) {
@@ -393,10 +498,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         '${state.corpus.dictionary.byId(id)?.name.of(lang) ?? id} ×',
                     selected: true,
                     onTap: () {
-                      final next = Set<String>.from(profile.avoidIngredients)
-                        ..remove(id);
-                      state.updateProfile(
-                        profile.copyWith(avoidIngredients: next),
+                      _editProfile(
+                        state,
+                        (profile) => profile.copyWith(
+                          avoidIngredients: Set<String>.from(
+                            profile.avoidIngredients,
+                          )..remove(id),
+                        ),
                       );
                     },
                   ),
@@ -424,8 +532,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 decoration: _underline(s('avoidSpecificHint')),
               ),
           onSelected: (id) {
-            final next = Set<String>.from(profile.avoidIngredients)..add(id);
-            state.updateProfile(profile.copyWith(avoidIngredients: next));
+            _editProfile(
+              state,
+              (profile) => profile.copyWith(
+                avoidIngredients: Set<String>.from(profile.avoidIngredients)
+                  ..add(id),
+              ),
+            );
           },
         ),
       ],
@@ -604,7 +717,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final morph = _morph;
     final fg = color ?? morph.colors.ink;
     return InkWell(
-      onTap: onTap,
+      onTap: () {
+        if (!_restoringBackup) onTap();
+      },
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 10),
         child: Row(
@@ -687,6 +802,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Future<void> _importBackup(AppState state, S s) async {
+    if (_restoringBackup) return;
     // Startup cleanup also clears picker caches, so let it finish before a
     // newly selected import starts using one.
     await _startupCleanup;
@@ -757,15 +873,24 @@ class _SettingsScreenState extends State<SettingsScreen> {
         );
       },
     );
-    if (merge == null) return;
+    if (merge == null || !mounted || _restoringBackup) return;
+    // Activate before enqueuing: settings must also stay locked while restore
+    // waits for earlier mutations. Ordinary settings saves remain interactive.
+    setState(() => _restoringBackup = true);
     try {
       await state.applyBackup(data, merge: merge);
+      if (mounted) {
+        _nameHasDraft = false;
+        _showName(state.profile.name);
+      }
     } on DecryptionException catch (e) {
       _toast(e.message);
       return;
     } catch (_) {
       _toast(s('backupImportFailed'));
       return;
+    } finally {
+      if (mounted) setState(() => _restoringBackup = false);
     }
     _toast(s('importDone'));
   }
@@ -848,6 +973,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Future<void> _confirmReset(AppState state, S s) async {
+    if (_restoringBackup) return;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) {
@@ -874,7 +1000,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         );
       },
     );
-    if (confirmed == true) {
+    if (confirmed == true && mounted && !_restoringBackup) {
       await state.resetEverything();
       await _clearMorphCookTemporaryFiles(reset: true);
     }
