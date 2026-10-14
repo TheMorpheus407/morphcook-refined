@@ -61,3 +61,18 @@ in `test/settings_profile_edits_test.dart` fail on fixed head `b70b32f` before
 the draft-preservation correction. They check the draft, controller identity,
 selection and focus after a delayed save, then submit the draft and check
 memory, storage and reload.
+
+`test/profile_persistence_failure_test.dart` injects `false` confirmations and
+exceptions before or after native preference writes, using the real HiveStore
+and SharedPreferences Dart implementations. It checks the previous published
+profile, the preferences cache, native data and a fresh cache after failed
+profile edits or onboarding, followed by a successful retry. Recovery is best
+effort if storage also rejects rollback; these checks do not simulate a device
+crash.
+
+The after-write ordering case pauses rollback before it restores storage and
+checks that the queued edit's callback has not started. It also reads storage
+inside that callback, before the next edit can repair it. With pre-PR AppState
+from `776f04b7`, the original ordering case passes; the strengthened case fails
+because the next edit starts before recovery. The other 13 failure cases fail
+with that pre-PR AppState as well.

@@ -140,20 +140,39 @@ class AppState extends ChangeNotifier {
 
   /// Apply a settings edit to the latest persisted profile, after earlier
   /// mutations finish. Callers must not capture a profile from a stale build.
-  Future<void> editProfile(Profile Function(Profile) edit) =>
-      _queueMutation(() async {
-        final next = edit(_profile);
+  Future<void> editProfile(Profile Function(Profile) edit) => _queueMutation(
+    () async {
+      final next = edit(_profile);
+      try {
         await store.saveProfile(next);
-        _profile = next;
-        notifyListeners();
-      });
+      } catch (_) {
+        // SharedPreferences updates its cache before native confirmation;
+        // a store may also have persisted the change before reporting failure.
+        try {
+          await store.saveProfile(_profile);
+        } catch (_) {}
+        rethrow;
+      }
+      _profile = next;
+      notifyListeners();
+    },
+  );
 
   Future<void> completeOnboarding(Profile profile) => _queueMutation(() async {
-    // Persist the actual choices before hiding onboarding. If either write
-    // fails, the next launch can safely show setup again instead of entering
-    // the app with a profile that was never saved.
-    await store.saveProfile(profile);
-    await store.setOnboardingComplete(true);
+    // Publish setup only after both writes succeed. Restore previous choices
+    // and the onboarding flag if a write changed storage before failing.
+    try {
+      await store.saveProfile(profile);
+      await store.setOnboardingComplete(true);
+    } catch (_) {
+      try {
+        await store.saveProfile(_profile);
+      } catch (_) {}
+      try {
+        await store.setOnboardingComplete(_onboarded);
+      } catch (_) {}
+      rethrow;
+    }
     _profile = profile;
     _onboarded = true;
     notifyListeners();
