@@ -319,7 +319,11 @@ class _RecipePhotoSearchScreenState extends State<RecipePhotoSearchScreen> {
         !_enabled || _saving || !_loaded.containsKey(candidate)
         ? null
         : () {
-            if (_enabled) setState(() => _selected = candidate);
+            if (_enabled &&
+                generation == _generation &&
+                _loaded.containsKey(candidate)) {
+              setState(() => _selected = candidate);
+            }
           };
     return Semantics(
       // A new search must not inherit another download's snapshot or frame,
