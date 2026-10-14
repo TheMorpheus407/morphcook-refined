@@ -90,3 +90,14 @@ recovery after failure. All six fail on base `5510d112`; removing the language
 and navigation guards also breaks the corresponding tests while keeping the
 flag snapshot and chip locks. These control tests use an injected in-memory
 store and a second route to observe attempted system-back navigation.
+
+Mounted search results follow each successfully published profile without
+requiring a new query. `test/search_profile_refresh_test.dart` covers tightening
+and relaxing ingredient, allergy, attribute, time and calorie restrictions.
+Two additional English/German cases switch between the real RootShell tabs,
+change the profile while search is offstage, and check that the mounted state,
+query and selected category/tag filters survive. They also verify that a
+bookmark notification retains the current results and pager. All seven cases
+fail with the pre-fix SearchScreen from `08c4eade` and pass with the profile
+dependency refresh. These are Flutter widget checks using the bundled corpus
+and in-memory storage.
