@@ -32,5 +32,23 @@ captured by a widget build. Each change reads the last successfully persisted
 profile when its turn starts. This preserves overlapping edits to different
 fields and set membership, including two clicks on the same allergy chip.
 `test/settings_profile_edits_test.dart` exercises these UI actions with a
-paused first write and verifies persisted and reloaded profiles. All three
+paused first write and verifies persisted and reloaded profiles. The three original allergy/language
 cases fail on base `1d03b818` before this change.
+
+During a confirmed backup merge or replacement, Settings briefly blocks edits
+until application and any failure recovery finish. Pointer input, focus and
+settings accessibility actions are excluded; callbacks already in flight are
+also guarded. The busy indicator announces restoration in English or German.
+Cancellation leaves settings usable, and navigating away safely lets restore
+finish. Blocked taps are never replayed against imported data. The name field
+refreshes when a published profile changes its name.
+
+`test/settings_backup_restore_test.dart` covers successful and failed paused
+restores, cancellation and navigation away, with English merge and German
+replacement flows. The restore-interaction and name-refresh regressions fail
+on submitted head `807acfe`. The settings edit tests also cover required-attribute
+double taps and localized save failures with an unchanged persisted profile
+and a successful retry. Removing the save-error handler fails both language
+cases. These tests use injected storage delays/failures and a mocked file
+picker with a real temporary backup fixture; they do not simulate a device
+crash or a native picker dialog.

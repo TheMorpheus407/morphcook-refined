@@ -41,6 +41,7 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   final _ingredientQuery = TextEditingController();
   late final Future<void> _startupCleanup;
+  bool _restoringBackup = false;
 
   MorphThemeData get _morph => MorphTheme.of(context);
 
@@ -65,7 +66,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final profile = state.profile;
     final ontology = state.corpus.ontology;
 
-    return SafeArea(
+    final content = SafeArea(
       child: ListView(
         padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
         children: [
@@ -74,6 +75,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
           SectionHeader(title: s('profile')),
           TextFormField(
+            key: ValueKey(profile.name),
+            enabled: !_restoringBackup,
             initialValue: profile.name,
             style: morph.text.mono.copyWith(fontSize: 13),
             decoration: _underline(s('yourName')),
@@ -379,6 +382,31 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ],
       ),
     );
+    return Stack(
+      children: [
+        ExcludeFocus(
+          excluding: _restoringBackup,
+          child: ExcludeSemantics(
+            excluding: _restoringBackup,
+            child: AbsorbPointer(absorbing: _restoringBackup, child: content),
+          ),
+        ),
+        if (_restoringBackup)
+          Positioned.fill(
+            child: ColoredBox(
+              color: morph.colors.paper.withValues(alpha: 0.88),
+              child: Center(
+                child: Semantics(
+                  liveRegion: true,
+                  child: CircularProgressIndicator(
+                    semanticsLabel: s('backupRestoring'),
+                  ),
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
   }
 
   // ---- helpers ----
@@ -398,6 +426,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
     AppState state,
     Profile Function(Profile) edit,
   ) async {
+    // Also reject keyboard submissions and callbacks already in flight when
+    // restore began. Blocked edits are never replayed against imported data.
+    if (_restoringBackup) return;
     try {
       await state.editProfile(edit);
     } catch (_) {
@@ -655,7 +686,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final morph = _morph;
     final fg = color ?? morph.colors.ink;
     return InkWell(
-      onTap: onTap,
+      onTap: () {
+        if (!_restoringBackup) onTap();
+      },
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 10),
         child: Row(
@@ -738,6 +771,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Future<void> _importBackup(AppState state, S s) async {
+    if (_restoringBackup) return;
     // Startup cleanup also clears picker caches, so let it finish before a
     // newly selected import starts using one.
     await _startupCleanup;
@@ -808,7 +842,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
         );
       },
     );
-    if (merge == null) return;
+    if (merge == null || !mounted || _restoringBackup) return;
+    // Activate before enqueuing: settings must also stay locked while restore
+    // waits for earlier mutations. Ordinary settings saves remain interactive.
+    setState(() => _restoringBackup = true);
     try {
       await state.applyBackup(data, merge: merge);
     } on DecryptionException catch (e) {
@@ -817,6 +854,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     } catch (_) {
       _toast(s('backupImportFailed'));
       return;
+    } finally {
+      if (mounted) setState(() => _restoringBackup = false);
     }
     _toast(s('importDone'));
   }
@@ -899,6 +938,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Future<void> _confirmReset(AppState state, S s) async {
+    if (_restoringBackup) return;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) {
@@ -925,7 +965,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         );
       },
     );
-    if (confirmed == true) {
+    if (confirmed == true && mounted && !_restoringBackup) {
       await state.resetEverything();
       await _clearMorphCookTemporaryFiles(reset: true);
     }
