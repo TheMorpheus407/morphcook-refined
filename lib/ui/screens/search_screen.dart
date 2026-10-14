@@ -31,6 +31,7 @@ class _SearchScreenState extends State<SearchScreen> {
   Timer? _debounce;
   String _query = '';
   bool _zeroLogged = false;
+  int _searchGeneration = 0;
 
   static const _filterableTags = [
     'vegan', 'vegetarian', 'gluten-free', 'halal', 'kosher',
@@ -53,6 +54,8 @@ class _SearchScreenState extends State<SearchScreen> {
 
   void _onQueryChanged(String value) {
     _debounce?.cancel();
+    // Typing invalidates a pending result even before the debounce fires.
+    _searchGeneration++;
     _debounce = Timer(const Duration(milliseconds: 250), () {
       _query = value;
       _runSearch();
@@ -60,9 +63,11 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 
   Future<void> _runSearch() async {
+    final generation = ++_searchGeneration;
     final state = context.read<AppState>();
     // Search spans the whole corpus: pull remaining partitions on demand.
     await state.corpus.ensureAllLoaded();
+    if (!mounted || generation != _searchGeneration) return;
     final raw = state.corpus.searchIndex
         .query(_query, tagFilters: _tagFilters);
     // One row per dish-and-coordinate: coverage variants stand in for
@@ -82,6 +87,8 @@ class _SearchScreenState extends State<SearchScreen> {
       _zeroLogged = false;
     }
 
+    // A queued content-request write may finish after another query/filter.
+    if (!mounted || generation != _searchGeneration) return;
     final old = _pager;
     final pager = PaginationController<Recipe>(
       fetch: pagedResults(results),
@@ -89,7 +96,6 @@ class _SearchScreenState extends State<SearchScreen> {
       prefetchThreshold: 10,
       maxRendered: 50,
     );
-    if (!mounted) return;
     setState(() => _pager = pager);
     old?.dispose();
     await pager.loadMore();

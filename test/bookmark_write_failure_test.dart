@@ -49,8 +49,18 @@ class _PausedSavedStore extends MemoryStore {
   }
 }
 
-Future<AppState> _state(PersistenceStore store, {String lang = 'en'}) async {
-  final state = AppState(store: store, corpus: await loadRealCorpus());
+// Simulate an unrelated rebuild while all persisted mutations are queued.
+class _RebuildableState extends AppState {
+  _RebuildableState({required super.store, required super.corpus});
+
+  void requestRebuild() => notifyListeners();
+}
+
+Future<_RebuildableState> _state(
+  PersistenceStore store, {
+  String lang = 'en',
+}) async {
+  final state = _RebuildableState(store: store, corpus: await loadRealCorpus());
   await state.load();
   await state.completeOnboarding(Profile(lang: lang));
   return state;
@@ -85,22 +95,36 @@ void main() {
           await store.entered.future;
           expect(state.saved.map((s) => s.toJson()).toList(), before);
           expect(observed, isEmpty);
-          // Meal-plan writes notify independently of the shared mutation queue.
-          await state.assignMeal('2026-W42', 'mon-dinner', 'ramen-vegan');
+          // Meal-plan writes now wait behind the pending bookmark write.
+          final assigning = state.assignMeal(
+            '2026-W42',
+            'mon-dinner',
+            'ramen-vegan',
+          );
+          addTearDown(() async {
+            if (!store.release.isCompleted) store.release.complete();
+            await Future.wait([toggling, assigning]);
+          });
+          await Future<void>.delayed(Duration.zero);
+          expect(state.mealPlan, isEmpty);
+          expect(observed, isEmpty);
+          state.requestRebuild();
           expect(observed, [before]);
           expect(state.isSaved(id), initiallySaved);
           if (!afterPersistence) expect(_persistedSaved(store), before);
 
           store.release.complete();
-          await toggling;
+          await Future.wait([toggling, assigning]);
+          expect(state.mealPlan['2026-W42']?['mon-dinner'], 'ramen-vegan');
           expect(state.isSaved(id), !initiallySaved);
           final after = state.saved.map((s) => s.toJson()).toList();
-          expect(observed, [before, after]);
+          expect(observed, [before, after, after]);
           expect(_persistedSaved(store), after);
           final reloaded = AppState(store: store, corpus: state.corpus);
           await reloaded.load();
           addTearDown(reloaded.dispose);
           expect(reloaded.isSaved(id), !initiallySaved);
+          expect(reloaded.mealPlan['2026-W42']?['mon-dinner'], 'ramen-vegan');
         },
       );
     }

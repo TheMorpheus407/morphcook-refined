@@ -7,10 +7,12 @@ attempts storage rollback before the queue continues. Home and recipe details
 report failures in English or German and allow the same change to be retried.
 
 `test/bookmark_write_failure_test.dart` checks additions and removals paused
-before persistence and after persistence but before confirmation. An unrelated
-meal-plan notification still exposes the previous saved list; successful
-completion publishes once and survives reload. All four paused cases fail when
-publication is moved before the write, even with rollback on failure retained.
+before persistence and after persistence but before confirmation. An explicit
+unrelated rebuild notification still exposes the previous saved list. A meal assignment
+requested while the bookmark is pending waits in the shared queue; successful
+completion publishes the bookmark once, then the meal assignment, and both
+survive reload. All four paused cases fail when publication is moved before the
+write, even with rollback on failure retained.
 
 The failure tests cover errors before and after persistence, rollback, reload,
 notifications and retry. The six English/German widget cases exercise failed

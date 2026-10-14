@@ -71,6 +71,11 @@ class ShoppingItem {
   final bool checked;
   final DateTime addedAt;
 
+  // Runtime identity survives copies, including quantity merges and toggles.
+  // Reload/restore creates new rows; duplicate unscaled lines stay distinct.
+  final Object? _identity;
+  Object get identity => _identity ?? this;
+
   const ShoppingItem({
     required this.ingredientId,
     this.customName,
@@ -80,7 +85,8 @@ class ShoppingItem {
     required this.aisle,
     this.checked = false,
     required this.addedAt,
-  });
+    Object? identity,
+  }) : _identity = identity;
 
   ShoppingItem copyWith({
     String? customName,
@@ -96,6 +102,7 @@ class ShoppingItem {
     aisle: aisle,
     checked: checked ?? this.checked,
     addedAt: addedAt,
+    identity: identity,
   );
 
   Map<String, dynamic> toJson() => {

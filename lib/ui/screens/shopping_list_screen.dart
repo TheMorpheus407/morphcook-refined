@@ -86,7 +86,7 @@ class ShoppingListScreen extends StatelessWidget {
         state.corpus.dictionary.byId(item.ingredientId)?.name.of(lang) ??
         item.ingredientId;
     return InkWell(
-      onTap: () => state.toggleShoppingItem(index),
+      onTap: () => state.toggleShoppingItem(item),
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 6),
         child: Row(

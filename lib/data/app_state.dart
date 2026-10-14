@@ -726,105 +726,119 @@ class AppState extends ChangeNotifier {
 
   // ---- history ----
 
-  Future<void> logCooked(String recipeId) async {
+  Future<void> logCooked(String recipeId) => _queueMutation(() async {
+    // A queued action may outlive deletion, replacement or reset.
+    if (await recipeById(recipeId) == null) return;
     _history.add(HistoryEntry(recipeId: recipeId, cookedAt: DateTime.now()));
     await _writeJson('history', _history.map((h) => h.toJson()).toList());
     notifyListeners();
-  }
+  });
 
   // ---- meal plan ----
 
-  Future<void> assignMeal(String weekKey, String slot, String recipeId) async {
-    _mealPlan.putIfAbsent(weekKey, () => {})[slot] = recipeId;
-    await _writeJson('meal_plan', _mealPlan);
-    notifyListeners();
-  }
+  Future<void> assignMeal(String weekKey, String slot, String recipeId) =>
+      _queueMutation(() async {
+        // A queued action may outlive deletion, replacement or reset.
+        if (await recipeById(recipeId) == null) return;
+        _mealPlan.putIfAbsent(weekKey, () => {})[slot] = recipeId;
+        await _writeJson('meal_plan', _mealPlan);
+        notifyListeners();
+      });
 
-  Future<void> clearMeal(String weekKey, String slot) async {
-    _mealPlan[weekKey]?.remove(slot);
-    if (_mealPlan[weekKey]?.isEmpty ?? false) _mealPlan.remove(weekKey);
-    await _writeJson('meal_plan', _mealPlan);
-    notifyListeners();
-  }
+  Future<void> clearMeal(String weekKey, String slot) =>
+      _queueMutation(() async {
+        _mealPlan[weekKey]?.remove(slot);
+        if (_mealPlan[weekKey]?.isEmpty ?? false) _mealPlan.remove(weekKey);
+        await _writeJson('meal_plan', _mealPlan);
+        notifyListeners();
+      });
 
-  Future<void> moveMeal(String weekKey, String fromSlot, String toSlot) async {
-    final week = _mealPlan[weekKey];
-    if (week == null || !week.containsKey(fromSlot)) return;
-    final moving = week.remove(fromSlot)!;
-    final displaced = week[toSlot];
-    week[toSlot] = moving;
-    if (displaced != null) week[fromSlot] = displaced;
-    await _writeJson('meal_plan', _mealPlan);
-    notifyListeners();
-  }
+  Future<void> moveMeal(String weekKey, String fromSlot, String toSlot) =>
+      _queueMutation(() async {
+        final week = _mealPlan[weekKey];
+        if (week == null || !week.containsKey(fromSlot)) return;
+        final moving = week.remove(fromSlot)!;
+        final displaced = week[toSlot];
+        week[toSlot] = moving;
+        if (displaced != null) week[fromSlot] = displaced;
+        await _writeJson('meal_plan', _mealPlan);
+        notifyListeners();
+      });
 
   // ---- shopping ----
 
-  Future<void> addToShoppingList(Iterable<(Recipe, double)> recipes) async {
-    final aggregated = aggregate(recipes, corpus.dictionary);
-    final now = DateTime.now();
-    _shoppingList = mergeIntoList(_shoppingList, aggregated, now);
-    // History keeps one record per added line for insights.
-    _shoppingHistory = [
-      ..._shoppingHistory,
-      ...aggregated.map(
-        (a) => ShoppingItem(
-          ingredientId: a.ingredientId,
-          customName: a.customName,
-          qty: a.quantity.amount,
-          unit: a.quantity.unit,
-          hasQuantity: a.hasQuantity,
-          aisle: a.aisle,
-          addedAt: now,
-        ),
-      ),
-    ];
-    await _writeJson(
-      'shopping_list',
-      _shoppingList.map((s) => s.toJson()).toList(),
-    );
-    await _writeJson(
-      'shopping_history',
-      _shoppingHistory.map((s) => s.toJson()).toList(),
-    );
-    notifyListeners();
-  }
+  Future<void> addToShoppingList(Iterable<(Recipe, double)> recipes) =>
+      _queueMutation(() async {
+        final aggregated = aggregate(recipes, corpus.dictionary);
+        final now = DateTime.now();
+        _shoppingList = mergeIntoList(_shoppingList, aggregated, now);
+        // History keeps one record per added line for insights.
+        _shoppingHistory = [
+          ..._shoppingHistory,
+          ...aggregated.map(
+            (a) => ShoppingItem(
+              ingredientId: a.ingredientId,
+              customName: a.customName,
+              qty: a.quantity.amount,
+              unit: a.quantity.unit,
+              hasQuantity: a.hasQuantity,
+              aisle: a.aisle,
+              addedAt: now,
+            ),
+          ),
+        ];
+        await _writeJson(
+          'shopping_list',
+          _shoppingList.map((s) => s.toJson()).toList(),
+        );
+        await _writeJson(
+          'shopping_history',
+          _shoppingHistory.map((s) => s.toJson()).toList(),
+        );
+        notifyListeners();
+      });
 
-  Future<void> toggleShoppingItem(int index) async {
-    if (index < 0 || index >= _shoppingList.length) return;
-    _shoppingList[index] = _shoppingList[index].copyWith(
-      checked: !_shoppingList[index].checked,
-    );
-    await _writeJson(
-      'shopping_list',
-      _shoppingList.map((s) => s.toJson()).toList(),
-    );
-    notifyListeners();
-  }
+  Future<void> toggleShoppingItem(ShoppingItem item) =>
+      _queueMutation(() async {
+        // Resolve the displayed row after earlier removals/merges finish. A row
+        // removed by clear/reset/restore must not target its replacement.
+        final index = _shoppingList.indexWhere(
+          (current) => identical(current.identity, item.identity),
+        );
+        if (index < 0) return;
+        _shoppingList[index] = _shoppingList[index].copyWith(
+          checked: !_shoppingList[index].checked,
+        );
+        await _writeJson(
+          'shopping_list',
+          _shoppingList.map((s) => s.toJson()).toList(),
+        );
+        notifyListeners();
+      });
 
-  Future<void> clearCheckedShoppingItems() async {
+  Future<void> clearCheckedShoppingItems() => _queueMutation(() async {
     _shoppingList.removeWhere((s) => s.checked);
     await _writeJson(
       'shopping_list',
       _shoppingList.map((s) => s.toJson()).toList(),
     );
     notifyListeners();
-  }
+  });
 
-  Future<void> clearShoppingList() async {
+  Future<void> clearShoppingList() => _queueMutation(() async {
     _shoppingList = [];
     await _writeJson('shopping_list', const []);
     notifyListeners();
-  }
+  });
 
   // ---- content requests (zero-result searches) ----
 
-  Future<void> logContentRequest(String query) async {
+  Future<void> logContentRequest(String query) => _queueMutation(() async {
     final q = query.trim().toLowerCase();
     if (q.isEmpty || _contentRequests.contains(q)) return;
     _contentRequests.add(q);
     await _writeJson('content_requests', _contentRequests);
-  }
+  });
 
   // ---- cook progress ----
 
