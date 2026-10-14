@@ -1,6 +1,10 @@
 # Recipe photo event ordering checks
 
-These tables cover the behavioural findings from PR #10 and the shared mutation ordering in PR #11. Each row has a targeted regression. Async results belong to the latest search generation; persisted attribution belongs to its exact photo bytes. A crash may recover a partial backup without misattributing replacement photos. Full-backup atomicity is outside this feature.
+These tables cover the behavioural findings from PR #10, the shared mutation ordering in PR #11, and accessible photo selection in PR #12. Each row has a targeted regression. Async results belong to the latest search generation; persisted attribution belongs to its exact photo bytes. A crash may recover a partial backup without misattributing replacement photos. Full-backup atomicity is outside this feature.
+
+## Accessible photo selection
+
+The English and German `screen reader selects only decoded idle photos ($lang)` widget cases in `test/recipe_photo_search_widget_test.dart` perform the tile's semantic tap action and check its localized credit, selected state and enabled save button. Pending previews have no tap action. Saving removes the action; a failed save restores it without publishing a photo. Both cases fail on the pre-fix base `56cf59d` because the decoded tile has no semantic tap action. These are Flutter semantics checks; TalkBack and VoiceOver device acceptance remains unverified.
 
 ## Overlapping photo mutations
 

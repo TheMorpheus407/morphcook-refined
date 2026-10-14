@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:morphcook/data/app_state.dart';
 import 'package:morphcook/data/store.dart';
@@ -17,6 +18,7 @@ import 'package:morphcook/ui/theme.dart';
 import 'package:provider/provider.dart';
 
 import 'helpers.dart';
+import 'recipe_photo_write_ordering_test.dart' show PausedPhotoStore;
 
 const en = S('en');
 
@@ -141,6 +143,84 @@ Future<void> settlePhotos(WidgetTester tester) async {
 
 void main() {
   WidgetController.hitTestWarningShouldBeFatal = true;
+
+  for (final lang in ['en', 'de']) {
+    testWidgets('screen reader selects only decoded idle photos ($lang)', (
+      tester,
+    ) async {
+      final semantics = tester.ensureSemantics();
+      try {
+        final store = PausedPhotoStore()..failFirst = true;
+        final state = (await tester.runAsync(() async {
+          final state = AppState(store: store, corpus: await loadRealCorpus());
+          await state.load();
+          await state.completeOnboarding(
+            Profile(lang: lang, imageSearchEnabled: true),
+          );
+          return state;
+        }))!;
+        final photo = candidate('Selectable photo');
+        final download = Completer<Uint8List>();
+        final search = DelayedPhotoSearch()
+          ..results = [photo]
+          ..pending[photo] = download;
+        await tester.pumpWidget(
+          app(
+            state,
+            RecipePhotoSearchScreen(
+              recipeId: 'doener-vegan',
+              initialQuery: 'food',
+              photoSearch: search,
+            ),
+          ),
+        );
+        await tester.pump();
+        await tester.pump();
+        final tile = find.byKey(const ValueKey('found-photo-0'));
+        expect(
+          tester
+              .getSemantics(tile)
+              .getSemanticsData()
+              .hasAction(SemanticsAction.tap),
+          isFalse,
+        );
+        download.complete((await tester.runAsync(differentPngBytes))!);
+        await settlePhotos(tester);
+        final node = tester.getSemantics(tile);
+        expect(node.getSemanticsData().label, photo.credit.label(lang));
+        expect(node.getSemanticsData().hasAction(SemanticsAction.tap), isTrue);
+        node.owner!.performAction(node.id, SemanticsAction.tap);
+        await tester.pump();
+        expect(
+          tester.getSemantics(tile).flagsCollection.isSelected,
+          ui.Tristate.isTrue,
+        );
+        expect(tester.widget<FilledButton>(useButton).onPressed, isNotNull);
+        await tester.tap(useButton);
+        await tester.pump();
+        expect(store.entered.isCompleted, isTrue);
+        expect(
+          tester
+              .getSemantics(tile)
+              .getSemanticsData()
+              .hasAction(SemanticsAction.tap),
+          isFalse,
+        );
+        store.release.complete();
+        await tester.pumpAndSettle();
+        expect(
+          tester
+              .getSemantics(tile)
+              .getSemanticsData()
+              .hasAction(SemanticsAction.tap),
+          isTrue,
+        );
+        expect(state.recipeImages, isEmpty);
+      } finally {
+        semantics.dispose();
+      }
+    });
+  }
 
   for (final preview in [false, true]) {
     for (final fails in [false, true]) {

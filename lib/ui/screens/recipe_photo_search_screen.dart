@@ -269,6 +269,10 @@ class _RecipePhotoSearchScreenState extends State<RecipePhotoSearchScreen> {
     final generation = _generation;
     final selected = identical(_selected, candidate);
     final credit = candidate.credit;
+    // Both touch and assistive technology select only decoded, idle previews.
+    final VoidCallback? select = _saving || !_loaded.containsKey(candidate)
+        ? null
+        : () => setState(() => _selected = candidate);
     return Semantics(
       // A new search must not inherit another download's snapshot or frame,
       // even when the grid updates before an empty-results frame is drawn.
@@ -277,12 +281,11 @@ class _RecipePhotoSearchScreenState extends State<RecipePhotoSearchScreen> {
       selected: selected,
       label: credit.label(lang),
       excludeSemantics: true,
+      onTap: select,
       child: InkWell(
         key: ValueKey('found-photo-$index'),
         // Only a photo whose preview loaded can be chosen and saved.
-        onTap: _saving || !_loaded.containsKey(candidate)
-            ? null
-            : () => setState(() => _selected = candidate),
+        onTap: select,
         child: DecoratedBox(
           decoration: BoxDecoration(
             color: morph.colors.card,
