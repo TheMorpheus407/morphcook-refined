@@ -40,6 +40,9 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   final _ingredientQuery = TextEditingController();
+  final _nameController = TextEditingController();
+  bool _nameHasDraft = false;
+  int _nameDraftRevision = 0;
   late final Future<void> _startupCleanup;
   bool _restoringBackup = false;
 
@@ -52,8 +55,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final state = context.watch<AppState>();
+    if (!_nameHasDraft) _showName(state.profile.name);
+  }
+
+  @override
   void dispose() {
     _ingredientQuery.dispose();
+    _nameController.dispose();
     super.dispose();
   }
 
@@ -75,15 +86,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
           SectionHeader(title: s('profile')),
           TextFormField(
-            key: ValueKey(profile.name),
             enabled: !_restoringBackup,
-            initialValue: profile.name,
+            controller: _nameController,
             style: morph.text.mono.copyWith(fontSize: 13),
             decoration: _underline(s('yourName')),
-            onFieldSubmitted: (v) => _editProfile(
-              state,
-              (profile) => profile.copyWith(name: v.trim()),
-            ),
+            onChanged: (_) {
+              _nameHasDraft = true;
+              _nameDraftRevision++;
+            },
+            onFieldSubmitted: (v) => _submitName(state, v),
           ),
           const SizedBox(height: 14),
           Row(
@@ -422,17 +433,37 @@ class _SettingsScreenState extends State<SettingsScreen> {
     ),
   );
 
-  Future<void> _editProfile(
+  void _showName(String name) {
+    if (_nameController.text != name) _nameController.text = name;
+  }
+
+  Future<void> _submitName(AppState state, String value) async {
+    final revision = _nameDraftRevision;
+    final saved = await _editProfile(
+      state,
+      (profile) => profile.copyWith(name: value.trim()),
+    );
+    // Publication of an earlier submission must not replace newer typing,
+    // even if that draft happens to match the previously persisted name.
+    if (saved && mounted && revision == _nameDraftRevision) {
+      _nameHasDraft = false;
+      _showName(state.profile.name);
+    }
+  }
+
+  Future<bool> _editProfile(
     AppState state,
     Profile Function(Profile) edit,
   ) async {
     // Also reject keyboard submissions and callbacks already in flight when
     // restore began. Blocked edits are never replayed against imported data.
-    if (_restoringBackup) return;
+    if (_restoringBackup) return false;
     try {
       await state.editProfile(edit);
+      return true;
     } catch (_) {
       _toast(S(state.lang)('obSaveFailed'));
+      return false;
     }
   }
 
@@ -848,6 +879,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
     setState(() => _restoringBackup = true);
     try {
       await state.applyBackup(data, merge: merge);
+      if (mounted) {
+        _nameHasDraft = false;
+        _showName(state.profile.name);
+      }
     } on DecryptionException catch (e) {
       _toast(e.message);
       return;

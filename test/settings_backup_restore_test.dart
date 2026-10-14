@@ -134,6 +134,7 @@ void main() {
               await Future<void>.delayed(Duration.zero);
             });
             await tester.pumpAndSettle();
+            await tester.enterText(find.byType(TextFormField), 'Unsaved draft');
             Finder chip(String label) => find
                 .byWidgetPredicate(
                   (w) =>
@@ -241,7 +242,10 @@ void main() {
                 matching: find.byType(EditableText),
               ),
             );
-            expect(nameField.controller.text, expected.name);
+            expect(
+              nameField.controller.text,
+              fail ? 'Unsaved draft' : expected.name,
+            );
             await tester.ensureVisible(chip('egg'));
             await tester.tap(chip('egg'));
             await tester.pumpAndSettle();

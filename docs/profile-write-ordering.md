@@ -41,7 +41,10 @@ settings accessibility actions are excluded; callbacks already in flight are
 also guarded. The busy indicator announces restoration in English or German.
 Cancellation leaves settings usable, and navigating away safely lets restore
 finish. Blocked taps are never replayed against imported data. The name field
-refreshes when a published profile changes its name.
+refreshes to a successfully restored name. Ordinary name saves keep the field's
+controller and focus, and completion only refreshes text if no newer typing has
+occurred. A newer draft remains editable and can be submitted separately, even
+if it matches the old persisted name. A failed restore retains unsaved name text.
 
 `test/settings_backup_restore_test.dart` covers successful and failed paused
 restores, cancellation and navigation away, with English merge and German
@@ -52,3 +55,9 @@ and a successful retry. Removing the save-error handler fails both language
 cases. These tests use injected storage delays/failures and a mocked file
 picker with a real temporary backup fixture; they do not simulate a device
 crash or a native picker dialog.
+
+The four `pending en/de name save preserves newer Alicia/Original draft` cases
+in `test/settings_profile_edits_test.dart` fail on fixed head `b70b32f` before
+the draft-preservation correction. They check the draft, controller identity,
+selection and focus after a delayed save, then submit the draft and check
+memory, storage and reload.

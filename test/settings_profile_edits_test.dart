@@ -32,6 +32,64 @@ class _PausedProfileStore extends MemoryStore {
 }
 
 void main() {
+  for (final lang in ['en', 'de']) {
+    for (final draft in ['Alicia', 'Original']) {
+      testWidgets('pending $lang name save preserves newer $draft draft', (
+        tester,
+      ) async {
+        final store = _PausedProfileStore();
+        final state = (await tester.runAsync(() async {
+          final state = AppState(store: store, corpus: await loadRealCorpus());
+          await state.load();
+          await state.completeOnboarding(Profile(name: 'Original', lang: lang));
+          return state;
+        }))!;
+        addTearDown(() {
+          if (!store.release.isCompleted) store.release.complete();
+          state.dispose();
+        });
+        await tester.pumpWidget(
+          app(state, const Scaffold(body: SettingsScreen())),
+        );
+        await tester.pumpAndSettle();
+        final name = find.byType(TextFormField);
+        EditableText field() => tester.widget<EditableText>(
+          find.descendant(of: name, matching: find.byType(EditableText)),
+        );
+        await tester.enterText(name, ' Alice ');
+        store.pauseNext = true;
+        await tester.testTextInput.receiveAction(TextInputAction.done);
+        await tester.pump();
+        expect(store.entered.isCompleted, isTrue);
+        expect(state.profile.name, 'Original');
+        await tester.enterText(name, draft);
+        final controller = field().controller;
+        final selection = controller.selection;
+        expect(field().focusNode.hasFocus, isTrue);
+
+        store.release.complete();
+        await tester.pumpAndSettle();
+        expect(state.profile.name, 'Alice');
+        expect(store.loadProfile()!.name, 'Alice');
+        expect(field().controller.text, draft);
+        expect(field().controller, same(controller));
+        expect(field().controller.selection, selection);
+        expect(field().focusNode.hasFocus, isTrue);
+
+        await tester.testTextInput.receiveAction(TextInputAction.done);
+        await tester.pumpAndSettle();
+        expect(state.profile.name, draft);
+        expect(store.loadProfile()!.toJson(), state.profile.toJson());
+        final reloaded = AppState(store: store, corpus: state.corpus);
+        await reloaded.load();
+        expect(reloaded.profile.toJson(), state.profile.toJson());
+        reloaded.dispose();
+        expect(tester.takeException(), isNull);
+        await tester.pumpWidget(const SizedBox());
+      });
+    }
+  }
+
   for (final nextEdit in [
     'other allergy',
     'language',
