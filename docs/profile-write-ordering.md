@@ -76,3 +76,17 @@ inside that callback, before the next edit can repair it. With pre-PR AppState
 from `776f04b7`, the original ordering case passes; the strengthened case fails
 because the next edit starts before recovery. The other 13 failure cases fail
 with that pre-PR AppState as well.
+
+Onboarding copies the submitted dietary flags and locks language, diet/allergy
+choices and back navigation while saving. A failed save keeps those choices,
+reports the localized error and unlocks editing and navigation for retry.
+`test/onboarding_pending_profile_test.dart` covers adding/removing dairy during
+delayed native flag confirmation, failure/retry and a fresh preferences cache.
+Its four cases fail on base `5510d112` and pass with the onboarding fix.
+
+`test/onboarding_pending_controls_test.dart` adds six English/German cases for
+pending language selection, compound diet chips, toolbar/system back and
+recovery after failure. All six fail on base `5510d112`; removing the language
+and navigation guards also breaks the corresponding tests while keeping the
+flag snapshot and chip locks. These control tests use an injected in-memory
+store and a second route to observe attempted system-back navigation.
