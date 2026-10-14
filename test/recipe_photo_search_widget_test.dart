@@ -929,6 +929,7 @@ void main() {
       'imageSearch',
       'imageSearchHint',
       'findRecipeImage',
+      'photoSearchDisabled',
       'photoSearchTitle',
       'photoSearchQuery',
       'photoSearchButton',

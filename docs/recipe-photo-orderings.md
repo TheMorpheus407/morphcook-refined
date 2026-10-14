@@ -57,7 +57,14 @@ touch and accessibility callbacks must still belong to the current search and
 decoded preview when invoked. Both retained-tile cases fail on submitted PR #16
 head `8bace73` before that callback check. Re-enabling alone makes no request;
 an explicit new search remains usable. English and German disabled messages are
-checked in widgets. These use fake network services and Flutter callbacks;
+checked in widgets, including the message disappearing on re-enable without a
+request. The shared locale-key test includes `photoSearchDisabled` and rejects
+an English fallback in German. Pending-preview cases cover both successful and
+failed completions with opt-out held or off/on before a frame; a fresh explicit
+search can decode and select the same candidate afterward. These six preview
+and disabled-message cases fail with the pre-PR screen `ea9ecdd` and pass on
+submitted head `8bace73`; they cover existing guards rather than an additional
+behavioural fix. These use fake network services and Flutter callbacks;
 TalkBack and VoiceOver device acceptance remains unverified.
 
 | Event ordering | Intended behaviour | Regression in `test/recipe_photo_search_widget_test.dart` |

@@ -114,47 +114,86 @@ void main() {
   }
 
   for (final reenableBeforeFrame in [false, true]) {
-    testWidgets(
-      'pending preview stays discarded after opt-out: reenable=$reenableBeforeFrame',
-      (tester) async {
-        final state = (await tester.runAsync(() => photoState(enabled: true)))!;
-        final photo = candidate('Pending photo');
-        final pending = Completer<Uint8List>();
-        final search = DelayedPhotoSearch()
-          ..results = [photo]
-          ..pending[photo] = pending;
-        await tester.pumpWidget(_screen(state, search));
-        await tester.pump();
-        expect(search.downloads, ['Pending photo']);
-        await state.updateProfile(
-          state.profile.copyWith(imageSearchEnabled: false),
-        );
-        if (reenableBeforeFrame) {
+    for (final downloadFails in [false, true]) {
+      testWidgets(
+        'pending preview stays discarded after opt-out: reenable=$reenableBeforeFrame fails=$downloadFails',
+        (tester) async {
+          final state = (await tester.runAsync(
+            () => photoState(enabled: true),
+          ))!;
+          final photo = candidate('Pending photo');
+          final pending = Completer<Uint8List>();
+          final search = DelayedPhotoSearch()
+            ..results = [photo]
+            ..pending[photo] = pending;
+          await tester.pumpWidget(_screen(state, search));
+          await tester.pump();
+          expect(search.downloads, ['Pending photo']);
           await state.updateProfile(
-            state.profile.copyWith(imageSearchEnabled: true),
+            state.profile.copyWith(imageSearchEnabled: false),
           );
-        }
-        pending.complete(testPngBytes());
-        await settlePhotos(tester);
-        expect(find.byType(Image), findsNothing);
-        expect(find.byKey(const ValueKey('found-photo-0')), findsNothing);
-        expect(find.text(photo.credit.label('en')), findsNothing);
-        expect(search.queries, ['food']);
-        expect(search.downloads, ['Pending photo']);
-        expect(state.recipeImages, isEmpty);
-        expect(
-          tester
-              .widget<FilledButton>(
-                find.byKey(const ValueKey('use-found-photo')),
-              )
-              .onPressed,
-          isNull,
-        );
-        expect(tester.takeException(), isNull);
-        await tester.pumpWidget(const SizedBox());
-        state.dispose();
-      },
-    );
+          if (reenableBeforeFrame) {
+            await state.updateProfile(
+              state.profile.copyWith(imageSearchEnabled: true),
+            );
+          }
+          if (downloadFails) {
+            pending.completeError(StateError('late preview failure'));
+          } else {
+            pending.complete(testPngBytes());
+          }
+          await settlePhotos(tester);
+          expect(find.byType(Image), findsNothing);
+          expect(find.byKey(const ValueKey('found-photo-0')), findsNothing);
+          expect(find.text(photo.credit.label('en')), findsNothing);
+          expect(search.queries, ['food']);
+          expect(search.downloads, ['Pending photo']);
+          expect(state.recipeImages, isEmpty);
+          expect(
+            tester
+                .widget<FilledButton>(
+                  find.byKey(const ValueKey('use-found-photo')),
+                )
+                .onPressed,
+            isNull,
+          );
+          expect(tester.takeException(), isNull);
+
+          // An invalidated download must not poison a fresh explicit search,
+          // even when it returns the same candidate again.
+          search.pending.remove(photo);
+          if (!reenableBeforeFrame) {
+            await state.updateProfile(
+              state.profile.copyWith(imageSearchEnabled: true),
+            );
+            await tester.pumpAndSettle();
+          }
+          expect(search.queries, ['food']);
+          expect(search.downloads, ['Pending photo']);
+          await tester.tap(_runButton);
+          await settlePhotos(tester);
+          final tile = find.byKey(const ValueKey('found-photo-0'));
+          expect(tester.widget<InkWell>(tile).onTap, isNotNull);
+          await tester.tap(tile);
+          await tester.pump();
+          expect(find.text(photo.credit.label('en')), findsOneWidget);
+          expect(
+            tester
+                .widget<FilledButton>(
+                  find.byKey(const ValueKey('use-found-photo')),
+                )
+                .onPressed,
+            isNotNull,
+          );
+          expect(search.queries, ['food', 'food']);
+          expect(search.downloads, ['Pending photo', 'Pending photo']);
+          expect(state.recipeImages, isEmpty);
+          expect(tester.takeException(), isNull);
+          await tester.pumpWidget(const SizedBox());
+          state.dispose();
+        },
+      );
+    }
   }
 
   for (final lang in ['en', 'de']) {
@@ -164,9 +203,20 @@ void main() {
       final search = FakePhotoSearch();
       await tester.pumpWidget(_screen(state, search));
       await tester.pumpAndSettle();
+      final message = find.byKey(const ValueKey('photo-search-disabled'));
+      expect(tester.widget<Text>(message).data, S(lang)('photoSearchDisabled'));
       expect(find.text(S(lang)('photoSearchDisabled')), findsOneWidget);
       expect(S(lang)('photoSearchDisabled'), isNot('photoSearchDisabled'));
+      expect(tester.widget<IconButton>(_runButton).onPressed, isNull);
+      expect(tester.widget<TextField>(_query).enabled, isFalse);
       expect(search.queries, isEmpty);
+      await state.updateProfile(
+        state.profile.copyWith(imageSearchEnabled: true),
+      );
+      await tester.pumpAndSettle();
+      expect(message, findsNothing);
+      expect(search.queries, isEmpty);
+      expect(search.downloads, isEmpty);
       await tester.pumpWidget(const SizedBox());
       state.dispose();
     });
