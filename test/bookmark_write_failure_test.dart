@@ -28,19 +28,83 @@ class _FailingSavedStore extends MemoryStore {
   }
 }
 
-Future<AppState> _state(_FailingSavedStore store, {String lang = 'en'}) async {
+class _PausedSavedStore extends MemoryStore {
+  final bool afterPersistence;
+  bool pauseNext = false;
+  final entered = Completer<void>();
+  final release = Completer<void>();
+
+  _PausedSavedStore({required this.afterPersistence});
+
+  @override
+  Future<void> putCollection(String key, String value) async {
+    if (key == 'saved' && pauseNext) {
+      pauseNext = false;
+      if (afterPersistence) await super.putCollection(key, value);
+      entered.complete();
+      await release.future;
+      if (afterPersistence) return;
+    }
+    await super.putCollection(key, value);
+  }
+}
+
+Future<AppState> _state(PersistenceStore store, {String lang = 'en'}) async {
   final state = AppState(store: store, corpus: await loadRealCorpus());
   await state.load();
   await state.completeOnboarding(Profile(lang: lang));
   return state;
 }
 
-List<dynamic> _persistedSaved(_FailingSavedStore store) =>
+List<dynamic> _persistedSaved(PersistenceStore store) =>
     jsonDecode(store.getCollection('saved') ?? '[]') as List<dynamic>;
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   for (final initiallySaved in [false, true]) {
+    for (final afterPersistence in [false, true]) {
+      test(
+        'pending bookmark stays unpublished: saved=$initiallySaved afterPersistence=$afterPersistence',
+        () async {
+          final store = _PausedSavedStore(afterPersistence: afterPersistence);
+          final state = await _state(store);
+          addTearDown(state.dispose);
+          const id = 'doener-vegan';
+          if (initiallySaved) await state.toggleSaved(id);
+          final before = state.saved.map((s) => s.toJson()).toList();
+          final observed = <List<Map<String, dynamic>>>[];
+          state.addListener(
+            () => observed.add(state.saved.map((s) => s.toJson()).toList()),
+          );
+          store.pauseNext = true;
+          final toggling = state.toggleSaved(id);
+          addTearDown(() async {
+            if (!store.release.isCompleted) store.release.complete();
+            await toggling;
+          });
+          await store.entered.future;
+          expect(state.saved.map((s) => s.toJson()).toList(), before);
+          expect(observed, isEmpty);
+          // Meal-plan writes notify independently of the shared mutation queue.
+          await state.assignMeal('2026-W42', 'mon-dinner', 'ramen-vegan');
+          expect(observed, [before]);
+          expect(state.isSaved(id), initiallySaved);
+          if (!afterPersistence) expect(_persistedSaved(store), before);
+
+          store.release.complete();
+          await toggling;
+          expect(state.isSaved(id), !initiallySaved);
+          final after = state.saved.map((s) => s.toJson()).toList();
+          expect(observed, [before, after]);
+          expect(_persistedSaved(store), after);
+          final reloaded = AppState(store: store, corpus: state.corpus);
+          await reloaded.load();
+          addTearDown(reloaded.dispose);
+          expect(reloaded.isSaved(id), !initiallySaved);
+        },
+      );
+    }
+
     for (final afterWrite in [false, true]) {
       test(
         'failed bookmark preserves prior data and retry: saved=$initiallySaved afterWrite=$afterWrite',
@@ -152,6 +216,11 @@ void main() {
           await tester.pumpAndSettle();
           if (surface != 'detail') {
             expect(tester.widget<BookmarkBadge>(control).saved, isFalse);
+          } else {
+            expect(
+              (tester.widget<IconButton>(control).icon as Icon).icon,
+              Icons.bookmark_border,
+            );
           }
           callback()();
           await tester.pumpAndSettle();
@@ -161,6 +230,38 @@ void main() {
           await reloaded.load();
           expect(reloaded.isSaved(id), isTrue);
           reloaded.dispose();
+
+          // Removal uses the same callback and must preserve the saved entry
+          // after failure, including an unrelated rebuild and a later retry.
+          ScaffoldMessenger.of(tester.element(control)).removeCurrentSnackBar();
+          await tester.pumpAndSettle();
+          expect(find.byType(SnackBar), findsNothing);
+          final beforeRemoval = state.saved.map((s) => s.toJson()).toList();
+          store.failNext = true;
+          runZonedGuarded(() => callback()(), (error, _) => errors.add(error));
+          await tester.pumpAndSettle();
+          expect(errors, isEmpty);
+          expect(state.saved.map((s) => s.toJson()).toList(), beforeRemoval);
+          expect(_persistedSaved(store), beforeRemoval);
+          expect(find.text(errorText), findsOneWidget);
+          await state.updateProfile(state.profile);
+          await tester.pumpAndSettle();
+          if (surface != 'detail') {
+            expect(tester.widget<BookmarkBadge>(control).saved, isTrue);
+          } else {
+            expect(
+              (tester.widget<IconButton>(control).icon as Icon).icon,
+              Icons.bookmark,
+            );
+          }
+          callback()();
+          await tester.pumpAndSettle();
+          expect(state.saved, isEmpty);
+          expect(_persistedSaved(store), isEmpty);
+          final removed = AppState(store: store, corpus: state.corpus);
+          await removed.load();
+          addTearDown(removed.dispose);
+          expect(removed.isSaved(id), isFalse);
           await tester.pumpWidget(const SizedBox());
         },
       );
