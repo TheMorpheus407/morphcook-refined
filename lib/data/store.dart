@@ -55,7 +55,9 @@ class HiveStore implements PersistenceStore {
 
   @override
   Future<void> saveProfile(Profile profile) async {
-    await _prefs.setString('profile', json.encode(profile.toJson()));
+    if (!await _prefs.setString('profile', json.encode(profile.toJson()))) {
+      throw StateError('Failed to save profile');
+    }
   }
 
   @override
@@ -63,7 +65,9 @@ class HiveStore implements PersistenceStore {
 
   @override
   Future<void> setOnboardingComplete(bool value) async {
-    await _prefs.setBool('onboarding_complete', value);
+    if (!await _prefs.setBool('onboarding_complete', value)) {
+      throw StateError('Failed to save onboarding status');
+    }
   }
 
   @override
