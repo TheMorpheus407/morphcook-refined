@@ -195,7 +195,10 @@ class AppState extends ChangeNotifier {
   /// Creates or updates a device-only recipe. New recipes are saved into the
   /// cookbook automatically, while edited recipes keep their existing id and
   /// references in plans/history.
-  Future<void> savePersonalRecipe(PersonalRecipe recipe) async {
+  Future<void> savePersonalRecipe(PersonalRecipe recipe) =>
+      _queueMutation(() => _savePersonalRecipe(recipe));
+
+  Future<void> _savePersonalRecipe(PersonalRecipe recipe) async {
     final index = _personalRecipes.indexWhere((r) => r.id == recipe.id);
     if (index < 0) {
       if (_personalRecipes.length >= maxPersonalRecipes) {

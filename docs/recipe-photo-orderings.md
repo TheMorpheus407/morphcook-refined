@@ -100,3 +100,11 @@ The dedicated replace-cleanup cases include an old-only credited photo and an in
 | Share enrichment → metadata write fails → restart | Existing binary and metadata survive rollback. | `stored found photos credit enrichment rollback keeps existing binary and metadata` |
 | Collect share → readable text and JSON → decode → import | Photo credit survives all share stages and appears in readable text. | `stored found photos recipe shares carry the credit to the recipient` |
 | Invalid metadata entry → valid entry with same preview | Only eligible entries participate in deduplication; offer the valid candidate. | `Commons response parsing rejected candidates do not suppress a valid duplicate preview` |
+
+Personal recipe editor saves also use the common mutation queue, including
+validation, collection snapshots, persistence, rollback and publication. A
+pending editor save can no longer overwrite a later shared import or leave its
+credited photo without a recipe. `personal_recipe_write_ordering_test.dart`
+checks save followed by import, another editor save, backup merge/replacement,
+delete or reset, with successful and failed first writes, including reload.
+All twelve ordering cases fail on base `76481c2` before this fix.
