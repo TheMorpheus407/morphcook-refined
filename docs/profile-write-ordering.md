@@ -26,3 +26,11 @@ They tap save and remove after an injected failure and check that the previous
 profile stays in memory and storage. These are injected storage and Flutter
 widget checks; they do not simulate a device crash or guarantee atomicity
 across all backup writes.
+
+Settings use `editProfile` to enqueue a change rather than a complete profile
+captured by a widget build. Each change reads the last successfully persisted
+profile when its turn starts. This preserves overlapping edits to different
+fields and set membership, including two clicks on the same allergy chip.
+`test/settings_profile_edits_test.dart` exercises these UI actions with a
+paused first write and verifies persisted and reloaded profiles. All three
+cases fail on base `1d03b818` before this change.
