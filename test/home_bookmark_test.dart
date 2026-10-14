@@ -20,6 +20,19 @@ import 'package:morphcook/ui/widgets/recipe_cover.dart';
 import 'helpers.dart';
 import 'widget_smoke_test.dart' show app, onboardedState;
 
+class FailingProfileStore extends MemoryStore {
+  bool failNext = false;
+
+  @override
+  Future<void> saveProfile(Profile profile) async {
+    if (failNext) {
+      failNext = false;
+      throw StateError('profile write failed');
+    }
+    await super.saveProfile(profile);
+  }
+}
+
 // Reverse authored input order to prove ordering is defined by tier and ID.
 class ReversedCorpus extends CorpusRepository {
   ReversedCorpus() : super(bundle: FileAssetBundle());
@@ -100,6 +113,65 @@ void main() {
     await tester.ensureVisible(card);
     await tester.pumpAndSettle();
     return card;
+  }
+
+  for (final featured in [false, true]) {
+    for (final refresh in [false, true]) {
+      testWidgets(
+        'failed profile write leaves bookmarks usable: featured=$featured refresh=$refresh',
+        (tester) async {
+          final store = FailingProfileStore();
+          final state = (await tester.runAsync(() async {
+            final state = AppState(
+              store: store,
+              corpus: await loadRealCorpus(),
+            );
+            await state.load();
+            await state.completeOnboarding(const Profile());
+            return state;
+          }))!;
+          await tester.pumpWidget(
+            app(state, const Scaffold(body: HomeScreen())),
+          );
+          await tester.pumpAndSettle();
+          final previous = state.profile;
+          store.failNext = true;
+          await expectLater(
+            state.updateProfile(previous.copyWith(themeMode: 'dark')),
+            throwsStateError,
+          );
+          await tester.pumpAndSettle();
+          if (refresh) {
+            await tester
+                .widget<RefreshIndicator>(find.byType(RefreshIndicator))
+                .onRefresh();
+            await tester.pumpAndSettle();
+          }
+          final target = featured
+              ? find.byType(HomeScreen)
+              : await firstCard(tester);
+          final id = tester
+              .widget<RecipeCover>(
+                find
+                    .descendant(of: target, matching: find.byType(RecipeCover))
+                    .first,
+              )
+              .recipeId;
+          final bookmark = find
+              .descendant(of: target, matching: find.byType(BookmarkBadge))
+              .first;
+          await tester.tap(bookmark);
+          await tester.pumpAndSettle();
+          expect(state.saved.map((saved) => saved.recipeId), [id]);
+          await tester.tap(bookmark);
+          await tester.pumpAndSettle();
+          expect(state.saved, isEmpty);
+          expect(state.profile, same(previous));
+          expect(store.loadProfile()!.toJson(), previous.toJson());
+          expect(find.byType(DishDetailScreen), findsNothing);
+        },
+      );
+    }
   }
 
   testWidgets('start view card bookmark saves a recipe without opening it', (
