@@ -37,7 +37,7 @@ class AppState extends ChangeNotifier {
   List<String> _contentRequests = [];
   List<PersonalRecipe> _personalRecipes = [];
   List<ExpertAssessment> _expertAssessments = [];
-  Future<void> _assessmentWork = Future<void>.value();
+  Future<void>? _mutationWork;
   Map<String, RecipeImage> _recipeImages = {};
   CookProgress? _cookProgress;
 
@@ -249,18 +249,11 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> _sharedRecipeImportTail = Future<void>.value();
-
   /// Add received recipes without applying backup/profile/history state.
   /// Conflicts become deterministic copies, so importing a file twice does not
   /// keep creating copies. Local content and photos are never overwritten.
-  Future<int> importSharedRecipes(RecipeShareData data) {
-    final result = _sharedRecipeImportTail.then(
-      (_) => _importSharedRecipes(data),
-    );
-    _sharedRecipeImportTail = result.then<void>((_) {}, onError: (Object _) {});
-    return result;
-  }
+  Future<int> importSharedRecipes(RecipeShareData data) =>
+      _queueMutation(() => _importSharedRecipes(data));
 
   Future<int> _importSharedRecipes(RecipeShareData data) async {
     final nextRecipes = {
@@ -408,7 +401,7 @@ class AppState extends ChangeNotifier {
   /// Deletes the owned recipe and every reference that cannot be rendered
   /// without it. Shopping-list lines remain useful and retain their names.
   Future<void> deletePersonalRecipe(String recipeId) =>
-      _queueAssessment(() => _deletePersonalRecipe(recipeId));
+      _queueMutation(() => _deletePersonalRecipe(recipeId));
 
   Future<void> _deletePersonalRecipe(String recipeId) async {
     if (!isPersonalRecipe(recipeId)) return;
@@ -498,7 +491,7 @@ class AppState extends ChangeNotifier {
   }
 
   Future<void> saveExpertAssessment(ExpertAssessment entry) =>
-      _queueAssessment(() async {
+      _queueMutation(() async {
         final recipe = await recipeById(entry.recipeId);
         if (recipe == null ||
             expertRecipeFingerprint(recipe) != entry.recipeFingerprint) {
@@ -512,18 +505,29 @@ class AppState extends ChangeNotifier {
         await _persistAssessments([..._expertAssessments, entry]);
       });
 
-  Future<void> deleteExpertAssessment(String id) => _queueAssessment(() async {
+  Future<void> deleteExpertAssessment(String id) => _queueMutation(() async {
     await _persistAssessments(
       _expertAssessments.where((e) => e.id != id).toList(),
     );
   });
 
-  Future<void> _queueAssessment(Future<void> Function() action) {
-    final result = _assessmentWork.then((_) => action());
-    _assessmentWork = result.then<void>(
-      (_) {},
-      onError: (Object _, StackTrace __) {},
+  // Shared snapshots and their rollback must finish before another writer
+  // reads them. A failed operation must not poison the next queued write.
+  Future<T> _queueMutation<T>(Future<T> Function() action) {
+    final previous = _mutationWork;
+    final result = previous == null
+        ? Future<T>.sync(action)
+        : previous.then((_) => action());
+    late final Future<void> settled;
+    void completed() {
+      if (identical(_mutationWork, settled)) _mutationWork = null;
+    }
+
+    settled = result.then<void>(
+      (_) => completed(),
+      onError: (Object _, StackTrace __) => completed(),
     );
+    _mutationWork = settled;
     return result;
   }
 
@@ -583,6 +587,16 @@ class AppState extends ChangeNotifier {
   /// Stores a photo override. [credit] attributes a photo found through the
   /// online image search; replacing it with a device photo clears the credit.
   Future<RecipeImage> setRecipeImage(
+    String recipeId,
+    List<int> bytes, {
+    DateTime? updatedAt,
+    RecipeImageCredit? credit,
+  }) => _queueMutation(
+    () =>
+        _setRecipeImage(recipeId, bytes, updatedAt: updatedAt, credit: credit),
+  );
+
+  Future<RecipeImage> _setRecipeImage(
     String recipeId,
     List<int> bytes, {
     DateTime? updatedAt,
@@ -650,7 +664,10 @@ class AppState extends ChangeNotifier {
     return image;
   }
 
-  Future<void> removeRecipeImage(String recipeId) async {
+  Future<void> removeRecipeImage(String recipeId) =>
+      _queueMutation(() => _removeRecipeImage(recipeId));
+
+  Future<void> _removeRecipeImage(String recipeId) async {
     final previousImage = _recipeImages[recipeId];
     if (previousImage == null) return;
     final nextRecipeImages = Map<String, RecipeImage>.of(_recipeImages)
@@ -811,7 +828,7 @@ class AppState extends ChangeNotifier {
   /// incoming; otherwise the import replaces local state. Never touches the
   /// bundled corpus.
   Future<void> applyBackup(BackupData incoming, {required bool merge}) =>
-      _queueAssessment(() => _applyBackup(incoming, merge: merge));
+      _queueMutation(() => _applyBackup(incoming, merge: merge));
 
   Future<void> _applyBackup(BackupData incoming, {required bool merge}) async {
     final data = merge
@@ -971,7 +988,7 @@ class AppState extends ChangeNotifier {
   }
 
   /// Full reset (troubleshooting: "reset profile").
-  Future<void> resetEverything() => _queueAssessment(_resetEverything);
+  Future<void> resetEverything() => _queueMutation(_resetEverything);
 
   Future<void> _resetEverything() async {
     await store.clearAll();
