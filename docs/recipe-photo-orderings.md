@@ -100,3 +100,32 @@ The dedicated replace-cleanup cases include an old-only credited photo and an in
 | Share enrichment → metadata write fails → restart | Existing binary and metadata survive rollback. | `stored found photos credit enrichment rollback keeps existing binary and metadata` |
 | Collect share → readable text and JSON → decode → import | Photo credit survives all share stages and appears in readable text. | `stored found photos recipe shares carry the credit to the recipient` |
 | Invalid metadata entry → valid entry with same preview | Only eligible entries participate in deduplication; offer the valid candidate. | `Commons response parsing rejected candidates do not suppress a valid duplicate preview` |
+
+Personal recipe editor saves also use the common mutation queue, including
+validation, collection snapshots, persistence, rollback and publication. A
+pending editor save can no longer overwrite a later shared import or leave its
+credited photo without a recipe. `personal_recipe_write_ordering_test.dart`
+checks save followed by import, another editor save, backup merge/replacement,
+delete or reset, with successful and failed first writes, including reload.
+All twelve ordering cases fail on base `76481c2` before this fix.
+
+Bookmark toggles and cooking-progress writes share this queue as well. Otherwise
+a pending recipe save could discard a later bookmark in memory or storage, and
+a delayed cooking-progress write could restore progress invalidated by an edit.
+The fourteen additional cases in `personal_recipe_write_ordering_test.dart`
+check bookmark additions/removals during creation and editing, bookmark writes
+before creation, progress writes before editing, and new cooking sessions during
+successful or failed edits. They inspect memory and reload; all fourteen fail
+on submitted PR head `d8e57da` before those two writers join the queue.
+These are injected storage-ordering checks, not device-crash guarantees.
+
+Queued bookmarks and cooking-progress updates revalidate their recipe when
+they run. If deletion, backup replacement or reset removed it, a stale screen
+action is ignored. Otherwise a bookmark could recreate a dangling saved id
+and block whole-cookbook sharing, or cooking progress could reappear for a
+removed recipe. The twelve `rechecks recipe` cases cover both actions after
+successful and failed removals, checking memory, reload and actual cookbook
+export (including the expected empty result after reset). The six successful
+removal cases fail on `169df3f` before revalidation; the six failure controls
+keep the surviving recipe usable. Two additional cases preserve bookmarks
+and progress for bundled recipes whose partition has not loaded yet.

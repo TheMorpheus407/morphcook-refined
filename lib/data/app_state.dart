@@ -163,10 +163,15 @@ class AppState extends ChangeNotifier {
 
   bool isSaved(String recipeId) => _saved.any((s) => s.recipeId == recipeId);
 
-  Future<void> toggleSaved(String recipeId) async {
+  Future<void> toggleSaved(String recipeId) =>
+      _queueMutation(() => _toggleSaved(recipeId));
+
+  Future<void> _toggleSaved(String recipeId) async {
     if (isSaved(recipeId)) {
       _saved.removeWhere((s) => s.recipeId == recipeId);
     } else {
+      // A queued tap may outlive deletion, backup replacement or reset.
+      if (await recipeById(recipeId) == null) return;
       _saved.add(SavedRecipe(recipeId: recipeId, savedAt: DateTime.now()));
     }
     await _writeJson('saved', _saved.map((s) => s.toJson()).toList());
@@ -195,7 +200,10 @@ class AppState extends ChangeNotifier {
   /// Creates or updates a device-only recipe. New recipes are saved into the
   /// cookbook automatically, while edited recipes keep their existing id and
   /// references in plans/history.
-  Future<void> savePersonalRecipe(PersonalRecipe recipe) async {
+  Future<void> savePersonalRecipe(PersonalRecipe recipe) =>
+      _queueMutation(() => _savePersonalRecipe(recipe));
+
+  Future<void> _savePersonalRecipe(PersonalRecipe recipe) async {
     final index = _personalRecipes.indexWhere((r) => r.id == recipe.id);
     if (index < 0) {
       if (_personalRecipes.length >= maxPersonalRecipes) {
@@ -809,7 +817,14 @@ class AppState extends ChangeNotifier {
 
   // ---- cook progress ----
 
-  Future<void> persistCookProgress(CookProgress? progress) async {
+  Future<void> persistCookProgress(CookProgress? progress) =>
+      _queueMutation(() => _persistCookProgress(progress));
+
+  Future<void> _persistCookProgress(CookProgress? progress) async {
+    // Ignore updates from a screen whose recipe an earlier mutation removed.
+    if (progress != null && await recipeById(progress.recipeId) == null) {
+      return;
+    }
     _cookProgress = progress;
     if (progress == null) {
       await store.putCollection('cook_progress', 'null');
