@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import '../../data/app_state.dart';
 import '../../logic/pagination.dart';
 import '../../logic/search.dart';
+import '../../models/profile.dart';
 import '../../models/recipe.dart';
 import '../strings.dart';
 import '../theme.dart';
@@ -31,6 +32,7 @@ class _SearchScreenState extends State<SearchScreen> {
   Timer? _debounce;
   String _query = '';
   int _searchGeneration = 0;
+  Profile? _searchProfile;
 
   static const _filterableTags = [
     'vegan', 'vegetarian', 'gluten-free', 'halal', 'kosher',
@@ -38,8 +40,15 @@ class _SearchScreenState extends State<SearchScreen> {
   ];
 
   @override
-  void initState() {
-    super.initState();
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final profile = context.watch<AppState>().profile;
+    if (identical(_searchProfile, profile)) return;
+    _searchProfile = profile;
+    // RootShell keeps this page mounted across tab switches. Drop the old
+    // profile's results immediately and invalidate any pending search.
+    _pager?.dispose();
+    _pager = null;
     _runSearch();
   }
 
