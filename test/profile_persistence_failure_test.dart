@@ -39,17 +39,29 @@ class _FailingPreferences extends InMemorySharedPreferencesStore {
 }
 
 class _AfterWriteProfileStore extends MemoryStore {
+  _AfterWriteProfileStore({this.pauseRollback = false});
+
+  final bool pauseRollback;
   bool armed = false;
+  bool _rollbackPending = false;
   final entered = Completer<void>();
   final release = Completer<void>();
+  final rollbackEntered = Completer<void>();
+  final rollbackRelease = Completer<void>();
 
   @override
   Future<void> saveProfile(Profile profile) async {
+    if (_rollbackPending && pauseRollback) {
+      _rollbackPending = false;
+      rollbackEntered.complete();
+      await rollbackRelease.future;
+    }
     await super.saveProfile(profile);
     if (armed) {
       armed = false;
       entered.complete();
       await release.future;
+      _rollbackPending = true;
       throw StateError('confirmation failed after writing profile');
     }
   }
@@ -153,7 +165,7 @@ void main() {
   test(
     'after-write failure rolls back before the next queued profile edit',
     () async {
-      final store = _AfterWriteProfileStore();
+      final store = _AfterWriteProfileStore(pauseRollback: true);
       final state = AppState(store: store, corpus: await loadRealCorpus());
       addTearDown(state.dispose);
       await state.load();
@@ -165,13 +177,32 @@ void main() {
       );
       addTearDown(() async {
         if (!store.release.isCompleted) store.release.complete();
+        if (!store.rollbackRelease.isCompleted) {
+          store.rollbackRelease.complete();
+        }
         await failed;
       });
       await store.entered.future.timeout(const Duration(seconds: 5));
-      final next = state.editProfile((p) => p.copyWith(name: 'Later'));
+      var nextEditStarted = false;
+      Profile? storedBeforeNextEdit;
+      final next = state.editProfile((p) {
+        nextEditStarted = true;
+        storedBeforeNextEdit = store.loadProfile();
+        return p.copyWith(name: 'Later');
+      });
       store.release.complete();
+      await Future<void>.delayed(Duration.zero);
+      final rollbackStarted = store.rollbackEntered.isCompleted;
+      final nextEditStartedDuringRollback = nextEditStarted;
+      store.rollbackRelease.complete();
       await failed;
       await next;
+      expect(rollbackStarted, isTrue);
+      expect(nextEditStartedDuringRollback, isFalse);
+      expect(
+        storedBeforeNextEdit!.toJson(),
+        const Profile(avoidFlags: {'dairy'}).toJson(),
+      );
       expect(state.profile.avoidFlags, {'dairy'});
       expect(state.profile.name, 'Later');
       expect(store.loadProfile()!.toJson(), state.profile.toJson());
