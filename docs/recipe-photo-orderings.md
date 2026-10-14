@@ -108,3 +108,13 @@ credited photo without a recipe. `personal_recipe_write_ordering_test.dart`
 checks save followed by import, another editor save, backup merge/replacement,
 delete or reset, with successful and failed first writes, including reload.
 All twelve ordering cases fail on base `76481c2` before this fix.
+
+Bookmark toggles and cooking-progress writes share this queue as well. Otherwise
+a pending recipe save could discard a later bookmark in memory or storage, and
+a delayed cooking-progress write could restore progress invalidated by an edit.
+The fourteen additional cases in `personal_recipe_write_ordering_test.dart`
+check bookmark additions/removals during creation and editing, bookmark writes
+before creation, progress writes before editing, and new cooking sessions during
+successful or failed edits. They inspect memory and reload; all fourteen fail
+on submitted PR head `d8e57da` before those two writers join the queue.
+These are injected storage-ordering checks, not device-crash guarantees.

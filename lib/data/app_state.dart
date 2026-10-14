@@ -163,7 +163,10 @@ class AppState extends ChangeNotifier {
 
   bool isSaved(String recipeId) => _saved.any((s) => s.recipeId == recipeId);
 
-  Future<void> toggleSaved(String recipeId) async {
+  Future<void> toggleSaved(String recipeId) =>
+      _queueMutation(() => _toggleSaved(recipeId));
+
+  Future<void> _toggleSaved(String recipeId) async {
     if (isSaved(recipeId)) {
       _saved.removeWhere((s) => s.recipeId == recipeId);
     } else {
@@ -812,7 +815,10 @@ class AppState extends ChangeNotifier {
 
   // ---- cook progress ----
 
-  Future<void> persistCookProgress(CookProgress? progress) async {
+  Future<void> persistCookProgress(CookProgress? progress) =>
+      _queueMutation(() => _persistCookProgress(progress));
+
+  Future<void> _persistCookProgress(CookProgress? progress) async {
     _cookProgress = progress;
     if (progress == null) {
       await store.putCollection('cook_progress', 'null');
