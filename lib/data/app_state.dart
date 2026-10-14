@@ -745,19 +745,34 @@ class AppState extends ChangeNotifier {
 
   // Keep published snapshots intact until all writes are confirmed. Rollback
   // also covers stores that persist a value before reporting a failure.
-  Future<void> _persistCollections(
-    Map<String, Object> next,
-    Map<String, Object> previous,
-  ) async {
+  Future<void> _persistCollections(Map<String, Object> next) async {
+    // Parsing is deliberately tolerant on load. Re-encoding that parsed view
+    // could erase recoverable records or unknown fields during rollback.
+    final previousJson = {
+      for (final key in next.keys) key: store.getCollection(key),
+    };
+    final nextJson = {
+      for (final entry in next.entries) entry.key: json.encode(entry.value),
+    };
+    final attempted = <String>[];
     try {
-      for (final entry in next.entries) {
-        await _writeJson(entry.key, entry.value);
+      for (final entry in nextJson.entries) {
+        attempted.add(entry.key);
+        await store.putCollection(entry.key, entry.value);
       }
     } catch (_) {
-      for (final entry in previous.entries) {
+      for (final key in attempted) {
         try {
-          await _writeJson(entry.key, entry.value);
-        } catch (_) {}
+          final raw = previousJson[key];
+          if (raw == null) {
+            await store.removeCollection(key);
+          } else {
+            await store.putCollection(key, raw);
+          }
+        } catch (_) {
+          // Best effort: storage can also reject recovery. Keep the original
+          // failure and the previous published state; no atomicity is promised.
+        }
       }
       rethrow;
     }
@@ -769,15 +784,14 @@ class AppState extends ChangeNotifier {
   };
 
   Future<void> _persistMealPlan(MealPlanData next) async {
-    await _persistCollections({'meal_plan': next}, {'meal_plan': _mealPlan});
+    await _persistCollections({'meal_plan': next});
     _mealPlan = next;
   }
 
   Future<void> _persistShoppingList(List<ShoppingItem> next) async {
-    await _persistCollections(
-      {'shopping_list': next.map((s) => s.toJson()).toList()},
-      {'shopping_list': _shoppingList.map((s) => s.toJson()).toList()},
-    );
+    await _persistCollections({
+      'shopping_list': next.map((s) => s.toJson()).toList(),
+    });
     _shoppingList = next;
   }
 
@@ -790,10 +804,9 @@ class AppState extends ChangeNotifier {
       ..._history,
       HistoryEntry(recipeId: recipeId, cookedAt: DateTime.now()),
     ];
-    await _persistCollections(
-      {'history': next.map((h) => h.toJson()).toList()},
-      {'history': _history.map((h) => h.toJson()).toList()},
-    );
+    await _persistCollections({
+      'history': next.map((h) => h.toJson()).toList(),
+    });
     _history = next;
     notifyListeners();
   });
@@ -854,18 +867,10 @@ class AppState extends ChangeNotifier {
             ),
           ),
         ];
-        await _persistCollections(
-          {
-            'shopping_list': nextList.map((s) => s.toJson()).toList(),
-            'shopping_history': nextHistory.map((s) => s.toJson()).toList(),
-          },
-          {
-            'shopping_list': _shoppingList.map((s) => s.toJson()).toList(),
-            'shopping_history': _shoppingHistory
-                .map((s) => s.toJson())
-                .toList(),
-          },
-        );
+        await _persistCollections({
+          'shopping_list': nextList.map((s) => s.toJson()).toList(),
+          'shopping_history': nextHistory.map((s) => s.toJson()).toList(),
+        });
         _shoppingList = nextList;
         _shoppingHistory = nextHistory;
         notifyListeners();
@@ -903,10 +908,7 @@ class AppState extends ChangeNotifier {
     final q = query.trim().toLowerCase();
     if (q.isEmpty || _contentRequests.contains(q)) return;
     final next = [..._contentRequests, q];
-    await _persistCollections(
-      {'content_requests': next},
-      {'content_requests': _contentRequests},
-    );
+    await _persistCollections({'content_requests': next});
     _contentRequests = next;
   });
 

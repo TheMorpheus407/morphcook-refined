@@ -6,6 +6,7 @@ import '../../data/app_state.dart';
 import '../../logic/cook/cook_controller.dart';
 import '../../logic/units.dart';
 import '../../models/recipe.dart';
+import '../collection_edit.dart';
 import '../strings.dart';
 import '../theme.dart';
 
@@ -455,7 +456,12 @@ class _CookModeScreenState extends State<CookModeScreen> {
                     ),
                   ),
                   onPressed: () async {
-                    await state.logCooked(widget.recipe.id);
+                    if (!await saveCollectionEdit(
+                      context,
+                      () => state.logCooked(widget.recipe.id),
+                    )) {
+                      return;
+                    }
                     if (!mounted) return;
                     // ignore: use_build_context_synchronously
                     Navigator.of(context).pop();

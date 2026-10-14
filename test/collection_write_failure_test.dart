@@ -26,6 +26,25 @@ class _FailingStore extends MemoryStore {
   }
 }
 
+class _RollbackFailingStore extends MemoryStore {
+  bool armed = false;
+  bool rejectRollback = false;
+
+  @override
+  Future<void> putCollection(String key, String jsonText) async {
+    if (key == 'shopping_list' && rejectRollback) {
+      rejectRollback = false;
+      throw StateError('rollback failed');
+    }
+    await super.putCollection(key, jsonText);
+    if (key == 'shopping_list' && armed) {
+      armed = false;
+      rejectRollback = true;
+      throw StateError('original confirmation failed');
+    }
+  }
+}
+
 Map<String, Object> _snapshot(AppState state) => {
   'history': state.history.map((h) => h.toJson()).toList(),
   'meal_plan': jsonDecode(jsonEncode(state.mealPlan)),
@@ -129,6 +148,110 @@ void main() {
     }
   }
 
+  for (final afterWrite in [false, true]) {
+    test('failed request restores an absent key ($afterWrite)', () async {
+      final store = _FailingStore()..afterWrite = afterWrite;
+      final state = AppState(store: store, corpus: await loadRealCorpus());
+      addTearDown(state.dispose);
+      await state.load();
+      expect(store.getCollection('content_requests'), isNull);
+      store.failKey = 'content_requests';
+      await expectLater(
+        state.logContentRequest('missing dish'),
+        throwsStateError,
+      );
+      expect(store.getCollection('content_requests'), isNull);
+    });
+  }
+
+  for (final afterWrite in [false, true]) {
+    test(
+      'failed history write preserves original raw JSON ($afterWrite)',
+      () async {
+        final store = _FailingStore()..afterWrite = afterWrite;
+        const raw =
+            '[ {"recipe_id":"doener-classic","cooked_at":"2026-10-01T12:00:00.000"},'
+            '{"recipe_id":"doener-vegan","cooked_at":null,"future_field":42} ]';
+        await store.putCollection('history', raw);
+        final state = AppState(store: store, corpus: await loadRealCorpus());
+        addTearDown(state.dispose);
+        await state.load();
+        expect(
+          state.history,
+          isEmpty,
+          reason: 'existing tolerant reader rejects the malformed row',
+        );
+        store.failKey = 'history';
+        await expectLater(state.logCooked('doener-classic'), throwsStateError);
+        expect(
+          store.getCollection('history'),
+          raw,
+          reason:
+              'failure must preserve recoverable records and unknown fields verbatim',
+        );
+      },
+    );
+
+    test(
+      'failed shopping addition preserves both raw collections ($afterWrite)',
+      () async {
+        final store = _FailingStore()..afterWrite = afterWrite;
+        const rawList =
+            '[{"ingredient_id":"garlic","qty":1,"unit":"piece",'
+            '"checked":false,"aisle":"produce","added_at":"2026-10-01T12:00:00.000","future_field":42}]';
+        const rawHistory = '[{"future_record":true}]';
+        await store.putCollection('shopping_list', rawList);
+        await store.putCollection('shopping_history', rawHistory);
+        final state = AppState(store: store, corpus: await loadRealCorpus());
+        addTearDown(state.dispose);
+        await state.load();
+        store.failKey = 'shopping_history';
+        await expectLater(
+          state.addToShoppingList([(makeRecipe(), 1.0)]),
+          throwsStateError,
+        );
+        expect(store.getCollection('shopping_list'), rawList);
+        expect(store.getCollection('shopping_history'), rawHistory);
+      },
+    );
+  }
+
+  test(
+    'double storage failure is best effort and leaves the queue retryable',
+    () async {
+      final store = _RollbackFailingStore();
+      final state = AppState(store: store, corpus: await loadRealCorpus());
+      addTearDown(state.dispose);
+      await state.load();
+      await state.addToShoppingList([(makeRecipe(), 1.0)]);
+      var notifications = 0;
+      state.addListener(() => notifications++);
+      store.armed = true;
+      await expectLater(
+        state.toggleShoppingItem(state.shoppingList.single),
+        throwsA(
+          isA<StateError>().having(
+            (e) => e.message,
+            'message',
+            'original confirmation failed',
+          ),
+        ),
+      );
+      expect(notifications, 0);
+      expect(state.shoppingList.single.checked, isFalse);
+      final reloaded = AppState(store: store, corpus: state.corpus);
+      addTearDown(reloaded.dispose);
+      await reloaded.load();
+      // This is the documented limit, not a claim of durable atomicity.
+      expect(reloaded.shoppingList.single.checked, isTrue);
+      await state.logContentRequest('later queued edit');
+      await state.toggleShoppingItem(state.shoppingList.single);
+      await reloaded.load();
+      expect(reloaded.shoppingList.single.checked, isTrue);
+      expect(reloaded.contentRequests, ['later queued edit']);
+    },
+  );
+
   test(
     'failed meal deletion cannot leak into the next queued assignment',
     () async {
@@ -151,10 +274,16 @@ void main() {
         await failed;
       });
       await store.entered!.future;
-      expect(state.mealPlan['week'], {'mon': 'doener-classic'});
-      final later = state.assignMeal('week', 'tue', 'doener-vegan');
-      store.release!.complete();
-      await failed;
+      late final Future<void> later;
+      try {
+        expect(state.mealPlan['week'], {'mon': 'doener-classic'});
+        later = state.assignMeal('week', 'tue', 'doener-vegan');
+      } finally {
+        // Release before the test framework waits for outstanding matchers,
+        // including when the assertion above detects a regression.
+        store.release!.complete();
+        await failed;
+      }
       await later;
       _expectSuccess(state, 'assign');
       final reloaded = AppState(store: store, corpus: state.corpus);

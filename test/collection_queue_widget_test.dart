@@ -29,8 +29,105 @@ class _PausedProfileStore extends MemoryStore {
   }
 }
 
+class _FailingCollectionStore extends MemoryStore {
+  bool armed = false;
+  bool afterWrite = false;
+  int attempts = 0;
+
+  @override
+  Future<void> putCollection(String key, String jsonText) async {
+    if (key == 'content_requests') {
+      attempts++;
+      if (armed) {
+        armed = false;
+        if (afterWrite) await super.putCollection(key, jsonText);
+        throw StateError('content request storage failed');
+      }
+    }
+    await super.putCollection(key, jsonText);
+  }
+}
+
 void main() {
   for (final lang in ['en', 'de']) {
+    for (final afterWrite in [false, true]) {
+      testWidgets(
+        '$lang search publishes and retries after logging failure ($afterWrite)',
+        (tester) async {
+          final store = _FailingCollectionStore()..afterWrite = afterWrite;
+          final state = (await tester.runAsync(() async {
+            final state = AppState(
+              store: store,
+              corpus: await loadRealCorpus(),
+            );
+            await state.load();
+            await state.completeOnboarding(Profile(lang: lang));
+            return state;
+          }))!;
+          addTearDown(state.dispose);
+          await tester.pumpWidget(
+            app(state, const Scaffold(body: SearchScreen())),
+          );
+          await tester.pumpAndSettle();
+          expect(find.byType(RecipeRow), findsWidgets);
+          store.armed = true;
+          await tester.enterText(find.byType(TextField), 'zzzzmissingdish');
+          await tester.pump(const Duration(milliseconds: 300));
+          await tester.pumpAndSettle();
+          expect(tester.takeException(), isNull);
+          expect(find.byType(RecipeRow), findsNothing);
+          expect(
+            find.text('${S(lang)('searchEmpty')} "zzzzmissingdish"'),
+            findsOneWidget,
+          );
+          expect(state.contentRequests, isEmpty);
+          await tester.enterText(find.byType(TextField), 'zzzzmissingdish ');
+          await tester.pump(const Duration(milliseconds: 300));
+          await tester.pumpAndSettle();
+          expect(state.contentRequests, ['zzzzmissingdish']);
+          expect(
+            store.attempts,
+            2,
+            reason:
+                'failed write and successful retry; rollback removes absent key',
+          );
+          final reloaded = AppState(store: store, corpus: state.corpus);
+          addTearDown(reloaded.dispose);
+          await reloaded.load();
+          expect(reloaded.contentRequests, ['zzzzmissingdish']);
+          await tester.pumpWidget(const SizedBox());
+        },
+      );
+    }
+
+    testWidgets('$lang consecutive distinct empty searches are both recorded', (
+      tester,
+    ) async {
+      final state = (await tester.runAsync(() async {
+        final state = AppState(
+          store: MemoryStore(),
+          corpus: await loadRealCorpus(),
+        );
+        await state.load();
+        await state.completeOnboarding(Profile(lang: lang));
+        return state;
+      }))!;
+      addTearDown(state.dispose);
+      await tester.pumpWidget(app(state, const Scaffold(body: SearchScreen())));
+      await tester.pumpAndSettle();
+      for (final query in [
+        'zzzzmissingone',
+        'zzzzmissingtwo',
+        'zzzzmissingone',
+      ]) {
+        await tester.enterText(find.byType(TextField), query);
+        await tester.pump(const Duration(milliseconds: 300));
+        await tester.pumpAndSettle();
+      }
+      expect(state.contentRequests, ['zzzzmissingone', 'zzzzmissingtwo']);
+      await tester.pumpWidget(const SizedBox());
+    });
+
     testWidgets('later $lang search survives queued content request', (
       tester,
     ) async {
@@ -54,6 +151,8 @@ void main() {
       await tester.pump(const Duration(milliseconds: 300));
       await tester.pumpAndSettle();
       expect(state.contentRequests, isEmpty);
+      expect(find.byType(RecipeRow), findsNothing);
+      expect(find.text('${S(lang)('searchEmpty')} "zzzzmissingdish"'), findsOneWidget);
       await tester.enterText(find.byType(TextField), 'lasag');
       await tester.pump(const Duration(milliseconds: 300));
       await tester.pumpAndSettle();
