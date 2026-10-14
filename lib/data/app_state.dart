@@ -134,13 +134,15 @@ class AppState extends ChangeNotifier {
 
   // ---- profile ----
 
-  Future<void> updateProfile(Profile profile) async {
+  // Profile writes share ordering with restore/reset so an older completion
+  // cannot republish a profile or overwrite a later operation's storage.
+  Future<void> updateProfile(Profile profile) => _queueMutation(() async {
     await store.saveProfile(profile);
     _profile = profile;
     notifyListeners();
-  }
+  });
 
-  Future<void> completeOnboarding(Profile profile) async {
+  Future<void> completeOnboarding(Profile profile) => _queueMutation(() async {
     // Persist the actual choices before hiding onboarding. If either write
     // fails, the next launch can safely show setup again instead of entering
     // the app with a profile that was never saved.
@@ -149,7 +151,7 @@ class AppState extends ChangeNotifier {
     _profile = profile;
     _onboarded = true;
     notifyListeners();
-  }
+  });
 
   // ---- cookbook ----
 
