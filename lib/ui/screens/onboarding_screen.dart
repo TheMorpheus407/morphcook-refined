@@ -42,6 +42,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   void _goToPage(int index) {
+    if (_finishing) return;
     FocusManager.instance.primaryFocus?.unfocus();
     final duration = motionDuration(
       context,
@@ -65,7 +66,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     final state = context.read<AppState>();
     try {
       await state.completeOnboarding(
-        Profile(lang: _lang, avoidFlags: _avoidFlags),
+        Profile(lang: _lang, avoidFlags: Set<String>.unmodifiable(_avoidFlags)),
       );
     } catch (_) {
       if (!mounted) return;
@@ -81,7 +82,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     final morph = MorphTheme.of(context);
     final s = S(_lang);
     return PopScope(
-      canPop: _index == 0,
+      canPop: !_finishing && _index == 0,
       onPopInvokedWithResult: (didPop, _) {
         if (!didPop && _index > 0) _goToPage(0);
       },
@@ -101,7 +102,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           child: IconButton(
                             key: const ValueKey('onboarding-back'),
                             tooltip: s('back'),
-                            onPressed: () => _goToPage(0),
+                            onPressed: _finishing ? null : () => _goToPage(0),
                             icon: const Icon(Icons.arrow_back),
                             color: morph.colors.ink,
                           ),
@@ -233,7 +234,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         color: selected ? morph.colors.ink : morph.colors.card,
         shape: Border.all(color: morph.colors.line),
         child: InkWell(
-          onTap: onTap,
+          onTap: _finishing ? null : onTap,
           child: Padding(
             padding: const EdgeInsets.all(16),
             child: Text(
@@ -263,6 +264,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               MonoChip(
                 label: compound.name.of(_lang),
                 selected: _avoidFlags.contains(compound.id),
+                enabled: !_finishing,
                 onTap: () => setState(() {
                   if (!_avoidFlags.remove(compound.id)) {
                     _avoidFlags.add(compound.id);
@@ -297,6 +299,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               MonoChip(
                 label: ontology.nameOf(flag, _lang),
                 selected: _avoidFlags.contains(flag),
+                enabled: !_finishing,
                 onTap: () => setState(() {
                   if (!_avoidFlags.remove(flag)) _avoidFlags.add(flag);
                 }),
