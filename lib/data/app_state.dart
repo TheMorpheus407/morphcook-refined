@@ -170,6 +170,8 @@ class AppState extends ChangeNotifier {
     if (isSaved(recipeId)) {
       _saved.removeWhere((s) => s.recipeId == recipeId);
     } else {
+      // A queued tap may outlive deletion, backup replacement or reset.
+      if (await recipeById(recipeId) == null) return;
       _saved.add(SavedRecipe(recipeId: recipeId, savedAt: DateTime.now()));
     }
     await _writeJson('saved', _saved.map((s) => s.toJson()).toList());
@@ -819,6 +821,10 @@ class AppState extends ChangeNotifier {
       _queueMutation(() => _persistCookProgress(progress));
 
   Future<void> _persistCookProgress(CookProgress? progress) async {
+    // Ignore updates from a screen whose recipe an earlier mutation removed.
+    if (progress != null && await recipeById(progress.recipeId) == null) {
+      return;
+    }
     _cookProgress = progress;
     if (progress == null) {
       await store.putCollection('cook_progress', 'null');

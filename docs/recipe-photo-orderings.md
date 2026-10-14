@@ -118,3 +118,14 @@ before creation, progress writes before editing, and new cooking sessions during
 successful or failed edits. They inspect memory and reload; all fourteen fail
 on submitted PR head `d8e57da` before those two writers join the queue.
 These are injected storage-ordering checks, not device-crash guarantees.
+
+Queued bookmarks and cooking-progress updates revalidate their recipe when
+they run. If deletion, backup replacement or reset removed it, a stale screen
+action is ignored. Otherwise a bookmark could recreate a dangling saved id
+and block whole-cookbook sharing, or cooking progress could reappear for a
+removed recipe. The twelve `rechecks recipe` cases cover both actions after
+successful and failed removals, checking memory, reload and actual cookbook
+export (including the expected empty result after reset). The six successful
+removal cases fail on `169df3f` before revalidation; the six failure controls
+keep the surviving recipe usable. Two additional cases preserve bookmarks
+and progress for bundled recipes whose partition has not loaded yet.

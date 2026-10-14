@@ -5,6 +5,8 @@ import 'package:morphcook/data/app_state.dart';
 import 'package:morphcook/data/store.dart';
 import 'package:morphcook/logic/backup/backup_service.dart';
 import 'package:morphcook/logic/cook/cook_controller.dart';
+import 'package:morphcook/logic/sharing/recipe_share.dart'
+    show collectRecipeShare;
 import 'package:morphcook/models/profile.dart';
 import 'package:morphcook/models/recipe_image.dart';
 import 'package:morphcook/models/recipe_share.dart';
@@ -27,6 +29,17 @@ class _PausedPersonalStore extends MemoryStore {
       if (failPaused) throw StateError('personal recipe write failed');
     }
     await super.putCollections(collections);
+  }
+
+  @override
+  Future<void> clearAll() async {
+    if (pauseNext) {
+      pauseNext = false;
+      entered.complete();
+      await release.future;
+      if (failPaused) throw StateError('reset failed');
+    }
+    await super.clearAll();
   }
 }
 
@@ -52,6 +65,140 @@ class _PausedCollectionStore extends MemoryStore {
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+  for (final action in ['bookmark', 'progress']) {
+    test('$action resolves an on-demand bundled recipe', () async {
+      final store = MemoryStore();
+      final state = AppState(
+        store: store,
+        corpus: await loadRealCorpus(all: false),
+      );
+      await state.load();
+      addTearDown(state.dispose);
+      expect(state.corpus.isPartitionLoaded('cuisine-asian'), isFalse);
+      if (action == 'bookmark') {
+        await state.toggleSaved('ramen-vegan');
+      } else {
+        await state.persistCookProgress(
+          const CookProgress(
+            recipeId: 'ramen-vegan',
+            stepIndex: 0,
+            servings: 2,
+          ),
+        );
+      }
+      final reloaded = AppState(store: store, corpus: state.corpus);
+      await reloaded.load();
+      addTearDown(reloaded.dispose);
+      for (final snapshot in [state, reloaded]) {
+        if (action == 'bookmark') {
+          expect(snapshot.isSaved('ramen-vegan'), isTrue);
+        } else {
+          expect(snapshot.cookProgress?.recipeId, 'ramen-vegan');
+        }
+      }
+    });
+  }
+
+  for (final operation in ['delete', 'replace', 'reset']) {
+    for (final action in ['bookmark', 'progress']) {
+      for (final fails in [false, true]) {
+        test(
+          '$action queued after $operation rechecks recipe: failure=$fails',
+          () async {
+            final store = _PausedPersonalStore()..pauseNext = false;
+            final state = AppState(
+              store: store,
+              corpus: await loadRealCorpus(),
+            );
+            await state.load();
+            addTearDown(state.dispose);
+            final removed = personalRecipe(1);
+            final survivor = personalRecipe(2);
+            await state.savePersonalRecipe(removed);
+            await state.savePersonalRecipe(survivor);
+            await state.toggleSaved('doener-vegan');
+            final backup = BackupData(
+              profile: const Profile(),
+              saved: state.saved
+                  .where((entry) => entry.recipeId != removed.id)
+                  .toList(),
+              mealPlan: const {},
+              history: const [],
+              personalRecipes: [survivor],
+            );
+            store
+              ..pauseNext = true
+              ..failPaused = fails;
+            final removing = switch (operation) {
+              'delete' => state.deletePersonalRecipe(removed.id),
+              'replace' => state.applyBackup(backup, merge: false),
+              'reset' => state.resetEverything(),
+              _ => throw StateError(operation),
+            };
+            final checkedRemoving = fails
+                ? expectLater(removing, throwsStateError)
+                : removing;
+            addTearDown(() async {
+              if (!store.release.isCompleted) store.release.complete();
+              await checkedRemoving;
+            });
+            await store.entered.future;
+            var completed = false;
+            final acting =
+                (action == 'bookmark'
+                        ? state.toggleSaved(removed.id)
+                        : state.persistCookProgress(
+                            CookProgress(
+                              recipeId: removed.id,
+                              stepIndex: 0,
+                              servings: 2,
+                            ),
+                          ))
+                    .then((_) => completed = true);
+            await Future<void>.delayed(Duration.zero);
+            final finishedBeforeRelease = completed;
+            store.release.complete();
+            await checkedRemoving;
+            await acting;
+            expect(finishedBeforeRelease, isFalse);
+
+            final reloaded = AppState(store: store, corpus: state.corpus);
+            await reloaded.load();
+            addTearDown(reloaded.dispose);
+            for (final snapshot in [state, reloaded]) {
+              // Exercise the actual whole-cookbook export, including unrelated
+              // personal and bundled recipes when they survive the operation.
+              if (operation == 'reset' && !fails) {
+                await expectLater(
+                  collectRecipeShare(snapshot),
+                  throwsA(
+                    isA<RecipeShareException>().having(
+                      (error) => error.failure,
+                      'failure',
+                      RecipeShareFailure.empty,
+                    ),
+                  ),
+                );
+              } else {
+                final share = await collectRecipeShare(snapshot);
+                expect(share.recipes, hasLength(fails ? 3 : 2));
+              }
+              expect(snapshot.isPersonalRecipe(removed.id), fails);
+              expect(
+                snapshot.isSaved(removed.id),
+                fails && action != 'bookmark',
+              );
+              expect(
+                snapshot.cookProgress?.recipeId,
+                fails && action == 'progress' ? removed.id : isNull,
+              );
+            }
+          },
+        );
+      }
+    }
+  }
+
   for (final editing in [false, true]) {
     for (final initiallySaved in [false, true]) {
       for (final fails in [false, true]) {
