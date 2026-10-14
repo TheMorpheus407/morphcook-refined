@@ -209,7 +209,7 @@ class _DishDetailScreenState extends State<DishDetailScreen> {
               color: saved ? morph.colors.terracotta : morph.colors.ink,
             ),
             tooltip: saved ? s('saved') : s('save'),
-            onPressed: () => state.toggleSaved(recipe.id),
+            onPressed: () => _toggleBookmark(recipe.id, state),
           ),
         ],
       ),
@@ -934,6 +934,14 @@ class _DishDetailScreenState extends State<DishDetailScreen> {
       return await readPickedFileBytes(file, maxBytes: maxRecipeImageBytes);
     } finally {
       await clearPickerTemporaryFiles();
+    }
+  }
+
+  Future<void> _toggleBookmark(String recipeId, AppState state) async {
+    try {
+      await state.toggleSaved(recipeId);
+    } catch (_) {
+      if (mounted) _toast(S(state.lang)('bookmarkSaveFailed'));
     }
   }
 

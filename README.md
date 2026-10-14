@@ -66,6 +66,10 @@ returns from recipe details. Its variant still follows your profile. Changing
 your profile or pulling down to refresh picks a featured dish using the current
 time and cooking history; restarting the app also starts a new selection.
 
+Bookmarks appear only after storage confirms the update. If saving or removing
+a bookmark fails, the app reports the storage error and keeps the previous
+visible state; the same button can retry the requested change.
+
 ## Website imports
 
 In the cookbook, use the link icon to import a recipe URL. Review its ingredients,
