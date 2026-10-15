@@ -28,6 +28,7 @@ const _next = CookProgress(
 class _ProgressStore extends MemoryStore {
   bool armed = false;
   bool afterWrite = false;
+  bool fail = true;
   String failureKey = 'cook_progress';
   Completer<void>? entered;
   Completer<void>? release;
@@ -39,7 +40,7 @@ class _ProgressStore extends MemoryStore {
       if (afterWrite) await super.putCollection(key, jsonText);
       entered?.complete();
       if (release != null) await release!.future;
-      throw error;
+      if (fail) throw error;
     }
     await super.putCollection(key, jsonText);
   }
@@ -156,6 +157,65 @@ void main() {
           expect(state.history, hasLength(2));
           expect(state.cookProgress, isNull);
           expect(store.getCollection('cook_progress'), 'null');
+        },
+      );
+    }
+  }
+
+  for (final previousMatches in [false, true]) {
+    for (final fails in [false, true]) {
+      test(
+        'scoped clear checks settled owner: previousMatches=$previousMatches fails=$fails',
+        () async {
+          final store = _ProgressStore()..afterWrite = true;
+          const other = CookProgress(
+            recipeId: 'doener-vegan',
+            stepIndex: 1,
+            servings: 4,
+            remainingTimerSeconds: 37,
+          );
+          final previous = previousMatches ? _old : other;
+          final next = previousMatches ? other : _next;
+          // Preserve unknown fields and formatting if the earlier save fails.
+          final raw = ' ${jsonEncode({...previous.toJson(), 'future': true})} ';
+          await store.putCollection('cook_progress', raw);
+          final state = await _load(store);
+          addTearDown(state.dispose);
+          store
+            ..fail = fails
+            ..armed = true
+            ..entered = Completer<void>()
+            ..release = Completer<void>();
+          addTearDown(() {
+            if (!store.release!.isCompleted) store.release!.complete();
+          });
+          final save = state.persistCookProgress(next);
+          final settledSave = fails
+              ? expectLater(save, throwsA(same(store.error)))
+              : save;
+          await store.entered!.future;
+          var notifications = 0;
+          state.addListener(() => notifications++);
+          final clear = state.clearCookProgressForRecipe(_old.recipeId);
+          expect(state.cookProgress?.toJson(), previous.toJson());
+          expect(notifications, 0);
+          store.release!.complete();
+          await settledSave;
+          await clear;
+          final confirmed = fails ? previous : next;
+          final clears = confirmed.recipeId == _old.recipeId;
+          expect(
+            state.cookProgress?.toJson(),
+            clears ? null : confirmed.toJson(),
+          );
+          expect(
+            store.getCollection('cook_progress'),
+            clears ? 'null' : (fails ? raw : jsonEncode(next.toJson())),
+          );
+          expect(notifications, (fails ? 0 : 1) + (clears ? 1 : 0));
+          final reloaded = await _load(store);
+          addTearDown(reloaded.dispose);
+          expect(reloaded.cookProgress?.toJson(), state.cookProgress?.toJson());
         },
       );
     }

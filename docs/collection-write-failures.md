@@ -36,6 +36,10 @@ save or resurrecting progress after a confirmed clear.
 Confirmed progress changes notify recipe details so its Start/Resume label
 updates after a save or clear; pending and failed writes keep the previous label.
 
+Finishing the last step clears only the cooking recipe's resume. Ownership is
+checked inside the mutation queue after earlier saves and rollback finish; a
+resume belonging to another recipe keeps its exact stored bytes.
+
 Saving a completed meal also clears any resume state for that recipe, including
 when the first progress-clear attempt failed. Both writes must confirm before
 either snapshot is published; failure recovers both raw values. Progress for
@@ -58,6 +62,9 @@ Targeted checks:
 - `test/cook_progress_confirmation_test.dart`: progress creation, update and
   clearing before/after-write failures, exact raw JSON recovery, unpublished
   pending values, queued retry, and EN/DE cook-mode errors and resume behavior.
+  Finishing a different recipe preserves step, servings, timer and raw storage
+  through reload. Scoped clears follow the owner after an earlier save succeeds
+  or rolls back, in both ownership directions, without spurious notifications.
 - `test/cook_progress_resume_test.dart`: EN/DE reopening during delayed saves,
   queued step changes, clearing and delayed failure recovery; paused timers and
   servings, subsequent edits and reload; unavailable controls while waiting,
