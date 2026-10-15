@@ -772,7 +772,7 @@ class AppState extends ChangeNotifier {
 
   // Keep published snapshots intact until all writes are confirmed. Rollback
   // also covers stores that persist a value before reporting a failure.
-  Future<void> _persistCollections(Map<String, Object> next) async {
+  Future<void> _persistCollections(Map<String, Object?> next) async {
     // Parsing is deliberately tolerant on load. Re-encoding that parsed view
     // could erase recoverable records or unknown fields during rollback.
     final previousJson = {
@@ -831,10 +831,13 @@ class AppState extends ChangeNotifier {
       ..._history,
       HistoryEntry(recipeId: recipeId, cookedAt: DateTime.now()),
     ];
+    final clearsProgress = _cookProgress?.recipeId == recipeId;
     await _persistCollections({
       'history': next.map((h) => h.toJson()).toList(),
+      if (clearsProgress) 'cook_progress': null,
     });
     _history = next;
+    if (clearsProgress) _cookProgress = null;
     notifyListeners();
   });
 
@@ -949,12 +952,8 @@ class AppState extends ChangeNotifier {
     if (progress != null && await recipeById(progress.recipeId) == null) {
       return;
     }
+    await _persistCollections({'cook_progress': progress?.toJson()});
     _cookProgress = progress;
-    if (progress == null) {
-      await store.putCollection('cook_progress', 'null');
-    } else {
-      await _writeJson('cook_progress', progress.toJson());
-    }
   }
 
   // ---- backup ----

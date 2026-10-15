@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -38,7 +40,14 @@ class _CookModeScreenState extends State<CookModeScreen> {
         : null;
     _session = CookSessionController(
       recipe: widget.recipe,
-      persist: state.persistCookProgress,
+      persist: (progress) {
+        unawaited(
+          saveCollectionEdit(
+            context,
+            () => state.persistCookProgress(progress),
+          ),
+        );
+      },
       resumeFrom: resume,
     );
     _oneHanded = OneHandedCookModeController(

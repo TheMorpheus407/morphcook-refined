@@ -1,6 +1,6 @@
 # Collection save failures
 
-History, meal plans, shopping lists/history and local content requests share
+History, meal plans, shopping lists/history, cook progress and local content requests share
 AppState's mutation queue. Each operation builds a private next snapshot and
 publishes it only after every required write succeeds. Failure propagates the
 original exception without publishing or notifying listeners. The queue waits
@@ -19,11 +19,16 @@ but a restart can expose the partially persisted edit. The double-failure test
 explicitly demonstrates this limit and subsequent queue/retry behavior. These
 checks do not promise transaction atomicity or recovery from a device crash.
 
-Shopping, meal-plan, recipe-add and cooking-completion controls report a failed
+Shopping, meal-plan, recipe-add, cook-progress and cooking-completion controls report a failed
 save in English or German and allow retry. Success feedback and leaving the
 cooking completion screen happen only after confirmation. The completion note
 asks the user to save the meal rather than claiming it is already recorded.
 Navigating away during a failed save does not show feedback on a disposed page.
+
+Saving a completed meal also clears any resume state for that recipe, including
+when the first progress-clear attempt failed. Both writes must confirm before
+either snapshot is published; failure recovers both raw values. Progress for
+another recipe remains untouched.
 
 Cooking completion accepts one Done action while its history save is pending,
 including taps before the disabled button rebuilds. A failed save enables retry.
@@ -39,6 +44,9 @@ that logging succeeded or that anything was sent to the developer.
 
 Targeted checks:
 
+- `test/cook_progress_confirmation_test.dart`: progress creation, update and
+  clearing before/after-write failures, exact raw JSON recovery, unpublished
+  pending values, queued retry, and EN/DE cook-mode errors and resume behavior.
 - `test/collection_write_failure_test.dart`: before/after-write failures for
   every collection edit, both shopping writes, retry/reload, notifications,
   queued assignment, exact raw JSON/unknown fields, absent keys and the
