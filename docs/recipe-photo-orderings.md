@@ -156,13 +156,22 @@ profile and onboarding recovery independently, preserving the original import
 error and the previous published state. Photo metadata is rebuilt from the old
 and incoming snapshots to match the bytes actually left in storage. This keeps
 surviving incoming credits after failed or partial byte rollback, restores old
-credits for successfully recovered bytes, and retains surviving incoming-only
-photos if cleanup fails. An unavailable photo read leaves metadata untouched
-while unrelated collection, profile and onboarding recovery still runs.
+credits for successfully recovered bytes, and retains eligible incoming-only
+photos if cleanup fails. Selection requires a recipe in the previous cookbook
+or bundled corpus, prioritizes previous photo IDs (including surviving
+replacement bytes), and stays within 100 photos and 20 MiB. Other surviving
+bytes remain inert when cleanup fails. An unavailable photo read leaves metadata
+untouched while unrelated collection, profile and onboarding recovery still
+runs. Reload also checks recipe existence and both limits, so leftover metadata
+cannot make subsequent backups unrestorable or unexportable.
 
 `test/backup_independent_rollback_test.dart` covers the four independent failures,
 replacement/merge with legacy/current credits and zero/partial/complete byte
 rollback, zero/partial cleanup, reload/export consistency and retry. Thirteen photo
 regressions fail on submitted PR #23 head `d1cbf53`; the four independent failure
 cases fail on base `0c1ccdc`. Storage can still reject recovery writes, and these
-injected storage checks do not provide process-crash atomicity.
+injected storage checks do not provide process-crash atomicity. Seven further
+regressions fail on finishing head `37ce3ed`: merge/replacement with orphan
+personal photos and readable/unreadable recovery stores, count and byte limits,
+and previous-ID priority with surviving replacement credit. They check reload,
+export/import, application of exported backups, unrelated merges and retry.

@@ -78,7 +78,7 @@ class AppState extends ChangeNotifier {
       'expert_assessments',
       ExpertAssessment.fromJson,
     );
-    _recipeImages = _loadRecipeImages();
+    _recipeImages = await _loadRecipeImages();
     final progressRaw = store.getCollection('cook_progress');
     if (progressRaw != null) {
       try {
@@ -601,7 +601,7 @@ class AppState extends ChangeNotifier {
 
   // ---- local recipe images ----
 
-  Map<String, RecipeImage> _loadRecipeImages() {
+  Future<Map<String, RecipeImage>> _loadRecipeImages() async {
     final metadata = _readList(
       'recipe_image_metadata',
       RecipeImageMetadata.fromJson,
@@ -625,7 +625,34 @@ class AppState extends ChangeNotifier {
         // Ignore a corrupt local entry; the striped fallback remains usable.
       }
     }
-    return loaded;
+    // Recovery writes or reads may also fail. Keep leftover metadata from
+    // exposing orphan photos or making the next backup exceed its limits.
+    return _selectBackupCompatibleImages(
+      loaded.values,
+      _personalRecipes.map((recipe) => recipe.id).toSet(),
+    );
+  }
+
+  Future<Map<String, RecipeImage>> _selectBackupCompatibleImages(
+    Iterable<RecipeImage> images,
+    Set<String> personalIds,
+  ) async {
+    final selected = <String, RecipeImage>{};
+    var totalBytes = 0;
+    for (final image in images) {
+      if (selected.containsKey(image.recipeId) ||
+          selected.length >= maxBackupRecipeImages ||
+          totalBytes + image.bytes.length > maxBackupImageBytes) {
+        continue;
+      }
+      if (!personalIds.contains(image.recipeId) &&
+          await corpus.recipeById(image.recipeId) == null) {
+        continue;
+      }
+      selected[image.recipeId] = image;
+      totalBytes += image.bytes.length;
+    }
+    return selected;
   }
 
   RecipeImage? recipeImageFor(String recipeId) => _recipeImages[recipeId];
@@ -1095,15 +1122,20 @@ class AppState extends ChangeNotifier {
         // Keep metadata (including credit) for the bytes that actually survived,
         // preferring the old photo when both snapshots contain identical bytes.
         final storedBytes = store.loadRecipeImageBytes();
-        final recoveredImages = <String, RecipeImage>{};
-        for (final image in [
-          ..._recipeImages.values,
-          ...nextRecipeImages.values,
-        ]) {
-          if (listEquals(storedBytes[image.recipeId], image.bytes)) {
-            recoveredImages.putIfAbsent(image.recipeId, () => image);
+        final matchingImages = <RecipeImage>[];
+        // Previous IDs take priority even when only their incoming bytes remain.
+        for (final id in {...oldImageIds, ...nextImageIds}) {
+          for (final image in [_recipeImages[id], nextRecipeImages[id]]) {
+            if (image != null && listEquals(storedBytes[id], image.bytes)) {
+              matchingImages.add(image);
+              break;
+            }
           }
         }
+        final recoveredImages = await _selectBackupCompatibleImages(
+          matchingImages,
+          _personalRecipes.map((recipe) => recipe.id).toSet(),
+        );
         recoveryCollections['recipe_image_metadata'] = jsonEncode(
           recoveredImages.values
               .map((image) => image.metadata.toJson())

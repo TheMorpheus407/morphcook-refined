@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:morphcook/data/app_state.dart';
 import 'package:morphcook/data/store.dart';
 import 'package:morphcook/logic/backup/backup_service.dart';
+import 'package:morphcook/models/personal_recipe.dart';
 import 'package:morphcook/models/profile.dart';
 import 'package:morphcook/models/recipe_image.dart';
 
@@ -108,6 +109,232 @@ void _expectPhoto(AppState state, RecipeImage expected) {
 }
 
 void main() {
+  for (final merge in [false, true]) {
+    for (final unreadable in [false, true]) {
+      test(
+        'failed cleanup keeps personal-photo backups restorable: merge=$merge unreadable=$unreadable',
+        () async {
+          final store = _RecoveryFailureStore();
+          final state = AppState(store: store, corpus: await loadRealCorpus());
+          addTearDown(state.dispose);
+          await state.load();
+          await state.toggleSaved('doener-vegan');
+          final recipe = PersonalRecipe(
+            id: 'personal-0123456789abcdef0123456789abcdef',
+            title: 'Incoming noodles',
+            timeMinutes: 10,
+            servings: 2,
+            ingredients: [
+              PersonalRecipeIngredient(name: 'Noodles', qty: 100, unit: 'g'),
+            ],
+            steps: [PersonalRecipeStep(text: 'Boil.')],
+            createdAt: DateTime.utc(2026),
+            updatedAt: DateTime.utc(2026),
+          );
+          final incoming = BackupData(
+            profile: const Profile(name: 'Incoming'),
+            saved: const [],
+            mealPlan: const {},
+            history: const [],
+            personalRecipes: [recipe],
+            recipeImages: [
+              RecipeImage(
+                recipeId: recipe.id,
+                bytes: testPngBytes(),
+                updatedAt: DateTime.utc(2026),
+                credit: _credit('Incoming'),
+              ),
+            ],
+          );
+          store.failedRecovery = 'cleanup';
+          store.failImageRead = unreadable;
+          store.armed = true;
+          await expectLater(
+            state.applyBackup(incoming, merge: merge),
+            throwsA(same(store.importError)),
+          );
+          final reloaded = AppState(store: store, corpus: state.corpus);
+          addTearDown(reloaded.dispose);
+          store.failImageRead = false;
+          await reloaded.load();
+          // The cookbook rolled back, even though the incoming binary survived.
+          expect(reloaded.personalRecipes, isEmpty);
+          expect(store.loadRecipeImageBytes(), contains(recipe.id));
+          expect(reloaded.recipeImages, isEmpty);
+          if (!unreadable) {
+            expect(
+              jsonDecode(store.getCollection('recipe_image_metadata')!) as List,
+              isEmpty,
+            );
+          }
+          expect(reloaded.isSaved('doener-vegan'), isTrue);
+          store.recovering = false;
+          final exported = BackupService.export(reloaded.buildBackup());
+          final restored = AppState(store: MemoryStore(), corpus: state.corpus);
+          addTearDown(restored.dispose);
+          await restored.load();
+          await restored.applyBackup(
+            BackupService.import(exported.jsonFile),
+            merge: false,
+          );
+          await reloaded.applyBackup(
+            const BackupData(
+              profile: Profile(),
+              saved: [],
+              mealPlan: {},
+              history: [],
+            ),
+            merge: true,
+          );
+          await reloaded.applyBackup(incoming, merge: merge);
+          _expectPhoto(reloaded, incoming.recipeImages.single);
+        },
+      );
+    }
+  }
+
+  test(
+    'failed byte recovery prioritizes previous photo IDs over incoming-only photos',
+    () async {
+      final store = _RecoveryFailureStore();
+      final corpus = await loadRealCorpus();
+      final state = AppState(store: store, corpus: corpus);
+      addTearDown(state.dispose);
+      await state.load();
+      final ids = corpus.loadedRecipes
+          .map((r) => r.id)
+          .take(maxBackupRecipeImages + 1)
+          .toList();
+      for (final id in ids.take(maxBackupRecipeImages)) {
+        await state.setRecipeImage(id, testPngBytes(), credit: _credit('Old'));
+      }
+      final replacement = RecipeImage(
+        recipeId: ids.first,
+        bytes: [...testPngBytes(), 0],
+        updatedAt: DateTime.utc(2026),
+        credit: _credit('Replacement'),
+      );
+      final incoming = BackupData(
+        profile: const Profile(name: 'Incoming'),
+        saved: const [],
+        mealPlan: const {},
+        history: const [],
+        recipeImages: [
+          RecipeImage(
+            recipeId: ids.last,
+            bytes: testPngBytes(),
+            updatedAt: DateTime.utc(2026),
+            credit: _credit('Extra'),
+          ),
+          replacement,
+        ],
+      );
+      store.imageWritesBeforeFailure = 0;
+      store.failedRecovery = 'cleanup';
+      store.armed = true;
+      await expectLater(
+        state.applyBackup(incoming, merge: false),
+        throwsA(same(store.importError)),
+      );
+      final reloaded = AppState(store: store, corpus: corpus);
+      addTearDown(reloaded.dispose);
+      await reloaded.load();
+      expect(
+        reloaded.recipeImages.map((i) => i.recipeId),
+        ids.take(maxBackupRecipeImages),
+      );
+      _expectPhoto(reloaded, replacement);
+      expect(
+        jsonDecode(store.getCollection('recipe_image_metadata')!) as List,
+        hasLength(maxBackupRecipeImages),
+      );
+      final exported = BackupService.export(reloaded.buildBackup());
+      store.recovering = false;
+      await reloaded.applyBackup(
+        BackupService.import(exported.jsonFile),
+        merge: true,
+      );
+    },
+  );
+
+  for (final limit in ['count', 'bytes']) {
+    test('failed cleanup keeps recovered photos within $limit limit', () async {
+      final store = _RecoveryFailureStore();
+      final corpus = await loadRealCorpus();
+      final state = AppState(store: store, corpus: corpus);
+      addTearDown(state.dispose);
+      await state.load();
+      final count = limit == 'count' ? maxBackupRecipeImages : 3;
+      final ids = corpus.loadedRecipes
+          .map((r) => r.id)
+          .take(count + 1)
+          .toList();
+      final bytes = limit == 'count'
+          ? testPngBytes()
+          : (Uint8List(maxBackupImageBytes ~/ 3)..setAll(0, testPngBytes()));
+      for (final id in ids.take(count)) {
+        await state.setRecipeImage(id, bytes, credit: _credit('Old'));
+      }
+      final before = state.buildBackup().toJson(DateTime.utc(2026));
+      final incoming = BackupData(
+        profile: const Profile(name: 'Incoming'),
+        saved: const [],
+        mealPlan: const {},
+        history: const [],
+        recipeImages: [
+          RecipeImage(
+            recipeId: ids.last,
+            bytes: bytes,
+            updatedAt: DateTime.utc(2026),
+            credit: _credit('Incoming'),
+          ),
+        ],
+      );
+      // Each input is exportable; their surviving union exceeds the limit.
+      BackupService.export(state.buildBackup(), includePlainGzip: false);
+      BackupService.export(incoming, includePlainGzip: false);
+      store.failedRecovery = 'cleanup';
+      store.armed = true;
+      await expectLater(
+        state.applyBackup(incoming, merge: false),
+        throwsA(same(store.importError)),
+      );
+      expect(state.buildBackup().toJson(DateTime.utc(2026)), before);
+      final reloaded = AppState(store: store, corpus: corpus);
+      addTearDown(reloaded.dispose);
+      await reloaded.load();
+      expect(store.loadRecipeImageBytes().length, count + 1);
+      expect(reloaded.recipeImages.map((i) => i.recipeId), ids.take(count));
+      expect(
+        jsonDecode(store.getCollection('recipe_image_metadata')!) as List,
+        hasLength(count),
+      );
+      store.recovering = false;
+      final exported = BackupService.export(
+        reloaded.buildBackup(),
+        includePlainGzip: false,
+      );
+      final restored = AppState(store: MemoryStore(), corpus: corpus);
+      addTearDown(restored.dispose);
+      await restored.load();
+      await restored.applyBackup(
+        BackupService.import(exported.jsonFile),
+        merge: false,
+      );
+      await reloaded.applyBackup(
+        const BackupData(
+          profile: Profile(),
+          saved: [],
+          mealPlan: {},
+          history: [],
+        ),
+        merge: true,
+      );
+      await reloaded.applyBackup(incoming, merge: false);
+      _expectPhoto(reloaded, incoming.recipeImages.single);
+    });
+  }
+
   for (final merge in [false, true]) {
     for (final legacy in [false, true]) {
       for (final count in [0, 1, 2]) {
