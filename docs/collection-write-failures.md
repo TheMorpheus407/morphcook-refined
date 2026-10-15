@@ -30,6 +30,13 @@ boxes and verify recovery from disk. The photo case fails if image recovery is
 removed; all six cases fail with the pre-PR store from `c9b116ac`. The same
 best-effort rollback limits apply if recovery itself fails.
 
+An open personal-recipe detail page follows confirmed cookbook changes. A reset
+or replacement backup that removes the recipe hides its cached content and all
+recipe actions, with an English/German unavailable message and Back still usable.
+A failed reset keeps the recipe and its supplied authorship. A restored revision
+updates its title, ingredients and source together; absent personal data never
+implies a bundled AI origin.
+
 Shopping, meal-plan, recipe-add, cook-progress and cooking-completion controls report a failed
 save in English or German and allow retry. Success feedback and leaving the
 cooking completion screen happen only after confirmation. The completion note
@@ -103,6 +110,11 @@ that logging succeeded or that anything was sent to the developer.
 
 Targeted checks:
 
+- `test/personal_detail_reset_test.dart`: EN/DE navigation from a pending Settings
+  reset into a personal recipe, confirmed removal versus failed reset, Back to
+  onboarding, direct deletion, and open-page backup replacement/removal. Checks
+  private content, authorship, available actions, current ingredients, instructions,
+  cooking time and servings.
 - `test/meal_gesture_week_test.dart`: EN/DE long-press source replacement
   before the drag starts, adjacent-week navigation across midnight, and an
   export press held through a midnight restore/rebuild. Unchanged-source/clock

@@ -148,8 +148,21 @@ class _DishDetailScreenState extends State<DishDetailScreen> {
     final state = context.watch<AppState>();
     final s = S(state.lang);
     final lang = state.lang;
-    final dish = _dish;
-    final recipe = _selected;
+    final personal = state.personalRecipeById(_selected?.id ?? '');
+    final personalDish = _dish?.partitionId == 'personal';
+    final dish = personalDish ? state.dishById(widget.dishId) : _dish;
+    final recipe = personal?.asRecipe() ?? _selected;
+
+    // A confirmed reset/delete/restore can remove a personal recipe while its
+    // route is still open. Never reinterpret the cached copy as a corpus dish.
+    if (personalDish && personal == null) {
+      return Scaffold(
+        appBar: AppBar(),
+        body: PaperBackground(
+          child: Center(child: Text(s('recipeUnavailable'))),
+        ),
+      );
+    }
 
     if (dish == null || recipe == null) {
       return Scaffold(
@@ -160,7 +173,6 @@ class _DishDetailScreenState extends State<DishDetailScreen> {
       );
     }
 
-    final personal = state.personalRecipeById(recipe.id);
     final hiddenByCalories = personal == null
         ? _all
               .where(
