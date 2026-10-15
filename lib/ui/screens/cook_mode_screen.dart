@@ -25,6 +25,8 @@ class _CookModeScreenState extends State<CookModeScreen> {
   late CookSessionController _session;
   late OneHandedCookModeController _oneHanded;
   bool _flashing = false;
+  bool _savingCompletion = false;
+  bool _completionSaved = false;
   Color _flashColor = MorphColors.light.coral;
 
   @override
@@ -455,17 +457,9 @@ class _CookModeScreenState extends State<CookModeScreen> {
                       vertical: 14,
                     ),
                   ),
-                  onPressed: () async {
-                    if (!await saveCollectionEdit(
-                      context,
-                      () => state.logCooked(widget.recipe.id),
-                    )) {
-                      return;
-                    }
-                    if (!mounted) return;
-                    // ignore: use_build_context_synchronously
-                    Navigator.of(context).pop();
-                  },
+                  onPressed: _savingCompletion
+                      ? null
+                      : () => _finishCooking(state),
                   child: Text(
                     morph.cased(s('done')),
                     style: morph.text.label(color: MorphColors.cream),
@@ -477,6 +471,30 @@ class _CookModeScreenState extends State<CookModeScreen> {
         ),
       ),
     );
+  }
+
+  Future<void> _finishCooking(AppState state) async {
+    // Also guard callbacks captured before the disabled button rebuilds.
+    if (_savingCompletion) return;
+    setState(() => _savingCompletion = true);
+    final saved =
+        _completionSaved ||
+        await saveCollectionEdit(
+          context,
+          () => state.logCooked(widget.recipe.id),
+        );
+    if (!mounted) return;
+    if (!saved) {
+      setState(() => _savingCompletion = false);
+      return;
+    }
+    _completionSaved = true;
+    // Back may already be animating, or another route may cover this one.
+    if (ModalRoute.of(context)?.isCurrent != true) {
+      setState(() => _savingCompletion = false);
+      return;
+    }
+    Navigator.of(context).pop();
   }
 }
 
