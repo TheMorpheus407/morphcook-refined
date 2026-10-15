@@ -409,6 +409,137 @@ void main() {
     },
   );
 
+  for (final edited in [false, true]) {
+    for (final saveOriginalFirst in [false, true]) {
+      test(
+        'cookbook preserves original and imported copy (edited=$edited, originalFirst=$saveOriginalFirst)',
+        () async {
+          final state = await _state();
+          const id = 'doener-vegan';
+          final sent = decodeRecipeShare(
+            encodeRecipeShare(await collectRecipeShare(state, recipeId: id)),
+          );
+          if (saveOriginalFirst) await state.toggleSaved(id);
+          await state.importSharedRecipes(sent);
+          final copy = sent.recipes.single;
+          if (edited) {
+            await state.savePersonalRecipe(copy.copyWith(title: 'Edited copy'));
+          }
+          if (!saveOriginalFirst) await state.toggleSaved(id);
+          await state.setRecipeImage(id, testPngBytes());
+          await state.setRecipeImage(
+            copy.id,
+            _image(copy.id, different: true).bytes,
+          );
+          expect(state.saved, hasLength(2));
+          await collectRecipeShare(state, recipeId: id);
+          await collectRecipeShare(state, recipeId: copy.id);
+          final data = decodeRecipeShare(
+            encodeRecipeShare(
+              await collectRecipeShare(state, includeImages: true),
+            ),
+          );
+          expect(data.recipes, hasLength(2));
+          expect(data.recipes.map((r) => r.id).toSet(), hasLength(2));
+          final exportedCopy = data.recipes.singleWhere((r) => r.id == copy.id);
+          expect(exportedCopy.title, edited ? 'Edited copy' : copy.title);
+          final original = data.recipes.singleWhere((r) => r.id != copy.id);
+          expect(original.title, copy.title);
+          expect(
+            data.images.singleWhere((i) => i.recipeId == original.id).bytes,
+            testPngBytes(),
+          );
+          expect(
+            data.images.singleWhere((i) => i.recipeId == copy.id).bytes,
+            _image(copy.id, different: true).bytes,
+          );
+          expect(
+            encodeRecipeShare(
+              await collectRecipeShare(state, includeImages: true),
+            ),
+            encodeRecipeShare(data),
+          );
+          final recipient = await _state();
+          await recipient.importSharedRecipes(data);
+          expect(recipient.personalRecipes, hasLength(2));
+          expect(recipient.recipeImages, hasLength(2));
+        },
+      );
+    }
+  }
+
+  for (final lang in ['en', 'de']) {
+    test(
+      'cookbook survives repeated self-imports with unsaved personal copies in $lang',
+      () async {
+        final state = await _state();
+        addTearDown(state.dispose);
+        await state.updateProfile(Profile(lang: lang));
+        const id = 'doener-vegan';
+        await state.toggleSaved(id);
+        await state.setRecipeImage(id, testPngBytes());
+        for (var round = 0; round < 3; round++) {
+          final data = decodeRecipeShare(
+            encodeRecipeShare(
+              await collectRecipeShare(state, includeImages: true),
+            ),
+          );
+          final copy = data.recipes.singleWhere(
+            (recipe) => state.personalRecipeById(recipe.id) == null,
+          );
+          expect(await state.importSharedRecipes(data), 1);
+          await state.savePersonalRecipe(
+            copy.copyWith(title: 'Saved copy $round'),
+          );
+          await state.setRecipeImage(
+            copy.id,
+            _image(copy.id, different: true).bytes,
+          );
+          // Personal recipes belong in a cookbook even without a bookmark.
+          await state.toggleSaved(copy.id);
+        }
+        expect(state.saved.map((saved) => saved.recipeId), [id]);
+        final before = state.personalRecipes.map((r) => r.toJson()).toList();
+        final data = decodeRecipeShare(
+          encodeRecipeShare(
+            await collectRecipeShare(state, includeImages: true),
+          ),
+        );
+        expect(data.recipes, hasLength(4));
+        for (final recipe in state.personalRecipes) {
+          expect(
+            data.recipes.singleWhere((r) => r.id == recipe.id).toJson(),
+            recipe.toJson(),
+          );
+        }
+        final original = data.recipes.singleWhere(
+          (recipe) => state.personalRecipeById(recipe.id) == null,
+        );
+        expect(original.title, (await state.recipeById(id))!.title.of(lang));
+        for (final recipe in data.recipes) {
+          expect(
+            data.images.singleWhere((i) => i.recipeId == recipe.id).bytes,
+            recipe.id == original.id
+                ? testPngBytes()
+                : _image(recipe.id, different: true).bytes,
+          );
+        }
+        expect(
+          encodeRecipeShare(
+            await collectRecipeShare(state, includeImages: true),
+          ),
+          encodeRecipeShare(data),
+        );
+        expect(state.personalRecipes.map((r) => r.toJson()), before);
+        final recipient = await _state();
+        addTearDown(recipient.dispose);
+        expect(await recipient.importSharedRecipes(data), 4);
+        expect(await recipient.importSharedRecipes(data), 0);
+        expect(recipient.recipeImages, hasLength(4));
+      },
+    );
+  }
+
   test(
     'bundled export resolves localized names and stable independent recipe and photo ids',
     () async {

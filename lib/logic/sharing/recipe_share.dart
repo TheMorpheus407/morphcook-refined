@@ -31,6 +31,13 @@ Future<RecipeShareData> collectRecipeShare(
   if (ids.length > maxPersonalRecipes) {
     throw const RecipeShareException(RecipeShareFailure.tooLarge);
   }
+  // Preserve personal identities, even when a bundled export would otherwise
+  // reuse the ID of a previously imported copy. Reserve them before iterating
+  // so saved-entry order cannot cause a collision.
+  final exportIds = {
+    for (final id in ids)
+      if (personal.containsKey(id)) id,
+  };
   final exported = <PersonalRecipe>[];
   final exportedImages = <RecipeImage>[];
   for (final id in ids) {
@@ -40,8 +47,14 @@ Future<RecipeShareData> collectRecipeShare(
       if (bundled == null) {
         throw const RecipeShareException(RecipeShareFailure.invalidFormat);
       }
+      final identity = 'morphcook-bundled:$id:$lang';
+      var exportId = sharedPersonalRecipeId(identity);
+      var suffix = 0;
+      while (!exportIds.add(exportId)) {
+        exportId = sharedPersonalRecipeId('$identity:${++suffix}');
+      }
       recipe = PersonalRecipe(
-        id: sharedPersonalRecipeId('morphcook-bundled:$id:$lang'),
+        id: exportId,
         title: bundled.title.of(lang),
         description: bundled.intro.of(lang),
         bundledOrigin: true,
