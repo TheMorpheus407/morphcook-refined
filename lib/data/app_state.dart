@@ -902,11 +902,7 @@ class AppState extends ChangeNotifier {
           if (snapshot.id.startsWith('personal-')) {
             final current = personalRecipeById(snapshot.id);
             if (current == null) {
-              throw ArgumentError.value(
-                snapshot.id,
-                'recipeId',
-                'unknown personal recipe',
-              );
+              throw RecipeUnavailableException(snapshot.id);
             }
             currentRecipes.add((current.asRecipe(), factor));
           } else {

@@ -7,10 +7,12 @@ import 'package:morphcook/data/app_state.dart';
 import 'package:morphcook/data/store.dart';
 import 'package:morphcook/logic/backup/backup_service.dart';
 import 'package:morphcook/main.dart';
+import 'package:morphcook/models/collections.dart';
 import 'package:morphcook/models/personal_recipe.dart';
 import 'package:morphcook/models/profile.dart';
 import 'package:morphcook/models/recipe.dart';
 import 'package:morphcook/ui/screens/dish_detail_screen.dart';
+import 'package:morphcook/ui/screens/meal_plan_screen.dart';
 import 'package:morphcook/ui/screens/settings_screen.dart';
 import 'package:morphcook/ui/strings.dart';
 import 'package:provider/provider.dart';
@@ -128,7 +130,7 @@ void main() {
           (bundled, 1.0),
           (snapshot, 1.0),
         ]),
-        throwsArgumentError,
+        throwsA(isA<RecipeUnavailableException>()),
       );
       final reloaded = AppState(store: store, corpus: state.corpus);
       await reloaded.load();
@@ -138,6 +140,30 @@ void main() {
       // Rejection must not poison the mutation queue.
       await state.addToShoppingList([(bundled, 1.0)]);
       expect(state.shoppingList, isNotEmpty);
+    },
+  );
+  test(
+    'personal shopping requires stored contents but not a bookmark',
+    () async {
+      final state = AppState(
+        store: MemoryStore(),
+        corpus: await loadRealCorpus(),
+      );
+      await state.load();
+      addTearDown(state.dispose);
+      final recipe = _personal();
+      await expectLater(
+        state.addToShoppingList([(recipe.asRecipe(), 1.0)]),
+        throwsA(isA<RecipeUnavailableException>()),
+      );
+      expect(state.shoppingList, isEmpty);
+      expect(state.shoppingHistory, isEmpty);
+      await state.savePersonalRecipe(recipe);
+      await state.toggleSaved(recipe.id);
+      expect(state.isSaved(recipe.id), isFalse);
+      await state.addToShoppingList([(recipe.asRecipe(), 1.0)]);
+      expect(state.shoppingList.single.customName, 'PRIVATE OLD ingredient');
+      expect(state.shoppingHistory.single.qty, 100);
     },
   );
   for (final lang in ['en', 'de']) {
@@ -208,6 +234,87 @@ void main() {
         expect(reloaded.shoppingHistory, fails ? hasLength(1) : isEmpty);
         await tester.pumpWidget(const SizedBox());
       });
+    }
+    for (final entrypoint in ['detail', 'planner']) {
+      testWidgets(
+        '$lang $entrypoint reports a removed recipe without storage advice',
+        (tester) async {
+          final store = _PausedStore();
+          final recipe = _personal();
+          final state = (await tester.runAsync(() async {
+            final state = AppState(
+              store: store,
+              corpus: await loadRealCorpus(),
+            );
+            await state.load();
+            await state.completeOnboarding(Profile(lang: lang));
+            await state.savePersonalRecipe(recipe);
+            await state.assignMeal(
+              isoWeekKey(DateTime.now()),
+              'mon.dinner',
+              recipe.id,
+            );
+            return state;
+          }))!;
+          addTearDown(state.dispose);
+          addTearDown(() {
+            if (!store.release.isCompleted) store.release.complete();
+          });
+          await tester.pumpWidget(
+            app(
+              state,
+              entrypoint == 'detail'
+                  ? DishDetailScreen(dishId: recipe.dishId)
+                  : const Scaffold(body: MealPlanScreen()),
+            ),
+          );
+          await tester.pumpAndSettle();
+          store.pauseImport = true;
+          final restore = state.applyBackup(
+            BackupData(
+              profile: Profile(lang: lang),
+              saved: const [],
+              mealPlan: const {},
+              history: const [],
+            ),
+            merge: false,
+          );
+          await tester.pump();
+          expect(store.entered.isCompleted, isTrue);
+          final s = S(lang);
+          final control = find.text(
+            s(entrypoint == 'detail' ? 'addToList' : 'exportWeekToList'),
+          );
+          if (entrypoint == 'detail') {
+            await tester.scrollUntilVisible(control, 300);
+            await tester.pumpAndSettle();
+          }
+          await tester.tap(control);
+          await tester.pump();
+          store.release.complete();
+          await restore;
+          await tester.pumpAndSettle();
+          expect(
+            find.descendant(
+              of: find.byType(SnackBar),
+              matching: find.text(s('recipeUnavailable')),
+            ),
+            findsOneWidget,
+          );
+          expect(find.text(s('collectionSaveFailed')), findsNothing);
+          expect(find.text(s('addedToList')), findsNothing);
+          expect(find.text(s('weekExported')), findsNothing);
+          expect(state.shoppingList, isEmpty);
+          expect(state.shoppingHistory, isEmpty);
+          final reloaded = AppState(store: store, corpus: state.corpus);
+          await reloaded.load();
+          addTearDown(reloaded.dispose);
+          expect(reloaded.shoppingList, isEmpty);
+          expect(reloaded.shoppingHistory, isEmpty);
+          expect(tester.takeException(), isNull);
+          await tester.pumpWidget(const SizedBox());
+        },
+      );
     }
     testWidgets('$lang shopping uses confirmed imported recipe', (
       tester,
