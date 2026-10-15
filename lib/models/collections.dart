@@ -49,11 +49,8 @@ String isoWeekKey(DateTime date) {
 }
 
 /// Monday of the week containing [date].
-DateTime weekStart(DateTime date) => DateTime(
-  date.year,
-  date.month,
-  date.day,
-).subtract(Duration(days: date.weekday - 1));
+DateTime weekStart(DateTime date) =>
+    DateTime(date.year, date.month, date.day - (date.weekday - 1));
 
 /// Meal plan: week key -> "mon.dinner" -> recipe id.
 typedef MealPlanData = Map<String, Map<String, String>>;

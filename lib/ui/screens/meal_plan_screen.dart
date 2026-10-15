@@ -34,18 +34,19 @@ class _MealPlanScreenState extends State<MealPlanScreen> {
   /// "max 4 weeks rendered" guardrail, one week rendered at a time).
   int _weekOffset = 0;
 
-  DateTime get _weekDate => weekStart(
-    widget.now?.call() ?? DateTime.now(),
-  ).add(Duration(days: 7 * _weekOffset));
-
-  String get _weekKey => isoWeekKey(_weekDate);
+  DateTime get _weekDate {
+    final monday = weekStart(widget.now?.call() ?? DateTime.now());
+    // Calendar days retain Monday midnight across daylight-saving changes.
+    return DateTime(monday.year, monday.month, monday.day + 7 * _weekOffset);
+  }
 
   @override
   Widget build(BuildContext context) {
     final morph = MorphTheme.of(context);
     final state = context.watch<AppState>();
     final s = S(state.lang);
-    final weekKey = _weekKey;
+    final weekDate = _weekDate;
+    final weekKey = isoWeekKey(weekDate);
     final week = state.mealPlan[weekKey] ?? const <String, String>{};
 
     return SafeArea(
@@ -106,7 +107,8 @@ class _MealPlanScreenState extends State<MealPlanScreen> {
             child: ListView(
               padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
               children: [
-                for (var d = 0; d < 7; d++) _dayRow(d, weekKey, week, state, s),
+                for (var d = 0; d < 7; d++)
+                  _dayRow(d, weekDate, weekKey, week, state, s),
               ],
             ),
           ),
@@ -115,7 +117,9 @@ class _MealPlanScreenState extends State<MealPlanScreen> {
             child: SizedBox(
               width: double.infinity,
               child: OutlinedButton.icon(
-                onPressed: week.isEmpty ? null : () => _exportWeek(state, s),
+                onPressed: week.isEmpty
+                    ? null
+                    : () => _exportWeek(weekKey, state, s),
                 icon: Icon(
                   Icons.playlist_add,
                   size: 16,
@@ -142,13 +146,18 @@ class _MealPlanScreenState extends State<MealPlanScreen> {
 
   Widget _dayRow(
     int dayIndex,
+    DateTime weekDate,
     String weekKey,
     Map<String, String> week,
     AppState state,
     S s,
   ) {
     final morph = MorphTheme.of(context);
-    final date = _weekDate.add(Duration(days: dayIndex));
+    final date = DateTime(
+      weekDate.year,
+      weekDate.month,
+      weekDate.day + dayIndex,
+    );
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -189,7 +198,7 @@ class _MealPlanScreenState extends State<MealPlanScreen> {
     final cell = DragTarget<MealPlanDrag>(
       onAcceptWithDetails: (details) {
         final source = details.data;
-        if (source.weekKey != _weekKey) return;
+        if (source.weekKey != weekKey) return;
         saveCollectionEdit(
           context,
           () => state.moveMeal(
@@ -420,8 +429,8 @@ class _MealPlanScreenState extends State<MealPlanScreen> {
     );
   }
 
-  Future<void> _exportWeek(AppState state, S s) async {
-    final week = state.mealPlan[_weekKey] ?? const <String, String>{};
+  Future<void> _exportWeek(String weekKey, AppState state, S s) async {
+    final week = state.mealPlan[weekKey] ?? const <String, String>{};
     final recipes = <(Recipe, double)>[];
     for (final recipeId in week.values) {
       final recipe = await state.recipeById(recipeId);
