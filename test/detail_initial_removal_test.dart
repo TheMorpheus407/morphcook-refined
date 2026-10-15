@@ -31,6 +31,57 @@ class _PausedResetStore extends MemoryStore {
 void main() {
   WidgetController.hitTestWarningShouldBeFatal = true;
   for (final lang in ['en', 'de']) {
+    testWidgets('$lang deletion before first detail frame stays localized', (
+      tester,
+    ) async {
+      final recipe = PersonalRecipe.create(
+        title: 'Private recipe',
+        timeMinutes: 10,
+        servings: 1,
+        ingredients: [
+          PersonalRecipeIngredient(name: 'rice', qty: 100, unit: 'g'),
+        ],
+        steps: [PersonalRecipeStep(text: 'Cook rice.')],
+      );
+      final state = (await tester.runAsync(() async {
+        final state = AppState(
+          store: MemoryStore(),
+          corpus: await loadRealCorpus(),
+        );
+        await state.load();
+        await state.completeOnboarding(Profile(lang: lang));
+        await state.savePersonalRecipe(recipe);
+        return state;
+      }))!;
+      addTearDown(state.dispose);
+      await tester.pumpWidget(
+        ChangeNotifierProvider.value(value: state, child: const ThemedApp()),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.byIcon(Icons.bookmark_border).last);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(recipe.title).first);
+      // Delete after the tap pushes the route and before its first build.
+      await state.deletePersonalRecipe(recipe.id);
+      await tester.pumpAndSettle();
+
+      expect(state.lang, lang);
+      expect(state.personalRecipeById(recipe.id), isNull);
+      expect(find.byType(DishDetailScreen), findsOneWidget);
+      expect(find.text(S(lang)('recipeUnavailable')), findsOneWidget);
+      expect(find.byType(SkeletonBlock), findsNothing);
+      expect(find.text(recipe.title), findsNothing);
+      expect(find.byKey(const ValueKey('share-detail-recipe')), findsNothing);
+      expect(find.byKey(const ValueKey('edit-personal-recipe')), findsNothing);
+      expect(find.text(S(lang)('startCooking')), findsNothing);
+      expect(tester.takeException(), isNull);
+      await tester.pageBack();
+      await tester.pumpAndSettle();
+      expect(find.byType(DishDetailScreen), findsNothing);
+      expect(find.text(S(lang)('cookbookEmpty')), findsOneWidget);
+      await tester.pumpWidget(const SizedBox());
+    });
+
     for (final fail in [false, true]) {
       testWidgets(
         '$lang reset completes before first detail frame fail=$fail',
