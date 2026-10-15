@@ -169,8 +169,10 @@ void main() {
     'cook mode scales known amounts and preserves raw ingredient text',
     (tester) async {
       final state = (await tester.runAsync(freshState))!;
+      final personal = importedRecipe();
+      await state.savePersonalRecipe(personal);
       await tester.pumpWidget(
-        app(state, CookModeScreen(recipe: importedRecipe().asRecipe())),
+        app(state, CookModeScreen(recipe: personal.asRecipe())),
       );
       await tester.pumpAndSettle();
       await tester.tap(find.byIcon(Icons.add));

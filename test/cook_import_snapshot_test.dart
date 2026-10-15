@@ -8,6 +8,7 @@ import 'package:morphcook/logic/backup/backup_service.dart';
 import 'package:morphcook/models/profile.dart';
 import 'package:morphcook/models/personal_recipe.dart';
 import 'package:morphcook/ui/screens/dish_detail_screen.dart';
+import 'package:morphcook/ui/screens/cook_mode_screen.dart';
 import 'package:morphcook/ui/strings.dart';
 
 import 'helpers.dart';
@@ -58,6 +59,96 @@ PersonalRecipe _personal({required bool updated}) => PersonalRecipe(
 void main() {
   WidgetController.hitTestWarningShouldBeFatal = true;
   for (final lang in ['en', 'de']) {
+    for (final fails in [false, true]) {
+      for (final afterWrite in [false, true]) {
+        testWidgets('$lang cooking rejects confirmed removal: '
+            'fails=$fails afterWrite=$afterWrite', (tester) async {
+          final store = _DelayedBackupStore()
+            ..fail = fails
+            ..afterWrite = afterWrite;
+          final recipe = _personal(updated: false);
+          final state = (await tester.runAsync(() async {
+            final state = AppState(
+              store: store,
+              corpus: await loadRealCorpus(),
+            );
+            await state.load();
+            await state.completeOnboarding(Profile(lang: lang));
+            await state.savePersonalRecipe(recipe);
+            return state;
+          }))!;
+          addTearDown(state.dispose);
+          addTearDown(() {
+            if (!store.release.isCompleted) store.release.complete();
+          });
+          store.armed = true;
+          final restore = state.applyBackup(
+            BackupData(
+              profile: Profile(lang: lang),
+              saved: const [],
+              mealPlan: const {},
+              history: const [],
+            ),
+            merge: false,
+          );
+          final restored = fails
+              ? expectLater(restore, throwsStateError)
+              : restore;
+          await store.entered.future;
+          await tester.pumpWidget(
+            app(state, DishDetailScreen(dishId: recipe.dishId)),
+          );
+          await tester.pumpAndSettle();
+          final start = find.text(S(lang)('startCooking'));
+          await tester.scrollUntilVisible(start, 400);
+          await tester.pumpAndSettle();
+          await tester.tap(start);
+          await tester.pump();
+          await tester.pump(const Duration(milliseconds: 400));
+          expect(find.byType(CircularProgressIndicator), findsOneWidget);
+          expect(state.personalRecipeById(recipe.id), isNotNull);
+          store.release.complete();
+          await restored;
+          await tester.pumpAndSettle();
+          final cook = find.byType(CookModeScreen);
+          expect(cook, findsOneWidget);
+          Finder inCook(Finder matching) =>
+              find.descendant(of: cook, matching: matching);
+          if (fails) {
+            expect(inCook(find.text(recipe.steps.single.text)), findsOneWidget);
+            await tester.tap(inCook(find.text(S(lang)('finishCooking'))));
+            await tester.pumpAndSettle();
+            await tester.tap(inCook(find.text(S(lang)('done'))));
+            await tester.pumpAndSettle();
+            expect(state.history.single.recipeId, recipe.id);
+          } else {
+            expect(
+              inCook(find.text(S(lang)('recipeUnavailable'))),
+              findsOneWidget,
+            );
+            expect(inCook(find.text(recipe.steps.single.text)), findsNothing);
+            expect(inCook(find.text(S(lang)('finishCooking'))), findsNothing);
+            expect(inCook(find.text(S(lang)('done'))), findsNothing);
+            expect(inCook(find.byIcon(Icons.add)), findsNothing);
+            expect(state.cookProgress, isNull);
+            expect(state.history, isEmpty);
+            await tester.tap(inCook(find.byIcon(Icons.close)));
+            await tester.pumpAndSettle();
+            expect(cook, findsNothing);
+          }
+          final reloaded = AppState(store: store, corpus: state.corpus);
+          await reloaded.load();
+          addTearDown(reloaded.dispose);
+          expect(
+            reloaded.personalRecipeById(recipe.id),
+            fails ? isNotNull : isNull,
+          );
+          expect(reloaded.history.length, fails ? 1 : 0);
+          expect(tester.takeException(), isNull);
+          await tester.pumpWidget(const SizedBox());
+        });
+      }
+    }
     for (final fails in [false, true]) {
       for (final afterWrite in [false, true]) {
         testWidgets('$lang cooking uses confirmed import snapshot: '

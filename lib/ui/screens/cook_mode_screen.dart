@@ -27,6 +27,7 @@ class _CookModeScreenState extends State<CookModeScreen> {
   late CookSessionController _session;
   late OneHandedCookModeController _oneHanded;
   bool _resuming = true;
+  bool _unavailable = false;
   bool _flashing = false;
   bool _savingCompletion = false;
   bool _completionSaved = false;
@@ -44,8 +45,15 @@ class _CookModeScreenState extends State<CookModeScreen> {
     if (!mounted) return;
     // Personal recipes may have been replaced by the import we awaited.
     // Keep one confirmed snapshot for controller, instructions and ingredients.
-    final recipe =
-        state.personalRecipeById(widget.recipe.id)?.asRecipe() ?? widget.recipe;
+    final personal = state.personalRecipeById(widget.recipe.id);
+    if (personal == null && widget.recipe.id.startsWith('personal-')) {
+      setState(() {
+        _unavailable = true;
+        _resuming = false;
+      });
+      return;
+    }
+    final recipe = personal?.asRecipe() ?? widget.recipe;
     final resume = progress?.recipeId == recipe.id ? progress : null;
     _session = CookSessionController(
       recipe: recipe,
@@ -117,7 +125,7 @@ class _CookModeScreenState extends State<CookModeScreen> {
 
   @override
   void dispose() {
-    if (!_resuming) {
+    if (!_resuming && !_unavailable) {
       _session.removeListener(_onSession);
       _session.dispose();
     }
@@ -130,6 +138,18 @@ class _CookModeScreenState extends State<CookModeScreen> {
     final state = context.watch<AppState>();
     final s = S(state.lang);
     final lang = state.lang;
+
+    if (_unavailable) {
+      return Scaffold(
+        appBar: AppBar(
+          leading: IconButton(
+            icon: const Icon(Icons.close),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+        ),
+        body: Center(child: Text(s('recipeUnavailable'))),
+      );
+    }
 
     if (_resuming) {
       return Scaffold(
