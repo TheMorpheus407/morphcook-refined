@@ -12,7 +12,7 @@ import '../widgets/recipe_row.dart';
 import 'search_screen.dart';
 import 'shopping_list_screen.dart';
 
-/// The assignment visible when a meal drag starts.
+/// The assignment captured when the cell interaction begins.
 typedef MealPlanDrag = ({String weekKey, String slotKey, String recipeId});
 
 typedef _MealSlotSelection = ({String weekKey, String? recipeId});
@@ -459,7 +459,8 @@ class _MealPlanScreenState extends State<MealPlanScreen> {
 
 /// Preserve pointer-down data through provider rebuilds without remounting the
 /// cell's independent tap recognizer. The drag avatar retains its own snapshot
-/// after release, while the next pointer starts with the current assignment.
+/// after release. Overlapping pointers share the first snapshot until all lift;
+/// the next independent interaction starts with the current assignment.
 class _MealDragSource extends StatefulWidget {
   const _MealDragSource({
     required this.data,
@@ -476,16 +477,16 @@ class _MealDragSource extends StatefulWidget {
 }
 
 class _MealDragSourceState extends State<_MealDragSource> {
-  int? _pointer;
+  final _pointers = <int>{};
   MealPlanDrag? _data;
   Widget? _feedback;
 
   void _release(PointerEvent event) {
     // Pointer-up can still target the old hit-test path after a restore removes
     // this source from the tree.
-    if (!mounted || event.pointer != _pointer) return;
+    if (!mounted || !_pointers.remove(event.pointer)) return;
+    if (_pointers.isNotEmpty) return;
     setState(() {
-      _pointer = null;
       _data = null;
       _feedback = null;
     });
@@ -494,9 +495,10 @@ class _MealDragSourceState extends State<_MealDragSource> {
   @override
   Widget build(BuildContext context) => Listener(
     onPointerDown: (event) {
-      if (!mounted || _pointer != null) return;
+      if (!mounted) return;
+      _pointers.add(event.pointer);
+      if (_pointers.length > 1) return;
       setState(() {
-        _pointer = event.pointer;
         _data = widget.data;
         _feedback = widget.feedback;
       });

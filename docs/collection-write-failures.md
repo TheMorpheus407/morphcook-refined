@@ -37,9 +37,11 @@ asks the user to save the meal rather than claiming it is already recorded.
 Navigating away during a failed save does not show feedback on a disposed page.
 
 Meal-plan drags retain the week, source slot, recipe ID and feedback visible at
-pointer-down, including provider rebuilds during the long-press delay. The queued
-move checks that the source still contains that recipe after earlier mutations
-settle. A backup replacement that changes or removes the source makes the drop
+the first pointer-down, including provider rebuilds during the long-press delay.
+Overlapping pointers on the same cell share that snapshot until all have lifted
+or cancelled; the next independent interaction captures the current assignment
+and feedback. The queued move checks that the source still contains that recipe
+after earlier mutations settle. A backup replacement that changes or removes the source makes the drop
 a no-op. If the source still matches, the move uses the current destination and
 swaps an occupied destination back to the source. Save failures keep the previous
 assignments and allow another drag to retry.
@@ -104,7 +106,10 @@ Targeted checks:
 - `test/meal_gesture_week_test.dart`: EN/DE long-press source replacement
   before the drag starts, adjacent-week navigation across midnight, and an
   export press held through a midnight restore/rebuild. Unchanged-source/clock
-  controls and persisted plan/shopping reloads accompany the bug cases.
+  controls and persisted plan/shopping reloads accompany the bug cases. Overlapping
+  pointers cover pending/started drags, either release order, up/cancel, restores
+  before/after the second down, removal, unchanged moves/swaps, frozen feedback
+  and fresh snapshots for subsequent gestures.
 - `test/cook_progress_confirmation_test.dart`: progress creation, update and
   clearing before/after-write failures, exact raw JSON recovery, unpublished
   pending values, queued retry, and EN/DE cook-mode errors and resume behavior.
