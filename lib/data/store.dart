@@ -119,13 +119,37 @@ class HiveStore implements PersistenceStore {
   @override
   Future<void> clearAll() async {
     final previous = {for (final key in _prefs.getKeys()) key: _prefs.get(key)};
+    // Read every store before erasing anything. A closed/unreadable box must
+    // leave the other stores intact, including unknown collection keys.
+    final collections = _box.toMap();
+    final images = {
+      for (final entry in _imageBox.toMap().entries)
+        entry.key: Uint8List.fromList(entry.value),
+    };
+    var clearingCollections = false;
+    var clearingImages = false;
     try {
       if (!await _prefs.clear()) {
         throw StateError('Failed to clear preferences');
       }
+      clearingCollections = true;
+      await _box.clear();
+      clearingImages = true;
+      await _imageBox.clear();
     } catch (_) {
-      // A failed clear can already have changed both the Dart and native maps.
-      // Restore each value independently; recovery must preserve the clear error.
+      // A clear can fail after writing. Restore each affected store
+      // independently so one unavailable box cannot block unrelated recovery.
+      // Recovery is best effort and must preserve the original clear error.
+      if (clearingImages) {
+        try {
+          await _imageBox.putAll(images);
+        } catch (_) {}
+      }
+      if (clearingCollections) {
+        try {
+          await _box.putAll(collections);
+        } catch (_) {}
+      }
       for (final entry in previous.entries) {
         try {
           await switch (entry.value) {
@@ -143,8 +167,6 @@ class HiveStore implements PersistenceStore {
       }
       rethrow;
     }
-    await _box.clear();
-    await _imageBox.clear();
   }
 }
 
