@@ -154,7 +154,9 @@ void main() {
 
   testWidgets('shopping screen omits the placeholder amount', (tester) async {
     final state = (await tester.runAsync(freshState))!;
-    await state.addToShoppingList([(importedRecipe().asRecipe(), 2.0)]);
+    final personal = importedRecipe();
+    await state.savePersonalRecipe(personal);
+    await state.addToShoppingList([(personal.asRecipe(), 2.0)]);
     await tester.pumpWidget(app(state, const ShoppingListScreen()));
     await tester.pumpAndSettle();
 

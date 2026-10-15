@@ -895,7 +895,21 @@ class AppState extends ChangeNotifier {
 
   Future<void> addToShoppingList(Iterable<(Recipe, double)> recipes) =>
       _queueMutation(() async {
-        final aggregated = aggregate(recipes, corpus.dictionary);
+        // Earlier reset/import/edit operations may invalidate a displayed
+        // personal recipe. Resolve its confirmed contents inside the queue.
+        final currentRecipes = <(Recipe, double)>[];
+        for (final (snapshot, factor) in recipes) {
+          if (snapshot.id.startsWith('personal-')) {
+            final current = personalRecipeById(snapshot.id);
+            if (current == null) {
+              throw RecipeUnavailableException(snapshot.id);
+            }
+            currentRecipes.add((current.asRecipe(), factor));
+          } else {
+            currentRecipes.add((snapshot, factor));
+          }
+        }
+        final aggregated = aggregate(currentRecipes, corpus.dictionary);
         final now = DateTime.now();
         final nextList = mergeIntoList(_shoppingList, aggregated, now);
         // History keeps one record per added line for insights.

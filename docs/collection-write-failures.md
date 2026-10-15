@@ -37,6 +37,16 @@ A failed reset keeps the recipe and its supplied authorship. A restored revision
 updates its title, ingredients and source together; absent personal data never
 implies a bundled AI origin.
 
+Shopping additions resolve personal recipes inside the mutation queue, after
+pending edits, reset or backup replacement settle. They use the confirmed recipe
+contents with the supplied scaling factor. Bundled snapshots keep their supplied
+contents. If any personal recipe is missing, the whole batch is rejected before
+shopping-list or history writes. Personal recipes must be stored, including when
+not bookmarked; detached snapshots cannot reintroduce removed ingredients.
+Recipe details and meal-plan export report this rejection with the existing
+English/German unavailable message and suppress success feedback. Storage
+failures keep the existing storage advice and retry behavior.
+
 Shopping, meal-plan, recipe-add, cook-progress and cooking-completion controls report a failed
 save in English or German and allow retry. Success feedback and leaving the
 cooking completion screen happen only after confirmation. The completion note
@@ -112,6 +122,14 @@ that logging succeeded or that anything was sent to the developer.
 
 Targeted checks:
 
+- `test/shopping_recipe_snapshot_test.dart`: EN/DE Settings reset followed by a
+  queued recipe addition, rejected-reset controls, confirmed imported contents,
+  mixed bundled/personal batches and scaling, atomic missing-recipe rejection,
+  queue recovery and stored-but-unbookmarked recipes. Both detail additions and
+  meal-plan exports check localized unavailable feedback after queued removal,
+  absent success/storage advice, and unchanged shopping/history after reload.
+- `test/raw_ingredient_test.dart`: persisted personal-recipe fixtures keep raw
+  amounts unscaled in shopping, history and cook mode while known amounts scale.
 - `test/detail_initial_removal_test.dart`: real cookbook taps followed by a
   confirmed reset before the detail route's first frame, starting from EN/DE
   profiles. Successful resets show unavailable content instead of a persistent

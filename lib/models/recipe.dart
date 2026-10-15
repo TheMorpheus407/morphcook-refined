@@ -172,3 +172,13 @@ class Recipe {
   Set<String> get ingredientIds =>
       ingredients.map((i) => i.ingredientId).toSet();
 }
+
+/// A queued action can outlive removal of the recipe it displayed.
+class RecipeUnavailableException implements Exception {
+  final String recipeId;
+
+  const RecipeUnavailableException(this.recipeId);
+
+  @override
+  String toString() => 'Recipe unavailable: $recipeId';
+}
