@@ -81,8 +81,10 @@ save or resurrecting progress after a confirmed clear.
 After the wait, cook mode resolves the current personal recipe and keeps that
 confirmed snapshot for instructions, title, timers, servings and ingredients.
 A successful pending backup import supplies its replacement recipe; a failed
-import keeps the previous recipe after recovery. Bundled recipes and caller
-snapshots without a persisted personal replacement retain their supplied data.
+import keeps the previous recipe after recovery. If the confirmed import removes
+the personal recipe, cook mode shows the localized unavailable message with a
+working Close action, without initializing cooking from its deleted snapshot.
+Bundled recipes retain their supplied data.
 
 Confirmed progress changes notify recipe details so its Start/Resume label
 updates after a save or clear; pending and failed writes keep the previous label.
@@ -132,6 +134,11 @@ Targeted checks:
   during a pending backup replacement, with success and failure before or after
   storage changes. Checks the waiting screen, confirmed instructions/title,
   timer, servings and scaled ingredients, plus recipe/progress after reload.
+  Removal cases check unavailable actions and Close on success, and cooking
+  completion/history after a failed import, including failures after storage was
+  changed. The four successful-removal cases fail with pre-PR cook mode from
+  `b7b7861`. `test/raw_ingredient_test.dart` persists its personal recipe before
+  opening cook mode and verifies known amounts scale while raw text stays intact.
 - `test/cook_progress_resume_test.dart`: EN/DE reopening during delayed saves,
   queued step changes, clearing and delayed failure recovery; paused timers and
   servings, subsequent edits and reload; unavailable controls while waiting,
