@@ -1076,17 +1076,25 @@ class AppState extends ChangeNotifier {
         oldImageIds.difference(nextImageIds),
       );
     } catch (_) {
-      // Best-effort rollback keeps a recoverable old state if persistence
-      // fails (for example because device storage is full).
+      // Recover independent storage components even if another recovery fails.
+      // Keep the original import error and leave in-memory state unpublished.
       try {
         await store.putRecipeImageBytesBatch({
           for (final image in _recipeImages.values) image.recipeId: image.bytes,
         });
+      } catch (_) {}
+      try {
         await store.removeRecipeImageBytesBatch(
           nextImageIds.difference(oldImageIds),
         );
+      } catch (_) {}
+      try {
         await store.putCollections(oldCollections);
+      } catch (_) {}
+      try {
         await store.saveProfile(_profile);
+      } catch (_) {}
+      try {
         await store.setOnboardingComplete(_onboarded);
       } catch (_) {}
       rethrow;
