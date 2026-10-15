@@ -187,7 +187,7 @@ class _MealPlanScreenState extends State<MealPlanScreen> {
       builder: (context, candidates, _) {
         final highlighted = candidates.isNotEmpty;
         return GestureDetector(
-          onTap: () => _assignSlot(slotKey, state, s),
+          onTap: () => _assignSlot(slotKey, recipeId, state, s),
           child: Container(
             height: 64,
             padding: const EdgeInsets.all(6),
@@ -245,8 +245,12 @@ class _MealPlanScreenState extends State<MealPlanScreen> {
     );
   }
 
-  Future<void> _assignSlot(String slotKey, AppState state, S s) async {
-    final existing = state.mealPlan[_weekKey]?[slotKey];
+  Future<void> _assignSlot(
+    String slotKey,
+    String? existing,
+    AppState state,
+    S s,
+  ) async {
     final action = await showModalBottomSheet<String>(
       context: context,
       backgroundColor: MorphTheme.of(context).colors.paper,
@@ -299,7 +303,7 @@ class _MealPlanScreenState extends State<MealPlanScreen> {
     if (action == 'remove') {
       await saveCollectionEdit(
         context,
-        () => state.clearMeal(_weekKey, slotKey),
+        () => state.clearMeal(_weekKey, slotKey, expectedRecipeId: existing),
       );
       return;
     }
