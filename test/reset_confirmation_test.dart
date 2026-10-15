@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -5,7 +6,13 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:morphcook/data/app_state.dart';
 import 'package:morphcook/data/store.dart';
+import 'package:morphcook/main.dart';
 import 'package:morphcook/models/profile.dart';
+import 'package:morphcook/ui/screens/dish_detail_screen.dart';
+import 'package:morphcook/ui/screens/home_screen.dart';
+import 'package:morphcook/ui/screens/onboarding_screen.dart';
+import 'package:morphcook/ui/widgets/recipe_cover.dart';
+import 'package:provider/provider.dart';
 import 'package:morphcook/ui/screens/settings_screen.dart';
 import 'package:morphcook/ui/strings.dart';
 import 'package:path_provider_platform_interface/path_provider_platform_interface.dart';
@@ -60,6 +67,18 @@ class _RejectOnceResetStore extends MemoryStore {
       reject = false;
       throw StateError('reset failed');
     }
+    await super.clearAll();
+  }
+}
+
+class _PausedResetStore extends MemoryStore {
+  final entered = Completer<void>();
+  final release = Completer<void>();
+
+  @override
+  Future<void> clearAll() async {
+    entered.complete();
+    await release.future;
     await super.clearAll();
   }
 }
@@ -173,6 +192,57 @@ void main() {
   }
 
   for (final lang in ['en', 'de']) {
+    testWidgets('$lang returning from detail after pending reset is safe', (
+      tester,
+    ) async {
+      final store = _PausedResetStore();
+      final state = (await tester.runAsync(() async {
+        final state = AppState(store: store, corpus: await loadRealCorpus());
+        await state.load();
+        await state.completeOnboarding(Profile(lang: lang));
+        return state;
+      }))!;
+      addTearDown(state.dispose);
+      final s = S(lang);
+      await tester.pumpWidget(
+        ChangeNotifierProvider.value(value: state, child: const ThemedApp()),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.byIcon(Icons.tune));
+      await tester.pumpAndSettle();
+      await tester.scrollUntilVisible(
+        find.text(s('resetApp')),
+        400,
+        scrollable: find
+            .descendant(
+              of: find.byType(SettingsScreen),
+              matching: find.byType(Scrollable),
+            )
+            .first,
+      );
+      await tester.tap(find.text(s('resetApp')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(TextButton, s('erase')));
+      await tester.pumpAndSettle();
+      expect(store.entered.isCompleted, isTrue);
+      await tester.tap(find.byIcon(Icons.auto_stories_outlined));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byType(RecipeCover).first);
+      await tester.pumpAndSettle();
+      expect(find.byType(DishDetailScreen), findsOneWidget);
+      store.release.complete();
+      await tester.pumpAndSettle();
+      expect(state.onboarded, isFalse);
+      expect(find.byType(HomeScreen, skipOffstage: false), findsNothing);
+      expect(find.byType(DishDetailScreen), findsOneWidget);
+      await tester.pageBack();
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+      expect(find.byType(OnboardingScreen), findsOneWidget);
+      expect(find.byType(DishDetailScreen), findsNothing);
+      await tester.pumpWidget(const SizedBox());
+    });
+
     testWidgets('$lang failed reset reports error and can retry', (
       tester,
     ) async {

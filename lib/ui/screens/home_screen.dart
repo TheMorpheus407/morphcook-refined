@@ -49,6 +49,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _recompute({bool reselectFeatured = false}) async {
+    if (!mounted) return;
     final state = context.read<AppState>();
     final profile = state.profile;
     final generation = ++_loadGeneration;
