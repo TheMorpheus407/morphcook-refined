@@ -853,14 +853,22 @@ class AppState extends ChangeNotifier {
         notifyListeners();
       });
 
-  Future<void> clearMeal(String weekKey, String slot) =>
-      _queueMutation(() async {
-        final next = _copyMealPlan();
-        next[weekKey]?.remove(slot);
-        if (next[weekKey]?.isEmpty ?? false) next.remove(weekKey);
-        await _persistMealPlan(next);
-        notifyListeners();
-      });
+  Future<void> clearMeal(
+    String weekKey,
+    String slot, {
+    String? expectedRecipeId,
+  }) {
+    // Bind the displayed meal before waiting for a restore or collection edit.
+    final expected = expectedRecipeId ?? _mealPlan[weekKey]?[slot];
+    return _queueMutation(() async {
+      if (expected == null || _mealPlan[weekKey]?[slot] != expected) return;
+      final next = _copyMealPlan();
+      next[weekKey]?.remove(slot);
+      if (next[weekKey]?.isEmpty ?? false) next.remove(weekKey);
+      await _persistMealPlan(next);
+      notifyListeners();
+    });
+  }
 
   Future<void> moveMeal(
     String weekKey,

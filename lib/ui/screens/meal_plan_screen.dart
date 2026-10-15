@@ -299,7 +299,7 @@ class _MealPlanScreenState extends State<MealPlanScreen> {
     if (action == 'remove') {
       await saveCollectionEdit(
         context,
-        () => state.clearMeal(_weekKey, slotKey),
+        () => state.clearMeal(_weekKey, slotKey, expectedRecipeId: existing),
       );
       return;
     }
