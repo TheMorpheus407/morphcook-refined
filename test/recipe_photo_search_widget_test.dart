@@ -145,6 +145,43 @@ void main() {
   WidgetController.hitTestWarningShouldBeFatal = true;
 
   for (final lang in ['en', 'de']) {
+    testWidgets('Unicode query survives prefill and submission ($lang)', (
+      tester,
+    ) async {
+      final state = (await tester.runAsync(() async {
+        final state = await photoState(enabled: true);
+        await state.completeOnboarding(
+          Profile(lang: lang, imageSearchEnabled: true),
+        );
+        return state;
+      }))!;
+      final search = FakePhotoSearch()..results = [];
+      final words = '${'a' * 99}🍲';
+      await tester.pumpWidget(
+        app(
+          state,
+          RecipePhotoSearchScreen(
+            recipeId: 'doener-vegan',
+            initialQuery: '  ${words}tail  ',
+            photoSearch: search,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      final query = find.byKey(const ValueKey('photo-search-query'));
+      expect(tester.widget<TextField>(query).controller!.text, words);
+      expect(search.queries, [words]);
+      expect(find.text(S(lang)('photoSearchQuery')), findsOneWidget);
+
+      final edited = '${'b' * 99}🥣';
+      await tester.enterText(query, edited);
+      await tester.testTextInput.receiveAction(TextInputAction.search);
+      await tester.pumpAndSettle();
+      expect(tester.widget<TextField>(query).controller!.text, edited);
+      expect(search.queries, [words, edited]);
+      expect(tester.takeException(), isNull);
+    });
+
     testWidgets('screen reader selects only decoded idle photos ($lang)', (
       tester,
     ) async {

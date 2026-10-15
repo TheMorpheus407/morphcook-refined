@@ -340,6 +340,37 @@ void main() {
       );
     });
 
+    test('query limits preserve whole Unicode code points', () {
+      for (final prefixLength in [98, 99, 100]) {
+        final prefix = 'a' * prefixLength;
+        final expected = prefixLength < maxRecipePhotoQueryLength
+            ? '$prefix🍲'
+            : prefix;
+        expect(normalizeRecipePhotoQuery('$prefix🍲'), expected);
+        expect(
+          normalizeRecipePhotoQuery('$prefix🍲tail'),
+          prefixLength == 98 ? '$prefix🍲t' : expected,
+        );
+      }
+      expect(normalizeRecipePhotoQuery('🍲' * 101), '🍲' * 100);
+      expect(normalizeRecipePhotoQuery('${'a' * 99}  🍲'), 'a' * 99);
+    });
+
+    test('sends intact Unicode when a query reaches the limit', () async {
+      final received = <String?>[];
+      final endpoint = await _serve((request) {
+        received.add(request.uri.queryParameters['gsrsearch']);
+        request.response.headers.contentType = ContentType.json;
+        request.response.write('{"batchcomplete":true}');
+        request.response.close();
+      });
+      final search = _localSearch(endpoint);
+      final words = '${'a' * 99}🍲';
+      await search.search(words);
+      await search.search('${words}tail');
+      expect(received, List.filled(2, '$words filetype:bitmap'));
+    });
+
     test('downloads a valid preview and rejects non-images', () async {
       final endpoint = await _serve((request) {
         if (request.uri.path == '/photo.png') {
