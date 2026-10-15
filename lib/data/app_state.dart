@@ -1088,8 +1088,32 @@ class AppState extends ChangeNotifier {
           nextImageIds.difference(oldImageIds),
         );
       } catch (_) {}
+      final recoveryCollections = Map<String, String>.of(oldCollections)
+        ..remove('recipe_image_metadata');
       try {
-        await store.putCollections(oldCollections);
+        // Either batch above may have applied only some entries before failing.
+        // Keep metadata (including credit) for the bytes that actually survived,
+        // preferring the old photo when both snapshots contain identical bytes.
+        final storedBytes = store.loadRecipeImageBytes();
+        final recoveredImages = <String, RecipeImage>{};
+        for (final image in [
+          ..._recipeImages.values,
+          ...nextRecipeImages.values,
+        ]) {
+          if (listEquals(storedBytes[image.recipeId], image.bytes)) {
+            recoveredImages.putIfAbsent(image.recipeId, () => image);
+          }
+        }
+        recoveryCollections['recipe_image_metadata'] = jsonEncode(
+          recoveredImages.values
+              .map((image) => image.metadata.toJson())
+              .toList(),
+        );
+      } catch (_) {
+        // An unreadable photo store must not block unrelated collection recovery.
+      }
+      try {
+        await store.putCollections(recoveryCollections);
       } catch (_) {}
       try {
         await store.saveProfile(_profile);

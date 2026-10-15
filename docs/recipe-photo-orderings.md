@@ -147,3 +147,22 @@ export (including the expected empty result after reset). The six successful
 removal cases fail on `169df3f` before revalidation; the six failure controls
 keep the surviving recipe usable. Two additional cases preserve bookmarks
 and progress for bundled recipes whose partition has not loaded yet.
+
+
+## Independent backup recovery failures
+
+Backup rollback attempts photo bytes, incoming-only photo cleanup, collections,
+profile and onboarding recovery independently, preserving the original import
+error and the previous published state. Photo metadata is rebuilt from the old
+and incoming snapshots to match the bytes actually left in storage. This keeps
+surviving incoming credits after failed or partial byte rollback, restores old
+credits for successfully recovered bytes, and retains surviving incoming-only
+photos if cleanup fails. An unavailable photo read leaves metadata untouched
+while unrelated collection, profile and onboarding recovery still runs.
+
+`test/backup_independent_rollback_test.dart` covers the four independent failures,
+replacement/merge with legacy/current credits and zero/partial/complete byte
+rollback, zero/partial cleanup, reload/export consistency and retry. Thirteen photo
+regressions fail on submitted PR #23 head `d1cbf53`; the four independent failure
+cases fail on base `0c1ccdc`. Storage can still reject recovery writes, and these
+injected storage checks do not provide process-crash atomicity.
