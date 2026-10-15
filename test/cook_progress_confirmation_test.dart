@@ -7,6 +7,7 @@ import 'package:morphcook/data/app_state.dart';
 import 'package:morphcook/data/store.dart';
 import 'package:morphcook/logic/cook/cook_controller.dart';
 import 'package:morphcook/models/profile.dart';
+import 'package:morphcook/models/personal_recipe.dart';
 import 'package:morphcook/ui/screens/cook_mode_screen.dart';
 import 'package:morphcook/ui/strings.dart';
 
@@ -27,6 +28,7 @@ const _next = CookProgress(
 class _ProgressStore extends MemoryStore {
   bool armed = false;
   bool afterWrite = false;
+  bool fail = true;
   String failureKey = 'cook_progress';
   Completer<void>? entered;
   Completer<void>? release;
@@ -38,7 +40,7 @@ class _ProgressStore extends MemoryStore {
       if (afterWrite) await super.putCollection(key, jsonText);
       entered?.complete();
       if (release != null) await release!.future;
-      throw error;
+      if (fail) throw error;
     }
     await super.putCollection(key, jsonText);
   }
@@ -160,6 +162,65 @@ void main() {
     }
   }
 
+  for (final previousMatches in [false, true]) {
+    for (final fails in [false, true]) {
+      test(
+        'scoped clear checks settled owner: previousMatches=$previousMatches fails=$fails',
+        () async {
+          final store = _ProgressStore()..afterWrite = true;
+          const other = CookProgress(
+            recipeId: 'doener-vegan',
+            stepIndex: 1,
+            servings: 4,
+            remainingTimerSeconds: 37,
+          );
+          final previous = previousMatches ? _old : other;
+          final next = previousMatches ? other : _next;
+          // Preserve unknown fields and formatting if the earlier save fails.
+          final raw = ' ${jsonEncode({...previous.toJson(), 'future': true})} ';
+          await store.putCollection('cook_progress', raw);
+          final state = await _load(store);
+          addTearDown(state.dispose);
+          store
+            ..fail = fails
+            ..armed = true
+            ..entered = Completer<void>()
+            ..release = Completer<void>();
+          addTearDown(() {
+            if (!store.release!.isCompleted) store.release!.complete();
+          });
+          final save = state.persistCookProgress(next);
+          final settledSave = fails
+              ? expectLater(save, throwsA(same(store.error)))
+              : save;
+          await store.entered!.future;
+          var notifications = 0;
+          state.addListener(() => notifications++);
+          final clear = state.clearCookProgressForRecipe(_old.recipeId);
+          expect(state.cookProgress?.toJson(), previous.toJson());
+          expect(notifications, 0);
+          store.release!.complete();
+          await settledSave;
+          await clear;
+          final confirmed = fails ? previous : next;
+          final clears = confirmed.recipeId == _old.recipeId;
+          expect(
+            state.cookProgress?.toJson(),
+            clears ? null : confirmed.toJson(),
+          );
+          expect(
+            store.getCollection('cook_progress'),
+            clears ? 'null' : (fails ? raw : jsonEncode(next.toJson())),
+          );
+          expect(notifications, (fails ? 0 : 1) + (clears ? 1 : 0));
+          final reloaded = await _load(store);
+          addTearDown(reloaded.dispose);
+          expect(reloaded.cookProgress?.toJson(), state.cookProgress?.toJson());
+        },
+      );
+    }
+  }
+
   test('logging another recipe keeps the active resume state', () async {
     final store = _ProgressStore();
     final state = await _load(store);
@@ -170,6 +231,58 @@ void main() {
     expect(state.cookProgress?.toJson(), _old.toJson());
     expect(store.getCollection('cook_progress'), raw);
   });
+
+  testWidgets(
+    'finishing another recipe preserves confirmed resume through reload',
+    (tester) async {
+      final store = _ProgressStore();
+      final state = (await tester.runAsync(() async {
+        final state = await _load(store);
+        await state.savePersonalRecipe(
+          PersonalRecipe(
+            id: 'personal-0123456789abcdef0123456789abcdef',
+            title: 'One step recipe',
+            timeMinutes: 1,
+            servings: 2,
+            ingredients: [
+              PersonalRecipeIngredient(name: 'Water', qty: 1, unit: 'ml'),
+            ],
+            steps: [PersonalRecipeStep(text: 'Drink.')],
+            createdAt: DateTime.utc(2026),
+            updatedAt: DateTime.utc(2026),
+          ),
+        );
+        await state.persistCookProgress(
+          const CookProgress(
+            recipeId: 'doener-classic',
+            stepIndex: 2,
+            servings: 4,
+            remainingTimerSeconds: 37,
+          ),
+        );
+        return state;
+      }))!;
+      addTearDown(state.dispose);
+      final before = state.cookProgress!.toJson();
+      final raw = store.getCollection('cook_progress');
+      await tester.pumpWidget(
+        app(
+          state,
+          CookModeScreen(recipe: state.personalRecipes.single.asRecipe()),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.byType(FilledButton)); // Finish, before Done.
+      await tester.pumpAndSettle();
+      expect(state.history, isEmpty);
+      expect(state.cookProgress?.toJson(), before);
+      expect(store.getCollection('cook_progress'), raw);
+      final reloaded = (await tester.runAsync(() => _load(store)))!;
+      addTearDown(reloaded.dispose);
+      expect(reloaded.cookProgress?.toJson(), before);
+      await tester.pumpWidget(const SizedBox());
+    },
+  );
 
   for (final lang in ['en', 'de']) {
     for (final action in ['servings', 'complete']) {

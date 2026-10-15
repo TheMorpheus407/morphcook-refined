@@ -49,7 +49,9 @@ class _CookModeScreenState extends State<CookModeScreen> {
         unawaited(
           saveCollectionEdit(
             context,
-            () => state.persistCookProgress(progress),
+            () => progress == null
+                ? state.clearCookProgressForRecipe(widget.recipe.id)
+                : state.persistCookProgress(progress),
           ),
         );
       },

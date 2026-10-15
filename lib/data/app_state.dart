@@ -951,6 +951,13 @@ class AppState extends ChangeNotifier {
   Future<void> persistCookProgress(CookProgress? progress) =>
       _queueMutation(() => _persistCookProgress(progress));
 
+  /// Finish only this recipe; a queued update may have replaced its resume.
+  Future<void> clearCookProgressForRecipe(String recipeId) =>
+      _queueMutation(() async {
+        if (_cookProgress?.recipeId != recipeId) return;
+        await _persistCookProgress(null);
+      });
+
   Future<void> _persistCookProgress(CookProgress? progress) async {
     // Ignore updates from a screen whose recipe an earlier mutation removed.
     if (progress != null && await recipeById(progress.recipeId) == null) {
