@@ -110,6 +110,98 @@ void _expectPhoto(AppState state, RecipeImage expected) {
 
 void main() {
   for (final merge in [false, true]) {
+    for (final replacement in [false, true]) {
+      // A merge without replacement already retains the previous metadata.
+      if (merge && !replacement) continue;
+      for (final cleanupFails in [false, true]) {
+        test('confirmed photo rollback survives unreadable store: merge=$merge '
+            'replacement=$replacement cleanupFails=$cleanupFails', () async {
+          final store = _RecoveryFailureStore();
+          final state = AppState(store: store, corpus: await loadRealCorpus());
+          addTearDown(state.dispose);
+          await state.load();
+          const original = Profile(name: 'Before', avoidFlags: {'dairy'});
+          await state.updateProfile(original);
+          await state.toggleSaved('doener-vegan');
+          await state.setRecipeImage(
+            'doener-vegan',
+            testPngBytes(),
+            updatedAt: DateTime.utc(2025),
+            credit: _credit('Old'),
+          );
+          final oldPhoto = state.recipeImages.single;
+          final before = state.buildBackup().toJson(DateTime.utc(2026));
+          final incoming = BackupData(
+            profile: const Profile(name: 'Incoming'),
+            saved: const [],
+            mealPlan: const {},
+            history: const [],
+            recipeImages: [
+              if (replacement)
+                RecipeImage(
+                  recipeId: oldPhoto.recipeId,
+                  bytes: [...testPngBytes(), 0],
+                  updatedAt: DateTime.utc(2026),
+                  credit: _credit('New'),
+                ),
+              RecipeImage(
+                recipeId: 'pad-thai-vegan',
+                bytes: testPngBytes(),
+                updatedAt: DateTime.utc(2026),
+                credit: _credit('Incoming'),
+              ),
+            ],
+          );
+          var notifications = 0;
+          state.addListener(() => notifications++);
+          store.failedRecovery = cleanupFails ? 'cleanup' : null;
+          store.failImageRead = true;
+          store.armed = true;
+          await expectLater(
+            state.applyBackup(incoming, merge: merge),
+            throwsA(same(store.importError)),
+          );
+          expect(store.recovered, [
+            'images',
+            'cleanup',
+            'collections',
+            'profile',
+            'onboarding',
+          ]);
+          expect(notifications, 0);
+          expect(state.buildBackup().toJson(DateTime.utc(2026)), before);
+          store.failImageRead = false;
+          expect(
+            store.loadRecipeImageBytes(),
+            cleanupFails
+                ? contains('pad-thai-vegan')
+                : isNot(contains('pad-thai-vegan')),
+          );
+          final reloaded = AppState(store: store, corpus: state.corpus);
+          addTearDown(reloaded.dispose);
+          await reloaded.load();
+          expect(reloaded.profile.toJson(), original.toJson());
+          expect(reloaded.isSaved('doener-vegan'), isTrue);
+          expect(reloaded.onboarded, isFalse);
+          expect(reloaded.recipeImages, hasLength(1));
+          _expectPhoto(reloaded, oldPhoto);
+          final exported = BackupService.export(reloaded.buildBackup());
+          store.recovering = false;
+          await reloaded.applyBackup(
+            BackupService.import(exported.jsonFile),
+            merge: false,
+          );
+          _expectPhoto(reloaded, oldPhoto);
+          await state.applyBackup(incoming, merge: merge);
+          for (final photo in incoming.recipeImages) {
+            _expectPhoto(state, photo);
+          }
+        });
+      }
+    }
+  }
+
+  for (final merge in [false, true]) {
     for (final unreadable in [false, true]) {
       test(
         'failed cleanup keeps personal-photo backups restorable: merge=$merge unreadable=$unreadable',

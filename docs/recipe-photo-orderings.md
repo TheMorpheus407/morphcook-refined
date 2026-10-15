@@ -160,10 +160,12 @@ credits for successfully recovered bytes, and retains eligible incoming-only
 photos if cleanup fails. Selection requires a recipe in the previous cookbook
 or bundled corpus, prioritizes previous photo IDs (including surviving
 replacement bytes), and stays within 100 photos and 20 MiB. Other surviving
-bytes remain inert when cleanup fails. An unavailable photo read leaves metadata
-untouched while unrelated collection, profile and onboarding recovery still
-runs. Reload also checks recipe existence and both limits, so leftover metadata
-cannot make subsequent backups unrestorable or unexportable.
+bytes remain inert when cleanup fails. If photo reads fail after confirmed byte
+rollback, previous metadata is restored and incoming-only bytes remain inert.
+If byte rollback also fails, persisted metadata remains untouched. Unrelated
+collection, profile and onboarding recovery still runs. Reload also checks
+recipe existence and both limits, so leftover metadata cannot make subsequent
+backups unrestorable or unexportable.
 
 `test/backup_independent_rollback_test.dart` covers the four independent failures,
 replacement/merge with legacy/current credits and zero/partial/complete byte
@@ -175,3 +177,7 @@ regressions fail on finishing head `37ce3ed`: merge/replacement with orphan
 personal photos and readable/unreadable recovery stores, count and byte limits,
 and previous-ID priority with surviving replacement credit. They check reload,
 export/import, application of exported backups, unrelated merges and retry.
+Six regressions fail on finishing head `844774c`: confirmed byte rollback with
+unreadable recovery storage, covering removed/replaced photos, merge/replacement
+and successful/failed cleanup. They check previous bytes, credits and timestamps,
+unchanged published state, unrelated recovery, reload, export/import and retry.

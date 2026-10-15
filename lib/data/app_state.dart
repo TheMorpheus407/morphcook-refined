@@ -1105,18 +1105,24 @@ class AppState extends ChangeNotifier {
     } catch (_) {
       // Recover independent storage components even if another recovery fails.
       // Keep the original import error and leave in-memory state unpublished.
+      var oldImageBytesRestored = false;
       try {
         await store.putRecipeImageBytesBatch({
           for (final image in _recipeImages.values) image.recipeId: image.bytes,
         });
+        oldImageBytesRestored = true;
       } catch (_) {}
       try {
         await store.removeRecipeImageBytesBatch(
           nextImageIds.difference(oldImageIds),
         );
       } catch (_) {}
-      final recoveryCollections = Map<String, String>.of(oldCollections)
-        ..remove('recipe_image_metadata');
+      final recoveryCollections = Map<String, String>.of(oldCollections);
+      if (!oldImageBytesRestored) {
+        // Without confirmed byte recovery or a readable store, retain the
+        // persisted metadata rather than attach old credits to incoming bytes.
+        recoveryCollections.remove('recipe_image_metadata');
+      }
       try {
         // Either batch above may have applied only some entries before failing.
         // Keep metadata (including credit) for the bytes that actually survived,
@@ -1143,6 +1149,8 @@ class AppState extends ChangeNotifier {
         );
       } catch (_) {
         // An unreadable photo store must not block unrelated collection recovery.
+        // Confirmed byte recovery can safely restore the previous metadata;
+        // incoming-only bytes left by failed cleanup remain inert in that case.
       }
       try {
         await store.putCollections(recoveryCollections);
