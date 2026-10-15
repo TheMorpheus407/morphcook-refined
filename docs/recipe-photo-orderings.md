@@ -2,6 +2,25 @@
 
 These tables cover the behavioural findings from PR #10, the shared mutation ordering in PR #11, and accessible photo selection in PR #12. Each row has a targeted regression. Async results belong to the latest search generation; persisted attribution belongs to its exact photo bytes. A crash may recover a partial backup without misattributing replacement photos. Full-backup atomicity is outside this feature.
 
+## Photo save navigation
+
+`test/recipe_photo_save_navigation_test.dart` pauses storage while the user
+stays, presses Back, or covers the search with another route. Each case runs in
+English and German and checks that the chosen bytes and attribution survive
+reload without another preview download.
+
+| Event ordering | Intended behaviour | Regression mode |
+|---|---|---|
+| Save → Back → completion 50 ms into reverse animation | Keep recipe details open; the dismissed search cannot pop again. | `back-50` |
+| Save → Back → completion after 500 ms | Keep recipe details open after the search is disposed. | `back-500` |
+| Save → covering route → completion → return | Keep the covering route open; returning enables save again. | `cover` |
+| Save → completion while search remains current | Pop the search once and show the localized save confirmation. | `stay` |
+
+With the parent implementation (`a330400`), `back-50` and `cover` fail on the
+unexpected extra pop; `back-500` and `stay` pass as controls. The current-route
+check in PR #28 fixes both failures. These are widget navigation checks; native
+Android/iOS Back gesture acceptance has not been exercised here.
+
 ## Accessible photo selection
 
 The English and German `screen reader selects only decoded idle photos ($lang)` widget cases in `test/recipe_photo_search_widget_test.dart` perform the tile's semantic tap action and check its localized credit, selected state and enabled save button. Pending previews have no tap action. Saving removes the action; a failed save restores it without publishing a photo. Both cases fail on the pre-fix base `56cf59d` because the decoded tile has no semantic tap action. These are Flutter semantics checks; TalkBack and VoiceOver device acceptance remains unverified.

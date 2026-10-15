@@ -175,7 +175,13 @@ class _RecipePhotoSearchScreenState extends State<RecipePhotoSearchScreen> {
       _failSave(s('recipeImageReadError'));
       return;
     }
-    if (mounted) Navigator.of(context).pop(true);
+    if (!mounted) return;
+    // Back can leave this route mounted during its reverse animation.
+    if (ModalRoute.of(context)?.isCurrent != true) {
+      setState(() => _saving = false);
+      return;
+    }
+    Navigator.of(context).pop(true);
   }
 
   void _failSave(String message) {
