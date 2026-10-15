@@ -14,11 +14,15 @@ import 'shopping_list_screen.dart';
 /// The assignment visible when a meal drag starts.
 typedef MealPlanDrag = ({String weekKey, String slotKey, String recipeId});
 
+typedef _MealSlotSelection = ({String weekKey, String? recipeId});
+
 /// Weekly meal plan: Mon–Sun × breakfast/lunch/dinner. Tap a slot to assign
 /// from cookbook/search, long-press-drag between slots, one-tap export of
 /// the week to the shopping list. Weekly pagination, ±4 weeks window.
 class MealPlanScreen extends StatefulWidget {
-  const MealPlanScreen({super.key});
+  const MealPlanScreen({super.key, this.now});
+
+  final DateTime Function()? now;
 
   @override
   State<MealPlanScreen> createState() => _MealPlanScreenState();
@@ -29,8 +33,12 @@ class _MealPlanScreenState extends State<MealPlanScreen> {
   /// "max 4 weeks rendered" guardrail, one week rendered at a time).
   int _weekOffset = 0;
 
-  DateTime get _weekDate =>
-      weekStart(DateTime.now()).add(Duration(days: 7 * _weekOffset));
+  // Pointer-down runs before a provider rebuild can replace onTap's closure.
+  final _tapSelections = <String, _MealSlotSelection>{};
+
+  DateTime get _weekDate => weekStart(
+    widget.now?.call() ?? DateTime.now(),
+  ).add(Duration(days: 7 * _weekOffset));
 
   String get _weekKey => isoWeekKey(_weekDate);
 
@@ -39,7 +47,8 @@ class _MealPlanScreenState extends State<MealPlanScreen> {
     final morph = MorphTheme.of(context);
     final state = context.watch<AppState>();
     final s = S(state.lang);
-    final week = state.mealPlan[_weekKey] ?? const <String, String>{};
+    final weekKey = _weekKey;
+    final week = state.mealPlan[weekKey] ?? const <String, String>{};
 
     return SafeArea(
       child: Column(
@@ -81,7 +90,7 @@ class _MealPlanScreenState extends State<MealPlanScreen> {
                 Expanded(
                   child: Center(
                     child: Text(
-                      morph.cased('${s('week')} $_weekKey'),
+                      morph.cased('${s('week')} $weekKey'),
                       style: morph.text.label(),
                     ),
                   ),
@@ -99,7 +108,7 @@ class _MealPlanScreenState extends State<MealPlanScreen> {
             child: ListView(
               padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
               children: [
-                for (var d = 0; d < 7; d++) _dayRow(d, week, state, s),
+                for (var d = 0; d < 7; d++) _dayRow(d, weekKey, week, state, s),
               ],
             ),
           ),
@@ -133,7 +142,13 @@ class _MealPlanScreenState extends State<MealPlanScreen> {
     );
   }
 
-  Widget _dayRow(int dayIndex, Map<String, String> week, AppState state, S s) {
+  Widget _dayRow(
+    int dayIndex,
+    String weekKey,
+    Map<String, String> week,
+    AppState state,
+    S s,
+  ) {
     final morph = MorphTheme.of(context);
     final date = _weekDate.add(Duration(days: dayIndex));
     return Column(
@@ -149,7 +164,9 @@ class _MealPlanScreenState extends State<MealPlanScreen> {
         Row(
           children: [
             for (final slot in mealSlots) ...[
-              Expanded(child: _slotCell(dayIndex, slot, week, state, s)),
+              Expanded(
+                child: _slotCell(dayIndex, slot, weekKey, week, state, s),
+              ),
               if (slot != mealSlots.last) const SizedBox(width: 8),
             ],
           ],
@@ -161,6 +178,7 @@ class _MealPlanScreenState extends State<MealPlanScreen> {
   Widget _slotCell(
     int dayIndex,
     String slot,
+    String weekKey,
     Map<String, String> week,
     AppState state,
     S s,
@@ -186,36 +204,55 @@ class _MealPlanScreenState extends State<MealPlanScreen> {
       },
       builder: (context, candidates, _) {
         final highlighted = candidates.isNotEmpty;
-        return GestureDetector(
-          onTap: () => _assignSlot(slotKey, recipeId, state, s),
-          child: Container(
-            height: 64,
-            padding: const EdgeInsets.all(6),
-            decoration: BoxDecoration(
-              color: recipe == null ? Colors.transparent : morph.colors.card,
-              border: Border.all(
-                color: highlighted
-                    ? morph.colors.terracotta
-                    : morph.colors.line,
-                width: highlighted ? 1.6 : 1,
-              ),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(s(slot), style: morph.text.label(size: 8)),
-                const Spacer(),
-                Text(
-                  recipe == null
-                      ? s('planEmptySlot')
-                      : morph.cased(recipe.title.of(state.lang)),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: recipe == null
-                      ? morph.text.handAt(14, color: morph.colors.inkFaint)
-                      : morph.text.mono.copyWith(fontSize: 10),
+        return Listener(
+          onPointerDown: (_) => _tapSelections.putIfAbsent(
+            slotKey,
+            () => (weekKey: weekKey, recipeId: recipeId),
+          ),
+          onPointerCancel: (_) => _tapSelections.remove(slotKey),
+          child: GestureDetector(
+            onTapCancel: () => _tapSelections.remove(slotKey),
+            onTap: () {
+              final selected =
+                  _tapSelections.remove(slotKey) ??
+                  (weekKey: weekKey, recipeId: recipeId);
+              _assignSlot(
+                selected.weekKey,
+                slotKey,
+                selected.recipeId,
+                state,
+                s,
+              );
+            },
+            child: Container(
+              height: 64,
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: recipe == null ? Colors.transparent : morph.colors.card,
+                border: Border.all(
+                  color: highlighted
+                      ? morph.colors.terracotta
+                      : morph.colors.line,
+                  width: highlighted ? 1.6 : 1,
                 ),
-              ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(s(slot), style: morph.text.label(size: 8)),
+                  const Spacer(),
+                  Text(
+                    recipe == null
+                        ? s('planEmptySlot')
+                        : morph.cased(recipe.title.of(state.lang)),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: recipe == null
+                        ? morph.text.handAt(14, color: morph.colors.inkFaint)
+                        : morph.text.mono.copyWith(fontSize: 10),
+                  ),
+                ],
+              ),
             ),
           ),
         );
@@ -225,7 +262,7 @@ class _MealPlanScreenState extends State<MealPlanScreen> {
     if (recipeId == null) return cell;
     // Keep the displayed identity even if a restore finishes during the drag.
     return LongPressDraggable<MealPlanDrag>(
-      data: (weekKey: _weekKey, slotKey: slotKey, recipeId: recipeId),
+      data: (weekKey: weekKey, slotKey: slotKey, recipeId: recipeId),
       feedback: Material(
         color: Colors.transparent,
         child: Container(
@@ -246,6 +283,7 @@ class _MealPlanScreenState extends State<MealPlanScreen> {
   }
 
   Future<void> _assignSlot(
+    String weekKey,
     String slotKey,
     String? existing,
     AppState state,
@@ -303,7 +341,7 @@ class _MealPlanScreenState extends State<MealPlanScreen> {
     if (action == 'remove') {
       await saveCollectionEdit(
         context,
-        () => state.clearMeal(_weekKey, slotKey, expectedRecipeId: existing),
+        () => state.clearMeal(weekKey, slotKey, expectedRecipeId: existing),
       );
       return;
     }
@@ -333,7 +371,7 @@ class _MealPlanScreenState extends State<MealPlanScreen> {
       final recipe = picked;
       await saveCollectionEdit(
         context,
-        () => state.assignMeal(_weekKey, slotKey, recipe.id),
+        () => state.assignMeal(weekKey, slotKey, recipe.id),
       );
     }
   }

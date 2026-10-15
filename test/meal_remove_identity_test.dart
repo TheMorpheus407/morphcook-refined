@@ -91,6 +91,7 @@ void main() {
     for (final replace in [false, true]) {
       for (final restoreTiming in [
         'before tap',
+        'during tap rebuild',
         'before Remove',
         'after Remove',
       ]) {
@@ -137,13 +138,17 @@ void main() {
             await tester.pumpAndSettle();
             final title = state.loadedRecipeById(displayed)!.title.of(lang);
             expect(find.text(title), findsOneWidget);
-            if (restoreTiming == 'before tap') {
+            if (restoreTiming == 'before tap' ||
+                restoreTiming == 'during tap rebuild') {
               final pointer = await tester.startGesture(
                 tester.getCenter(find.text(title)),
               );
               store.release.complete();
               await restoring;
-              // Deliver up before a frame rebuilds the displayed cell.
+              // Exercise both event orderings around the provider rebuild.
+              if (restoreTiming == 'during tap rebuild') {
+                await tester.pump(const Duration(milliseconds: 16));
+              }
               await pointer.up();
             } else {
               await tester.tap(find.text(title));
