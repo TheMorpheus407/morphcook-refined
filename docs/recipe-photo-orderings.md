@@ -170,6 +170,20 @@ and progress for bundled recipes whose partition has not loaded yet.
 
 ## Independent backup recovery failures
 
+Failed backup merge and replacement restore non-photo collections from their
+original stored JSON, preserving malformed rows, unknown fields and formatting.
+Previously absent keys are removed again. Tolerant readers can still hide
+malformed collections; rollback preserves their bytes without repairing them.
+Photo metadata follows the byte reconciliation below rather than exact raw JSON
+recovery, so credits remain attached to the surviving photos.
+
+`test/backup_raw_rollback_test.dart` checks failure before collection writes,
+after collection writes and after onboarding persistence. Its six cases cover
+exact raw recovery, absent keys, unchanged published state, reload and retry.
+All six fail with AppState from pre-fix base `592de62` and pass with the raw
+snapshot fix. Recovery remains best effort when storage rejects rollback;
+these injected tests do not guarantee atomicity across stores or a device crash.
+
 Backup rollback attempts photo bytes, incoming-only photo cleanup, collections,
 profile and onboarding recovery independently, preserving the original import
 error and the previous published state. Photo metadata is rebuilt from the old

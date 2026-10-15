@@ -1068,29 +1068,10 @@ class AppState extends ChangeNotifier {
           ? 'null'
           : json.encode(nextCookProgress.toJson()),
     };
-    final oldCollections = <String, String>{
-      'expert_assessments': jsonEncode(
-        _expertAssessments.map((e) => e.toJson()).toList(),
-      ),
-      'saved': json.encode(_saved.map((s) => s.toJson()).toList()),
-      'meal_plan': json.encode(_mealPlan),
-      'history': json.encode(_history.map((h) => h.toJson()).toList()),
-      'shopping_list': json.encode(
-        _shoppingList.map((s) => s.toJson()).toList(),
-      ),
-      'shopping_history': json.encode(
-        _shoppingHistory.map((s) => s.toJson()).toList(),
-      ),
-      'content_requests': json.encode(_contentRequests),
-      'personal_recipes': json.encode(
-        _personalRecipes.map((r) => r.toJson()).toList(),
-      ),
-      'recipe_image_metadata': json.encode(
-        _recipeImages.values.map((image) => image.metadata.toJson()).toList(),
-      ),
-      'cook_progress': _cookProgress == null
-          ? 'null'
-          : json.encode(_cookProgress!.toJson()),
+    // Preserve the stored representation: tolerant readers can hide malformed
+    // records, unknown fields, or an absent key in the published state.
+    final oldCollections = <String, String?>{
+      for (final key in nextCollections.keys) key: store.getCollection(key),
     };
     final oldImageIds = _recipeImages.keys.toSet();
     final nextImageIds = nextRecipeImages.keys.toSet();
@@ -1100,7 +1081,11 @@ class AppState extends ChangeNotifier {
         // write. Bind all existing credits first, including entries whose
         // bytes have not yet been replaced if the binary batch is interrupted.
         await store.putCollections({
-          'recipe_image_metadata': oldCollections['recipe_image_metadata']!,
+          'recipe_image_metadata': jsonEncode(
+            _recipeImages.values
+                .map((image) => image.metadata.toJson())
+                .toList(),
+          ),
         });
       }
       await store.putRecipeImageBytesBatch({
@@ -1128,7 +1113,7 @@ class AppState extends ChangeNotifier {
           nextImageIds.difference(oldImageIds),
         );
       } catch (_) {}
-      final recoveryCollections = Map<String, String>.of(oldCollections);
+      final recoveryCollections = Map<String, String?>.of(oldCollections);
       if (!oldImageBytesRestored) {
         // Without confirmed byte recovery or a readable store, retain the
         // persisted metadata rather than attach old credits to incoming bytes.
@@ -1164,8 +1149,17 @@ class AppState extends ChangeNotifier {
         // incoming-only bytes left by failed cleanup remain inert in that case.
       }
       try {
-        await store.putCollections(recoveryCollections);
+        await store.putCollections({
+          for (final entry in recoveryCollections.entries)
+            if (entry.value case final raw?) entry.key: raw,
+        });
       } catch (_) {}
+      for (final entry in recoveryCollections.entries) {
+        if (entry.value != null) continue;
+        try {
+          await store.removeCollection(entry.key);
+        } catch (_) {}
+      }
       try {
         await store.saveProfile(_profile);
       } catch (_) {}
