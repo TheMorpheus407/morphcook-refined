@@ -1,6 +1,6 @@
 # Collection save failures
 
-History, meal plans, shopping lists/history and local content requests share
+History, meal plans, shopping lists/history, cook progress and local content requests share
 AppState's mutation queue. Each operation builds a private next snapshot and
 publishes it only after every required write succeeds. Failure propagates the
 original exception without publishing or notifying listeners. The queue waits
@@ -19,11 +19,27 @@ but a restart can expose the partially persisted edit. The double-failure test
 explicitly demonstrates this limit and subsequent queue/retry behavior. These
 checks do not promise transaction atomicity or recovery from a device crash.
 
-Shopping, meal-plan, recipe-add and cooking-completion controls report a failed
+Shopping, meal-plan, recipe-add, cook-progress and cooking-completion controls report a failed
 save in English or German and allow retry. Success feedback and leaving the
 cooking completion screen happen only after confirmation. The completion note
 asks the user to save the meal rather than claiming it is already recorded.
 Navigating away during a failed save does not show feedback on a disposed page.
+
+Opening cook mode reads resume progress through the mutation queue, after earlier
+edits and their recovery settle. While waiting, the screen shows a progress
+indicator with an English/German accessibility label; Close and Back remain
+available. Cooking controls appear only once the confirmed step, servings and
+paused timer have been read. Leaving during this wait skips initialization.
+The one-handed tap setting is also read after queued profile edits settle.
+This prevents an older reopened session from overwriting a successful pending
+save or resurrecting progress after a confirmed clear.
+Confirmed progress changes notify recipe details so its Start/Resume label
+updates after a save or clear; pending and failed writes keep the previous label.
+
+Saving a completed meal also clears any resume state for that recipe, including
+when the first progress-clear attempt failed. Both writes must confirm before
+either snapshot is published; failure recovers both raw values. Progress for
+another recipe remains untouched.
 
 Cooking completion accepts one Done action while its history save is pending,
 including taps before the disabled button rebuilds. A failed save enables retry.
@@ -39,6 +55,21 @@ that logging succeeded or that anything was sent to the developer.
 
 Targeted checks:
 
+- `test/cook_progress_confirmation_test.dart`: progress creation, update and
+  clearing before/after-write failures, exact raw JSON recovery, unpublished
+  pending values, queued retry, and EN/DE cook-mode errors and resume behavior.
+- `test/cook_progress_resume_test.dart`: EN/DE reopening during delayed saves,
+  queued step changes, clearing and delayed failure recovery; paused timers and
+  servings, subsequent edits and reload; unavailable controls while waiting,
+  localized accessibility labels and safe Close/Back before initialization.
+  The eight save/clear cases fail on submitted PR #26 head `94e2884` even
+  without checking the waiting controls. All twenty cases fail with the waiting
+  and timer checks included, and pass after the queued resume read.
+  Four additional EN/DE checks toggle quick-tap while initialization waits,
+  then check the hint and actual tap behavior. They fail on finishing head
+  `6537a3b` and pass after reading that setting after the queued edits.
+  Four detail-screen checks cover EN/DE Start/Resume labels during and after
+  progress saves and clears; all fail without the confirmed-change notification.
 - `test/collection_write_failure_test.dart`: before/after-write failures for
   every collection edit, both shopping writes, retry/reload, notifications,
   queued assignment, exact raw JSON/unknown fields, absent keys and the
