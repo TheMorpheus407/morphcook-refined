@@ -12,9 +12,11 @@ an empty AppState. Both the Dart cache and native preferences may already be
 empty when a clear fails. HiveStore snapshots all preferences before clearing
 and attempts to restore each value independently before reporting the original
 failure. Settings reports the failure in English or German and permits retry.
-Recovery is best effort if storage also rejects rollback. A later Hive failure
-can still leave a partial reset; this is not a transaction across stores or a
-device-crash guarantee.
+Hive collections and photo bytes are also snapshotted before deletion and
+restored independently after a later clear failure; see the
+[native reset checks](collection-write-failures.md). Recovery is best effort if
+storage also rejects rollback, so a partial reset remains possible in that case.
+These writes do not provide transaction atomicity or a device-crash guarantee.
 
 `test/reset_confirmation_test.dart` covers rejected and throwing native clears
 before and after changing native values, with real Hive storage, no publication,

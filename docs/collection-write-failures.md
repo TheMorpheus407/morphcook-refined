@@ -24,8 +24,11 @@ any store. An unreadable box fails before deletion. If a later clear fails, each
 affected store is restored independently and the original error is reported;
 AppState keeps its previous published snapshot. `test/native_reset_rollback_test.dart`
 closes each real Hive box before reset or after preference deletion and checks
-raw data, reload, notifications and a successful retry. The same best-effort
-rollback limits apply if recovery itself fails.
+raw data, reload, notifications and a successful retry. Two further cases inject
+an I/O failure after truncating the real collection or photo file, close both
+boxes and verify recovery from disk. The photo case fails if image recovery is
+removed; all six cases fail with the pre-PR store from `c9b116ac`. The same
+best-effort rollback limits apply if recovery itself fails.
 
 Shopping, meal-plan, recipe-add, cook-progress and cooking-completion controls report a failed
 save in English or German and allow retry. Success feedback and leaving the
