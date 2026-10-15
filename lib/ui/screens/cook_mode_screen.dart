@@ -42,15 +42,19 @@ class _CookModeScreenState extends State<CookModeScreen> {
   Future<void> _resumeSession(AppState state) async {
     final progress = await state.readCookProgressForResume();
     if (!mounted) return;
-    final resume = progress?.recipeId == widget.recipe.id ? progress : null;
+    // Personal recipes may have been replaced by the import we awaited.
+    // Keep one confirmed snapshot for controller, instructions and ingredients.
+    final recipe =
+        state.personalRecipeById(widget.recipe.id)?.asRecipe() ?? widget.recipe;
+    final resume = progress?.recipeId == recipe.id ? progress : null;
     _session = CookSessionController(
-      recipe: widget.recipe,
+      recipe: recipe,
       persist: (progress) {
         unawaited(
           saveCollectionEdit(
             context,
             () => progress == null
-                ? state.clearCookProgressForRecipe(widget.recipe.id)
+                ? state.clearCookProgressForRecipe(recipe.id)
                 : state.persistCookProgress(progress),
           ),
         );
@@ -126,7 +130,6 @@ class _CookModeScreenState extends State<CookModeScreen> {
     final state = context.watch<AppState>();
     final s = S(state.lang);
     final lang = state.lang;
-    final recipe = widget.recipe;
 
     if (_resuming) {
       return Scaffold(
@@ -153,6 +156,7 @@ class _CookModeScreenState extends State<CookModeScreen> {
       );
     }
 
+    final recipe = _session.recipe;
     if (_session.isCompleted) return _completion(state, s);
 
     final step = recipe.steps[_session.stepIndex];
@@ -289,7 +293,7 @@ class _CookModeScreenState extends State<CookModeScreen> {
               ),
             ),
             const SizedBox(height: 10),
-            for (final ing in widget.recipe.ingredients)
+            for (final ing in _session.recipe.ingredients)
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 4),
                 child: Row(
@@ -525,7 +529,7 @@ class _CookModeScreenState extends State<CookModeScreen> {
         _completionSaved ||
         await saveCollectionEdit(
           context,
-          () => state.logCooked(widget.recipe.id),
+          () => state.logCooked(_session.recipe.id),
         );
     if (!mounted) return;
     if (!saved) {
