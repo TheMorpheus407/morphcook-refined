@@ -6,6 +6,25 @@ published and listeners are notified only after its persistence succeeds;
 a failed edit leaves the previously published profile usable and allows the
 next queued operation to run.
 
+Reset also requires SharedPreferences to confirm its clear before erasing Hive
+collections or photos. A false result or exception propagates without publishing
+an empty AppState. Both the Dart cache and native preferences may already be
+empty when a clear fails. HiveStore snapshots all preferences before clearing
+and attempts to restore each value independently before reporting the original
+failure. Settings reports the failure in English or German and permits retry.
+Recovery is best effort if storage also rejects rollback. A later Hive failure
+can still leave a partial reset; this is not a transaction across stores or a
+device-crash guarantee.
+
+`test/reset_confirmation_test.dart` covers rejected and throwing native clears
+before and after changing native values, with real Hive storage, no publication,
+a fresh-cache reload and successful retry. All five preference types are restored,
+including lists returned by platform channels. Rejected or throwing recovery
+writes do not block recovery of other keys or replace the original error. Its
+English and German widget cases check failure feedback and retry. The four
+original cases fail with the pre-fix store and settings code from `1779b5d`. Six
+after-write/rollback cases fail with the submitted PR #24 store from `a592271`.
+
 `test/profile_write_ordering_test.dart` covers these boundaries with paused
 storage calls and checks notifications, memory, storage and a fresh AppState:
 

@@ -26,15 +26,29 @@ class _RejectClearPreferences extends InMemorySharedPreferencesStore {
   _RejectClearPreferences(this.mode) : super.empty();
   final String mode;
   bool reject = false;
+  String rollbackFailure = 'none';
+  bool _rollbackPending = false;
   final error = StateError('native clear failed');
   @override
   Future<bool> clear() async {
     if (reject) {
       reject = false;
-      if (mode == 'false') return false;
+      if (mode.contains('after write')) await super.clear();
+      _rollbackPending = true;
+      if (mode.startsWith('false')) return false;
       throw error;
     }
     return super.clear();
+  }
+
+  @override
+  Future<bool> setValue(String type, String key, Object value) async {
+    if (_rollbackPending && key == 'flutter.retry_count') {
+      _rollbackPending = false;
+      if (rollbackFailure == 'false') return false;
+      if (rollbackFailure == 'throw') throw StateError('rollback failed');
+    }
+    return super.setValue(type, key, value);
   }
 }
 
@@ -53,74 +67,109 @@ class _RejectOnceResetStore extends MemoryStore {
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   WidgetController.hitTestWarningShouldBeFatal = true;
-  for (final mode in ['false', 'throw']) {
-    test(
-      'native clear $mode reports failure and preserves reset data',
-      () async {
-        final directory = await Directory.systemTemp.createTemp(
-          'morphcook-reset-',
-        );
-        final oldPath = PathProviderPlatform.instance;
-        final oldPreferences = SharedPreferencesStorePlatform.instance;
-        PathProviderPlatform.instance = _TestPath(directory.path);
-        SharedPreferences.setMockInitialValues({});
-        final preferences = _RejectClearPreferences(mode);
-        SharedPreferencesStorePlatform.instance = preferences;
-        final store = HiveStore();
-        final state = AppState(store: store, corpus: await loadRealCorpus());
-        addTearDown(() async {
-          state.dispose();
-          await Hive.close();
-          PathProviderPlatform.instance = oldPath;
+  for (final mode in [
+    'false',
+    'throw',
+    'false after write',
+    'throw after write',
+  ]) {
+    for (final rollback
+        in mode.contains('after write')
+            ? ['none', 'false', 'throw']
+            : ['none']) {
+      test(
+        'native clear $mode, rollback $rollback preserves reset data',
+        () async {
+          final directory = await Directory.systemTemp.createTemp(
+            'morphcook-reset-',
+          );
+          final oldPath = PathProviderPlatform.instance;
+          final oldPreferences = SharedPreferencesStorePlatform.instance;
+          PathProviderPlatform.instance = _TestPath(directory.path);
           SharedPreferences.setMockInitialValues({});
-          SharedPreferencesStorePlatform.instance = oldPreferences;
-          await directory.delete(recursive: true);
-        });
-        await state.load();
-        const profile = Profile(
-          name: 'Personal name',
-          imageSearchEnabled: true,
-        );
-        await state.completeOnboarding(profile);
-        await state.toggleSaved('doener-vegan');
-        await state.setRecipeImage('doener-vegan', testPngBytes());
-        final before = state.buildBackup().toJson(DateTime.utc(2026));
-        final rawSaved = store.getCollection('saved');
-        final native = await preferences.getAll();
-        var notifications = 0;
-        state.addListener(() => notifications++);
-        preferences.reject = true;
-        await expectLater(
-          state.resetEverything(),
-          mode == 'throw' ? throwsA(same(preferences.error)) : throwsStateError,
-        );
-        expect(notifications, 0);
-        expect(state.onboarded, isTrue);
-        expect(state.buildBackup().toJson(DateTime.utc(2026)), before);
-        expect(store.loadProfile()!.toJson(), profile.toJson());
-        expect(store.onboardingComplete, isTrue);
-        expect(store.getCollection('saved'), rawSaved);
-        expect(store.loadRecipeImageBytes()['doener-vegan'], testPngBytes());
-        expect(await preferences.getAll(), native);
+          final preferences = _RejectClearPreferences(mode)
+            ..rollbackFailure = rollback;
+          SharedPreferencesStorePlatform.instance = preferences;
+          // Platform-channel lists need not have a reified String element type.
+          await preferences.setValue('StringList', 'flutter.labels', <Object>[
+            'one',
+            'two',
+          ]);
+          final store = HiveStore();
+          final state = AppState(store: store, corpus: await loadRealCorpus());
+          addTearDown(() async {
+            state.dispose();
+            await Hive.close();
+            PathProviderPlatform.instance = oldPath;
+            SharedPreferences.setMockInitialValues({});
+            SharedPreferencesStorePlatform.instance = oldPreferences;
+            await directory.delete(recursive: true);
+          });
+          await state.load();
+          const profile = Profile(
+            name: 'Personal name',
+            imageSearchEnabled: true,
+          );
+          await state.completeOnboarding(profile);
+          await state.toggleSaved('doener-vegan');
+          await state.setRecipeImage('doener-vegan', testPngBytes());
+          final cache = await SharedPreferences.getInstance();
+          await cache.setInt('retry_count', 3);
+          await cache.setDouble('scale', 1.5);
+          final cached = {
+            for (final key in cache.getKeys()) key: cache.get(key),
+          };
+          final before = state.buildBackup().toJson(DateTime.utc(2026));
+          final rawSaved = store.getCollection('saved');
+          final native = await preferences.getAll();
+          var notifications = 0;
+          state.addListener(() => notifications++);
+          preferences.reject = true;
+          await expectLater(
+            state.resetEverything(),
+            mode.startsWith('throw')
+                ? throwsA(same(preferences.error))
+                : throwsA(
+                    isA<StateError>().having(
+                      (error) => error.message,
+                      'message',
+                      'Failed to clear preferences',
+                    ),
+                  ),
+          );
+          expect(notifications, 0);
+          expect(state.onboarded, isTrue);
+          expect(state.buildBackup().toJson(DateTime.utc(2026)), before);
+          expect(store.loadProfile()?.toJson(), profile.toJson());
+          expect(store.onboardingComplete, isTrue);
+          expect(store.getCollection('saved'), rawSaved);
+          expect(store.loadRecipeImageBytes()['doener-vegan'], testPngBytes());
+          expect({
+            for (final key in cache.getKeys()) key: cache.get(key),
+          }, cached);
+          final expectedNative = Map<String, Object>.of(native);
+          if (rollback != 'none') expectedNative.remove('flutter.retry_count');
+          expect(await preferences.getAll(), expectedNative);
 
-        // A fresh Dart cache must see the same data, not a successful reset.
-        SharedPreferences.setMockInitialValues({});
-        SharedPreferencesStorePlatform.instance = preferences;
-        final reloaded = AppState(store: HiveStore(), corpus: state.corpus);
-        addTearDown(reloaded.dispose);
-        await reloaded.load();
-        expect(reloaded.onboarded, isTrue);
-        expect(reloaded.buildBackup().toJson(DateTime.utc(2026)), before);
+          // A fresh Dart cache must see the same data, not a successful reset.
+          SharedPreferences.setMockInitialValues({});
+          SharedPreferencesStorePlatform.instance = preferences;
+          final reloaded = AppState(store: HiveStore(), corpus: state.corpus);
+          addTearDown(reloaded.dispose);
+          await reloaded.load();
+          expect(reloaded.onboarded, isTrue);
+          expect(reloaded.buildBackup().toJson(DateTime.utc(2026)), before);
 
-        await state.resetEverything();
-        expect(notifications, 1);
-        expect(state.onboarded, isFalse);
-        expect(state.profile.name, isEmpty);
-        expect(state.saved, isEmpty);
-        expect(store.loadRecipeImageBytes(), isEmpty);
-        expect(await preferences.getAll(), isEmpty);
-      },
-    );
+          await state.resetEverything();
+          expect(notifications, 1);
+          expect(state.onboarded, isFalse);
+          expect(state.profile.name, isEmpty);
+          expect(state.saved, isEmpty);
+          expect(store.loadRecipeImageBytes(), isEmpty);
+          expect(await preferences.getAll(), isEmpty);
+        },
+      );
+    }
   }
 
   for (final lang in ['en', 'de']) {
