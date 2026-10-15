@@ -134,6 +134,14 @@ Targeted checks:
   across Sunday/Monday midnight, with same-week controls and reload checks.
   Changing assignment back to recomputing the current week fails all four new
   rollover picker cases while the four same-week picker controls pass.
+- `test/meal_week_boundaries_test.dart`: displayed-week export and real drags
+  across Sunday/Monday midnight, with unchanged-clock controls and reload
+  checks; calendar navigation across spring/autumn DST in Europe/Berlin.
+  Also covers calendar Monday calculation and EN/DE exports after a weekday
+  DST change in Asia/Jerusalem. All three new checks fail on PR #36's submitted
+  head `4892bbe`: the helper returns Sunday 22 March at 23:00, and both exports
+  persist W12 ingredients instead of W13. Run this file with
+  `TZ=Europe/Berlin`, `TZ=Asia/Jerusalem` and `TZ=UTC`.
 - `test/collection_failure_feedback_test.dart`: EN/DE shopping toggle/clear,
   meal assignment/removal/move/export, recipe additions, cooking completion,
   failure feedback, retry/reload, truthful completion text and navigation.
