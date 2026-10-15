@@ -30,14 +30,21 @@ class MealPlanScreen extends StatefulWidget {
 }
 
 class _MealPlanScreenState extends State<MealPlanScreen> {
-  /// Offset in weeks from the current week (clamped to ±4 — the spec's
+  /// Offset from the week first displayed (clamped to ±4 — the spec's
   /// "max 4 weeks rendered" guardrail, one week rendered at a time).
   int _weekOffset = 0;
+  late final DateTime _initialWeek = weekStart(
+    widget.now?.call() ?? DateTime.now(),
+  );
 
   DateTime get _weekDate {
-    final monday = weekStart(widget.now?.call() ?? DateTime.now());
     // Calendar days retain Monday midnight across daylight-saving changes.
-    return DateTime(monday.year, monday.month, monday.day + 7 * _weekOffset);
+    // Rebuilds and gestures keep the displayed week across midnight.
+    return DateTime(
+      _initialWeek.year,
+      _initialWeek.month,
+      _initialWeek.day + 7 * _weekOffset,
+    );
   }
 
   @override
@@ -274,8 +281,8 @@ class _MealPlanScreenState extends State<MealPlanScreen> {
     );
 
     if (recipeId == null) return cell;
-    // Keep the displayed identity even if a restore finishes during the drag.
-    return LongPressDraggable<MealPlanDrag>(
+    // Capture before the delayed long-press recognizer starts the drag.
+    return _MealDragSource(
       data: (weekKey: weekKey, slotKey: slotKey, recipeId: recipeId),
       feedback: Material(
         color: Colors.transparent,
@@ -291,7 +298,6 @@ class _MealPlanScreenState extends State<MealPlanScreen> {
           ),
         ),
       ),
-      childWhenDragging: Opacity(opacity: 0.35, child: cell),
       child: cell,
     );
   }
@@ -449,6 +455,61 @@ class _MealPlanScreenState extends State<MealPlanScreen> {
       context,
     ).showSnackBar(SnackBar(content: Text(s('weekExported'))));
   }
+}
+
+/// Preserve pointer-down data through provider rebuilds without remounting the
+/// cell's independent tap recognizer. The drag avatar retains its own snapshot
+/// after release, while the next pointer starts with the current assignment.
+class _MealDragSource extends StatefulWidget {
+  const _MealDragSource({
+    required this.data,
+    required this.feedback,
+    required this.child,
+  });
+
+  final MealPlanDrag data;
+  final Widget feedback;
+  final Widget child;
+
+  @override
+  State<_MealDragSource> createState() => _MealDragSourceState();
+}
+
+class _MealDragSourceState extends State<_MealDragSource> {
+  int? _pointer;
+  MealPlanDrag? _data;
+  Widget? _feedback;
+
+  void _release(PointerEvent event) {
+    // Pointer-up can still target the old hit-test path after a restore removes
+    // this source from the tree.
+    if (!mounted || event.pointer != _pointer) return;
+    setState(() {
+      _pointer = null;
+      _data = null;
+      _feedback = null;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) => Listener(
+    onPointerDown: (event) {
+      if (!mounted || _pointer != null) return;
+      setState(() {
+        _pointer = event.pointer;
+        _data = widget.data;
+        _feedback = widget.feedback;
+      });
+    },
+    onPointerUp: _release,
+    onPointerCancel: _release,
+    child: LongPressDraggable<MealPlanDrag>(
+      data: _data ?? widget.data,
+      feedback: _feedback ?? widget.feedback,
+      childWhenDragging: Opacity(opacity: 0.35, child: widget.child),
+      child: widget.child,
+    ),
+  );
 }
 
 /// Capture context with the recognizer that owns the tap, before any rebuild.
