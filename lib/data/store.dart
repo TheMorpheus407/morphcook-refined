@@ -118,7 +118,18 @@ class HiveStore implements PersistenceStore {
 
   @override
   Future<void> clearAll() async {
-    await _prefs.clear();
+    try {
+      if (!await _prefs.clear()) {
+        throw StateError('Failed to clear preferences');
+      }
+    } catch (_) {
+      // SharedPreferences clears its Dart cache before native confirmation.
+      // Reload unchanged native values before another operation uses the store.
+      try {
+        await _prefs.reload();
+      } catch (_) {}
+      rethrow;
+    }
     await _box.clear();
     await _imageBox.clear();
   }
