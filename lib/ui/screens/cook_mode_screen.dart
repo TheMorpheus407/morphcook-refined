@@ -36,9 +36,6 @@ class _CookModeScreenState extends State<CookModeScreen> {
   void initState() {
     super.initState();
     final state = context.read<AppState>();
-    _oneHanded = OneHandedCookModeController(
-      quickNextTapEnabled: state.profile.quickNextTapEnabled,
-    );
     unawaited(_resumeSession(state));
   }
 
@@ -57,6 +54,9 @@ class _CookModeScreenState extends State<CookModeScreen> {
         );
       },
       resumeFrom: resume,
+    );
+    _oneHanded = OneHandedCookModeController(
+      quickNextTapEnabled: state.profile.quickNextTapEnabled,
     );
     _session.addListener(_onSession);
     setState(() => _resuming = false);

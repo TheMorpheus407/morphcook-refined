@@ -8,6 +8,7 @@ import 'package:morphcook/data/store.dart';
 import 'package:morphcook/logic/cook/cook_controller.dart';
 import 'package:morphcook/models/profile.dart';
 import 'package:morphcook/ui/screens/cook_mode_screen.dart';
+import 'package:morphcook/ui/screens/dish_detail_screen.dart';
 import 'package:morphcook/ui/strings.dart';
 
 import 'helpers.dart';
@@ -182,6 +183,108 @@ void main() {
           },
         );
       }
+    }
+    for (final clearing in [false, true]) {
+      testWidgets(
+        '$lang detail refreshes after confirmed progress clear=$clearing',
+        (tester) async {
+          final store = _DelayedProgressStore();
+          final state = (await tester.runAsync(() async {
+            final state = AppState(
+              store: store,
+              corpus: await loadRealCorpus(),
+            );
+            await state.load();
+            await state.completeOnboarding(Profile(lang: lang));
+            return state;
+          }))!;
+          addTearDown(state.dispose);
+          addTearDown(() {
+            if (!store.release.isCompleted) store.release.complete();
+          });
+          final recipe = (await tester.runAsync(
+            () => state.bestVariant('doener'),
+          ))!;
+          final progress = CookProgress(
+            recipeId: recipe.id,
+            stepIndex: 1,
+            servings: 2,
+          );
+          if (clearing) await state.persistCookProgress(progress);
+          await tester.pumpWidget(
+            app(state, DishDetailScreen(dishId: recipe.dishId)),
+          );
+          await tester.pumpAndSettle();
+          final before = S(lang)(clearing ? 'resumeCooking' : 'startCooking');
+          final after = S(lang)(clearing ? 'startCooking' : 'resumeCooking');
+          await tester.scrollUntilVisible(find.text(before), 400);
+          await tester.pumpAndSettle();
+          expect(find.text(before), findsOneWidget);
+          store.armed = true;
+          final saved = state.persistCookProgress(clearing ? null : progress);
+          await tester.pump();
+          expect(store.entered.isCompleted, isTrue);
+          expect(find.text(before), findsOneWidget);
+          expect(find.text(after), findsNothing);
+          store.release.complete();
+          await saved;
+          await tester.pumpAndSettle();
+          expect(find.text(after), findsOneWidget);
+          expect(find.text(before), findsNothing);
+          expect(tester.takeException(), isNull);
+          await tester.pumpWidget(const SizedBox());
+        },
+      );
+    }
+    for (final enabled in [false, true]) {
+      testWidgets('$lang queued quick-tap setting becomes $enabled', (
+        tester,
+      ) async {
+        final store = _DelayedProgressStore();
+        final state = (await tester.runAsync(() async {
+          final state = AppState(store: store, corpus: await loadRealCorpus());
+          await state.load();
+          await state.completeOnboarding(
+            Profile(lang: lang, quickNextTapEnabled: !enabled),
+          );
+          return state;
+        }))!;
+        addTearDown(state.dispose);
+        addTearDown(() {
+          if (!store.release.isCompleted) store.release.complete();
+        });
+        final recipe = (await tester.runAsync(
+          () => state.recipeById('doener-classic'),
+        ))!;
+        store.armed = true;
+        final progress = state.persistCookProgress(
+          const CookProgress(
+            recipeId: 'doener-classic',
+            stepIndex: 0,
+            servings: 2,
+          ),
+        );
+        final profile = state.editProfile(
+          (p) => p.copyWith(quickNextTapEnabled: enabled),
+        );
+        await tester.pumpWidget(app(state, CookModeScreen(recipe: recipe)));
+        expect(find.byType(FilledButton), findsNothing);
+        store.release.complete();
+        await tester.pumpAndSettle();
+        await progress;
+        await profile;
+        expect(state.profile.quickNextTapEnabled, enabled);
+        expect(
+          find.text(S(lang)('quickTapHint')),
+          enabled ? findsOneWidget : findsNothing,
+        );
+        await tester.tap(find.text(recipe.steps[0].text.of(lang)));
+        await tester.pumpAndSettle();
+        expect(find.text(enabled ? '2.' : '1.'), findsOneWidget);
+        expect(state.cookProgress?.stepIndex, enabled ? 1 : 0);
+        expect(tester.takeException(), isNull);
+        await tester.pumpWidget(const SizedBox());
+      });
     }
     for (final navigation in ['close', 'back']) {
       testWidgets('$lang $navigation while waiting for resume', (tester) async {

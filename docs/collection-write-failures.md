@@ -30,8 +30,11 @@ edits and their recovery settle. While waiting, the screen shows a progress
 indicator with an English/German accessibility label; Close and Back remain
 available. Cooking controls appear only once the confirmed step, servings and
 paused timer have been read. Leaving during this wait skips initialization.
+The one-handed tap setting is also read after queued profile edits settle.
 This prevents an older reopened session from overwriting a successful pending
 save or resurrecting progress after a confirmed clear.
+Confirmed progress changes notify recipe details so its Start/Resume label
+updates after a save or clear; pending and failed writes keep the previous label.
 
 Saving a completed meal also clears any resume state for that recipe, including
 when the first progress-clear attempt failed. Both writes must confirm before
@@ -62,6 +65,11 @@ Targeted checks:
   The eight save/clear cases fail on submitted PR #26 head `94e2884` even
   without checking the waiting controls. All twenty cases fail with the waiting
   and timer checks included, and pass after the queued resume read.
+  Four additional EN/DE checks toggle quick-tap while initialization waits,
+  then check the hint and actual tap behavior. They fail on finishing head
+  `6537a3b` and pass after reading that setting after the queued edits.
+  Four detail-screen checks cover EN/DE Start/Resume labels during and after
+  progress saves and clears; all fail without the confirmed-change notification.
 - `test/collection_write_failure_test.dart`: before/after-write failures for
   every collection edit, both shopping writes, retry/reload, notifications,
   queued assignment, exact raw JSON/unknown fields, absent keys and the

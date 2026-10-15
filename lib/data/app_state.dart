@@ -958,6 +958,7 @@ class AppState extends ChangeNotifier {
     }
     await _persistCollections({'cook_progress': progress?.toJson()});
     _cookProgress = progress;
+    notifyListeners();
   }
 
   // ---- backup ----
