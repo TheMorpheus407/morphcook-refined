@@ -46,6 +46,7 @@ class DishDetailScreen extends StatefulWidget {
 
 class _DishDetailScreenState extends State<DishDetailScreen> {
   Dish? _dish;
+  bool _dishUnavailable = false;
   List<Recipe> _all = [];
   Recipe? _selected;
   Set<String> _previousIngredients = {};
@@ -62,7 +63,10 @@ class _DishDetailScreenState extends State<DishDetailScreen> {
   Future<void> _load() async {
     final state = context.read<AppState>();
     final dish = state.dishById(widget.dishId);
-    if (dish == null) return;
+    if (dish == null) {
+      setState(() => _dishUnavailable = true);
+      return;
+    }
     final all = await state.variantsOf(dish);
     final best = await state.bestVariant(dish.id);
     if (!mounted) return;
@@ -155,7 +159,7 @@ class _DishDetailScreenState extends State<DishDetailScreen> {
 
     // A confirmed reset/delete/restore can remove a personal recipe while its
     // route is still open. Never reinterpret the cached copy as a corpus dish.
-    if (personalDish && personal == null) {
+    if (_dishUnavailable || (personalDish && personal == null)) {
       return Scaffold(
         appBar: AppBar(),
         body: PaperBackground(
