@@ -25,6 +25,12 @@ cooking completion screen happen only after confirmation. The completion note
 asks the user to save the meal rather than claiming it is already recorded.
 Navigating away during a failed save does not show feedback on a disposed page.
 
+Cooking completion accepts one Done action while its history save is pending,
+including taps before the disabled button rebuilds. A failed save enables retry.
+After success, it closes only the current cooking route: Back or a covering route
+cannot cause another page to close. When a covering route is dismissed, Done can
+close the already-saved completion without recording the meal again.
+
 Search results appear independently of local content-request writes. A failed
 log is silent and can retry on a later search; AppState deduplicates successful
 queries. Distinct consecutive empty searches are recorded independently. The
@@ -43,6 +49,9 @@ Targeted checks:
 - `test/collection_failure_feedback_test.dart`: EN/DE shopping toggle/clear,
   meal assignment/removal/move/export, recipe additions, cooking completion,
   failure feedback, retry/reload, truthful completion text and navigation.
+- `test/cooking_completion_pending_test.dart`: EN/DE rapid Done taps, Back during
+  a pending save, and a covering route followed by closing the saved completion;
+  checks persisted history and the exact route-pop sequence.
 
 The finisher evidence directory for PR #20 records the failing checks against
 submitted head `62aa25f` and passing checks after the fixes. The controller runs
