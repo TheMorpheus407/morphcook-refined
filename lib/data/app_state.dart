@@ -78,7 +78,7 @@ class AppState extends ChangeNotifier {
       'expert_assessments',
       ExpertAssessment.fromJson,
     );
-    _recipeImages = _loadRecipeImages();
+    _recipeImages = await _loadRecipeImages();
     final progressRaw = store.getCollection('cook_progress');
     if (progressRaw != null) {
       try {
@@ -601,7 +601,7 @@ class AppState extends ChangeNotifier {
 
   // ---- local recipe images ----
 
-  Map<String, RecipeImage> _loadRecipeImages() {
+  Future<Map<String, RecipeImage>> _loadRecipeImages() async {
     final metadata = _readList(
       'recipe_image_metadata',
       RecipeImageMetadata.fromJson,
@@ -625,7 +625,34 @@ class AppState extends ChangeNotifier {
         // Ignore a corrupt local entry; the striped fallback remains usable.
       }
     }
-    return loaded;
+    // Recovery writes or reads may also fail. Keep leftover metadata from
+    // exposing orphan photos or making the next backup exceed its limits.
+    return _selectBackupCompatibleImages(
+      loaded.values,
+      _personalRecipes.map((recipe) => recipe.id).toSet(),
+    );
+  }
+
+  Future<Map<String, RecipeImage>> _selectBackupCompatibleImages(
+    Iterable<RecipeImage> images,
+    Set<String> personalIds,
+  ) async {
+    final selected = <String, RecipeImage>{};
+    var totalBytes = 0;
+    for (final image in images) {
+      if (selected.containsKey(image.recipeId) ||
+          selected.length >= maxBackupRecipeImages ||
+          totalBytes + image.bytes.length > maxBackupImageBytes) {
+        continue;
+      }
+      if (!personalIds.contains(image.recipeId) &&
+          await corpus.recipeById(image.recipeId) == null) {
+        continue;
+      }
+      selected[image.recipeId] = image;
+      totalBytes += image.bytes.length;
+    }
+    return selected;
   }
 
   RecipeImage? recipeImageFor(String recipeId) => _recipeImages[recipeId];
@@ -1076,17 +1103,62 @@ class AppState extends ChangeNotifier {
         oldImageIds.difference(nextImageIds),
       );
     } catch (_) {
-      // Best-effort rollback keeps a recoverable old state if persistence
-      // fails (for example because device storage is full).
+      // Recover independent storage components even if another recovery fails.
+      // Keep the original import error and leave in-memory state unpublished.
+      var oldImageBytesRestored = false;
       try {
         await store.putRecipeImageBytesBatch({
           for (final image in _recipeImages.values) image.recipeId: image.bytes,
         });
+        oldImageBytesRestored = true;
+      } catch (_) {}
+      try {
         await store.removeRecipeImageBytesBatch(
           nextImageIds.difference(oldImageIds),
         );
-        await store.putCollections(oldCollections);
+      } catch (_) {}
+      final recoveryCollections = Map<String, String>.of(oldCollections);
+      if (!oldImageBytesRestored) {
+        // Without confirmed byte recovery or a readable store, retain the
+        // persisted metadata rather than attach old credits to incoming bytes.
+        recoveryCollections.remove('recipe_image_metadata');
+      }
+      try {
+        // Either batch above may have applied only some entries before failing.
+        // Keep metadata (including credit) for the bytes that actually survived,
+        // preferring the old photo when both snapshots contain identical bytes.
+        final storedBytes = store.loadRecipeImageBytes();
+        final matchingImages = <RecipeImage>[];
+        // Previous IDs take priority even when only their incoming bytes remain.
+        for (final id in {...oldImageIds, ...nextImageIds}) {
+          for (final image in [_recipeImages[id], nextRecipeImages[id]]) {
+            if (image != null && listEquals(storedBytes[id], image.bytes)) {
+              matchingImages.add(image);
+              break;
+            }
+          }
+        }
+        final recoveredImages = await _selectBackupCompatibleImages(
+          matchingImages,
+          _personalRecipes.map((recipe) => recipe.id).toSet(),
+        );
+        recoveryCollections['recipe_image_metadata'] = jsonEncode(
+          recoveredImages.values
+              .map((image) => image.metadata.toJson())
+              .toList(),
+        );
+      } catch (_) {
+        // An unreadable photo store must not block unrelated collection recovery.
+        // Confirmed byte recovery can safely restore the previous metadata;
+        // incoming-only bytes left by failed cleanup remain inert in that case.
+      }
+      try {
+        await store.putCollections(recoveryCollections);
+      } catch (_) {}
+      try {
         await store.saveProfile(_profile);
+      } catch (_) {}
+      try {
         await store.setOnboardingComplete(_onboarded);
       } catch (_) {}
       rethrow;
