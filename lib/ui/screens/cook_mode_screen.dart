@@ -26,6 +26,7 @@ class CookModeScreen extends StatefulWidget {
 class _CookModeScreenState extends State<CookModeScreen> {
   late CookSessionController _session;
   late OneHandedCookModeController _oneHanded;
+  bool _resuming = true;
   bool _flashing = false;
   bool _savingCompletion = false;
   bool _completionSaved = false;
@@ -35,9 +36,16 @@ class _CookModeScreenState extends State<CookModeScreen> {
   void initState() {
     super.initState();
     final state = context.read<AppState>();
-    final resume = state.cookProgress?.recipeId == widget.recipe.id
-        ? state.cookProgress
-        : null;
+    _oneHanded = OneHandedCookModeController(
+      quickNextTapEnabled: state.profile.quickNextTapEnabled,
+    );
+    unawaited(_resumeSession(state));
+  }
+
+  Future<void> _resumeSession(AppState state) async {
+    final progress = await state.readCookProgressForResume();
+    if (!mounted) return;
+    final resume = progress?.recipeId == widget.recipe.id ? progress : null;
     _session = CookSessionController(
       recipe: widget.recipe,
       persist: (progress) {
@@ -50,10 +58,8 @@ class _CookModeScreenState extends State<CookModeScreen> {
       },
       resumeFrom: resume,
     );
-    _oneHanded = OneHandedCookModeController(
-      quickNextTapEnabled: state.profile.quickNextTapEnabled,
-    );
     _session.addListener(_onSession);
+    setState(() => _resuming = false);
   }
 
   void _onSession() {
@@ -105,8 +111,10 @@ class _CookModeScreenState extends State<CookModeScreen> {
 
   @override
   void dispose() {
-    _session.removeListener(_onSession);
-    _session.dispose();
+    if (!_resuming) {
+      _session.removeListener(_onSession);
+      _session.dispose();
+    }
     super.dispose();
   }
 
@@ -117,6 +125,31 @@ class _CookModeScreenState extends State<CookModeScreen> {
     final s = S(state.lang);
     final lang = state.lang;
     final recipe = widget.recipe;
+
+    if (_resuming) {
+      return Scaffold(
+        backgroundColor: MorphColors.night,
+        body: SafeArea(
+          child: Stack(
+            children: [
+              Center(
+                child: CircularProgressIndicator(
+                  color: morph.colors.terracotta,
+                  semanticsLabel: s('loadingCookProgress'),
+                ),
+              ),
+              Align(
+                alignment: Alignment.topRight,
+                child: IconButton(
+                  icon: const Icon(Icons.close, color: MorphColors.cream),
+                  onPressed: () => Navigator.of(context).pop(),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
 
     if (_session.isCompleted) return _completion(state, s);
 

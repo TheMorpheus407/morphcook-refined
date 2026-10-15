@@ -944,6 +944,10 @@ class AppState extends ChangeNotifier {
 
   // ---- cook progress ----
 
+  /// Resume from confirmed progress after earlier edits and recovery settle.
+  Future<CookProgress?> readCookProgressForResume() =>
+      _queueMutation(() async => _cookProgress);
+
   Future<void> persistCookProgress(CookProgress? progress) =>
       _queueMutation(() => _persistCookProgress(progress));
 

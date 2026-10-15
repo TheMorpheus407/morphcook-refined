@@ -25,6 +25,14 @@ cooking completion screen happen only after confirmation. The completion note
 asks the user to save the meal rather than claiming it is already recorded.
 Navigating away during a failed save does not show feedback on a disposed page.
 
+Opening cook mode reads resume progress through the mutation queue, after earlier
+edits and their recovery settle. While waiting, the screen shows a progress
+indicator with an English/German accessibility label; Close and Back remain
+available. Cooking controls appear only once the confirmed step, servings and
+paused timer have been read. Leaving during this wait skips initialization.
+This prevents an older reopened session from overwriting a successful pending
+save or resurrecting progress after a confirmed clear.
+
 Saving a completed meal also clears any resume state for that recipe, including
 when the first progress-clear attempt failed. Both writes must confirm before
 either snapshot is published; failure recovers both raw values. Progress for
@@ -47,6 +55,13 @@ Targeted checks:
 - `test/cook_progress_confirmation_test.dart`: progress creation, update and
   clearing before/after-write failures, exact raw JSON recovery, unpublished
   pending values, queued retry, and EN/DE cook-mode errors and resume behavior.
+- `test/cook_progress_resume_test.dart`: EN/DE reopening during delayed saves,
+  queued step changes, clearing and delayed failure recovery; paused timers and
+  servings, subsequent edits and reload; unavailable controls while waiting,
+  localized accessibility labels and safe Close/Back before initialization.
+  The eight save/clear cases fail on submitted PR #26 head `94e2884` even
+  without checking the waiting controls. All twenty cases fail with the waiting
+  and timer checks included, and pass after the queued resume read.
 - `test/collection_write_failure_test.dart`: before/after-write failures for
   every collection edit, both shopping writes, retry/reload, notifications,
   queued assignment, exact raw JSON/unknown fields, absent keys and the
