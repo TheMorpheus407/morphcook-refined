@@ -16,6 +16,7 @@ import 'widget_smoke_test.dart' show app;
 class _DelayedBackupStore extends MemoryStore {
   bool armed = false;
   bool fail = false;
+  bool afterWrite = false;
   final entered = Completer<void>();
   final release = Completer<void>();
 
@@ -23,6 +24,7 @@ class _DelayedBackupStore extends MemoryStore {
   Future<void> putCollections(Map<String, String> collections) async {
     if (armed) {
       armed = false;
+      if (afterWrite) await super.putCollections(collections);
       entered.complete();
       await release.future;
       if (fail) throw StateError('import rejected');
@@ -57,10 +59,12 @@ void main() {
   WidgetController.hitTestWarningShouldBeFatal = true;
   for (final lang in ['en', 'de']) {
     for (final fails in [false, true]) {
-      testWidgets(
-        '$lang cooking uses confirmed import snapshot: fails=$fails',
-        (tester) async {
-          final store = _DelayedBackupStore()..fail = fails;
+      for (final afterWrite in [false, true]) {
+        testWidgets('$lang cooking uses confirmed import snapshot: '
+            'fails=$fails afterWrite=$afterWrite', (tester) async {
+          final store = _DelayedBackupStore()
+            ..fail = fails
+            ..afterWrite = afterWrite;
           final oldRecipe = _personal(updated: false);
           final newRecipe = _personal(updated: true);
           final state = (await tester.runAsync(() async {
@@ -104,6 +108,13 @@ void main() {
           await tester.pump(const Duration(milliseconds: 400));
           expect(find.byType(CircularProgressIndicator), findsOneWidget);
           expect(find.byIcon(Icons.add), findsNothing);
+          // Native storage may already contain the new recipe; the UI still
+          // waits for confirmation before choosing its cooking snapshot.
+          expect(state.personalRecipes.single.title, oldRecipe.title);
+          expect(
+            store.getCollection('personal_recipes'),
+            contains(afterWrite ? newRecipe.title : oldRecipe.title),
+          );
           store.release.complete();
           await restored;
           await tester.pumpAndSettle();
@@ -128,10 +139,18 @@ void main() {
           expect(find.text(expected.ingredients.single.name), findsOneWidget);
           expect(find.text(other.ingredients.single.name), findsNothing);
           expect(find.text(fails ? '150 ml' : '250 ml'), findsOneWidget);
+          final reloaded = (await tester.runAsync(() async {
+            final reloaded = AppState(store: store, corpus: state.corpus);
+            await reloaded.load();
+            return reloaded;
+          }))!;
+          addTearDown(reloaded.dispose);
+          expect(reloaded.personalRecipes.single.toJson(), expected.toJson());
+          expect(reloaded.cookProgress?.toJson(), state.cookProgress?.toJson());
           expect(tester.takeException(), isNull);
           await tester.pumpWidget(const SizedBox());
-        },
-      );
+        });
+      }
     }
   }
 }

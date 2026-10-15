@@ -33,6 +33,13 @@ paused timer have been read. Leaving during this wait skips initialization.
 The one-handed tap setting is also read after queued profile edits settle.
 This prevents an older reopened session from overwriting a successful pending
 save or resurrecting progress after a confirmed clear.
+
+After the wait, cook mode resolves the current personal recipe and keeps that
+confirmed snapshot for instructions, title, timers, servings and ingredients.
+A successful pending backup import supplies its replacement recipe; a failed
+import keeps the previous recipe after recovery. Bundled recipes and caller
+snapshots without a persisted personal replacement retain their supplied data.
+
 Confirmed progress changes notify recipe details so its Start/Resume label
 updates after a save or clear; pending and failed writes keep the previous label.
 
@@ -65,6 +72,10 @@ Targeted checks:
   Finishing a different recipe preserves step, servings, timer and raw storage
   through reload. Scoped clears follow the owner after an earlier save succeeds
   or rolls back, in both ownership directions, without spurious notifications.
+- `test/cook_import_snapshot_test.dart`: EN/DE Start Cooking from recipe details
+  during a pending backup replacement, with success and failure before or after
+  storage changes. Checks the waiting screen, confirmed instructions/title,
+  timer, servings and scaled ingredients, plus recipe/progress after reload.
 - `test/cook_progress_resume_test.dart`: EN/DE reopening during delayed saves,
   queued step changes, clearing and delayed failure recovery; paused timers and
   servings, subsequent edits and reload; unavailable controls while waiting,
