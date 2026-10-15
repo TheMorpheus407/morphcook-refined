@@ -89,6 +89,8 @@ class ShoppingListScreen extends StatelessWidget {
         state.corpus.dictionary.byId(item.ingredientId)?.name.of(lang) ??
         item.ingredientId;
     return InkWell(
+      // Keep an in-flight tap attached to the same item as rows move.
+      key: ObjectKey(item.identity),
       onTap: () =>
           saveCollectionEdit(context, () => state.toggleShoppingItem(item)),
       child: Padding(

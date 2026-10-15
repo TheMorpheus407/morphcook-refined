@@ -183,6 +183,64 @@ void main() {
       await tester.pumpWidget(const SizedBox());
     });
 
+    testWidgets(
+      '$lang shopping gesture keeps its item when clear finishes mid-tap',
+      (tester) async {
+        final store = _PausedProfileStore();
+        final state = (await tester.runAsync(() async {
+          final state = AppState(store: store, corpus: await loadRealCorpus());
+          await state.load();
+          await state.completeOnboarding(Profile(lang: lang));
+          await state.addToShoppingList([
+            (makeRecipe(ingredientIds: ['garlic', 'onion', 'tomato']), 1.0),
+          ]);
+          await state.toggleShoppingItem(state.shoppingList[0]);
+          return state;
+        }))!;
+        addTearDown(state.dispose);
+        await tester.pumpWidget(app(state, const ShoppingListScreen()));
+        await tester.pumpAndSettle();
+        store.armed = true;
+        final first = state.updateProfile(state.profile);
+        addTearDown(() {
+          if (!store.release.isCompleted) store.release.complete();
+        });
+        await store.entered.future;
+        await tester.tap(find.byTooltip(S(lang)('clearChecked')));
+        final onionName = state.corpus.dictionary.byId('onion')!.name.of(lang);
+        final finger = await tester.startGesture(
+          tester.getCenter(find.text(onionName)),
+        );
+        await tester.pump(const Duration(milliseconds: 30));
+        expect(state.shoppingList, hasLength(3));
+        store.release.complete();
+        await tester.pumpAndSettle();
+        await first;
+        expect(state.shoppingList.map((row) => row.ingredientId), [
+          'onion',
+          'tomato',
+        ]);
+        await finger.up();
+        await tester.pumpAndSettle();
+        expect(
+          state.shoppingList
+              .where((row) => row.checked)
+              .map((row) => row.ingredientId),
+          ['onion'],
+        );
+        final reloaded = AppState(store: store, corpus: state.corpus);
+        addTearDown(reloaded.dispose);
+        await reloaded.load();
+        expect(
+          reloaded.shoppingList
+              .where((row) => row.checked)
+              .map((row) => row.ingredientId),
+          ['onion'],
+        );
+        await tester.pumpWidget(const SizedBox());
+      },
+    );
+
     testWidgets('$lang shopping tap follows displayed row behind clear', (
       tester,
     ) async {
