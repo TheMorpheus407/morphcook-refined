@@ -54,12 +54,12 @@ class RecipePhotoCandidate {
   const RecipePhotoCandidate({required this.imageUrl, required this.credit});
 }
 
-/// Collapses whitespace and bounds the length; empty means "do not search".
+/// Collapses whitespace and bounds Unicode code points; empty means "do not search".
 String normalizeRecipePhotoQuery(String query) {
   final text = query.replaceAll(RegExp(r'\s+'), ' ').trim();
-  return text.length > maxRecipePhotoQueryLength
-      ? text.substring(0, maxRecipePhotoQueryLength).trimRight()
-      : text;
+  return String.fromCharCodes(
+    text.runes.take(maxRecipePhotoQueryLength),
+  ).trimRight();
 }
 
 /// Searches Wikimedia Commons for freely licensed photos. Only the search
