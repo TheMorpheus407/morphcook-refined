@@ -1,3 +1,4 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -32,9 +33,6 @@ class _MealPlanScreenState extends State<MealPlanScreen> {
   /// Offset in weeks from the current week (clamped to ±4 — the spec's
   /// "max 4 weeks rendered" guardrail, one week rendered at a time).
   int _weekOffset = 0;
-
-  // Pointer-down runs before a provider rebuild can replace onTap's closure.
-  final _tapSelections = <String, _MealSlotSelection>{};
 
   DateTime get _weekDate => weekStart(
     widget.now?.call() ?? DateTime.now(),
@@ -204,25 +202,32 @@ class _MealPlanScreenState extends State<MealPlanScreen> {
       },
       builder: (context, candidates, _) {
         final highlighted = candidates.isNotEmpty;
-        return Listener(
-          onPointerDown: (_) => _tapSelections.putIfAbsent(
-            slotKey,
-            () => (weekKey: weekKey, recipeId: recipeId),
-          ),
-          onPointerCancel: (_) => _tapSelections.remove(slotKey),
-          child: GestureDetector(
-            onTapCancel: () => _tapSelections.remove(slotKey),
-            onTap: () {
-              final selected =
-                  _tapSelections.remove(slotKey) ??
-                  (weekKey: weekKey, recipeId: recipeId);
-              _assignSlot(
-                selected.weekKey,
-                slotKey,
-                selected.recipeId,
-                state,
-                s,
-              );
+        // Accessibility taps have no pointer-down and use the visible context.
+        return Semantics(
+          onTap: () => _assignSlot(weekKey, slotKey, recipeId, state, s),
+          child: RawGestureDetector(
+            excludeFromSemantics: true,
+            gestures: {
+              _MealSlotTapRecognizer:
+                  GestureRecognizerFactoryWithHandlers<_MealSlotTapRecognizer>(
+                    _MealSlotTapRecognizer.new,
+                    (recognizer) {
+                      recognizer.gestureSettings =
+                          MediaQuery.maybeGestureSettingsOf(context);
+                      recognizer.selection = () =>
+                          (weekKey: weekKey, recipeId: recipeId);
+                      recognizer.onTap = () {
+                        final selected = recognizer.selected!;
+                        _assignSlot(
+                          selected.weekKey,
+                          slotKey,
+                          selected.recipeId,
+                          state,
+                          s,
+                        );
+                      };
+                    },
+                  ),
             },
             child: Container(
               height: 64,
@@ -434,5 +439,18 @@ class _MealPlanScreenState extends State<MealPlanScreen> {
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(SnackBar(content: Text(s('weekExported'))));
+  }
+}
+
+/// Capture context with the recognizer that owns the tap, before any rebuild.
+/// A new gesture replaces the snapshot; disposal drops it with the recognizer.
+class _MealSlotTapRecognizer extends TapGestureRecognizer {
+  late _MealSlotSelection Function() selection;
+  _MealSlotSelection? selected;
+
+  @override
+  void addAllowedPointer(PointerDownEvent event) {
+    if (state == GestureRecognizerState.ready) selected = selection();
+    super.addAllowedPointer(event);
   }
 }

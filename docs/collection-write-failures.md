@@ -34,7 +34,12 @@ assignments and allow another drag to retry.
 
 Meal removal also retains the recipe ID from the rendered cell, including if a
 restore completes between pointer-down and the tap callback or while the slot
-menu is open. The queued clear checks that the slot still holds that recipe;
+menu is open. The tap recognizer owns this snapshot: fast scrolls, secondary
+clicks and a restored empty slot cannot reuse it for a later tap. Additional
+pointers do not replace the active tap's context. Accessibility taps use the
+currently displayed slot. Remove and recipe selection retain the selected week
+through an open menu or picker, including Sunday/Monday midnight rollover.
+The queued clear checks that the slot still holds that recipe;
 a changed or removed assignment makes the action a no-op. Direct `clearMeal`
 calls without an explicit ID capture the current assignment before queueing.
 
@@ -113,13 +118,22 @@ Targeted checks:
   Restore completes before or after drop; exact plan snapshots are checked in
   memory and after reload. The original four cases yield two passing controls
   and two replacement failures with the pre-fix production code.
-- `test/meal_remove_identity_test.dart`: twelve EN/DE widget cases covering
-  restore completion before the tap callback, while the menu is open and after
-  Remove, with unchanged-meal controls. Four direct-call cases cover unchanged,
-  replaced, removed and initially empty slots while restore waits. Every case
+- `test/meal_remove_identity_test.dart`: sixteen EN/DE widget cases covering
+  restore completion before the tap callback, across a frame rebuild during the
+  tap, while the menu is open and after Remove, with unchanged-meal controls.
+  Four direct-call cases cover unchanged, replaced, removed and initially empty
+  slots while restore waits. Every case
   checks memory and reload. The two pointer-timing replacement cases fail on
   submitted PR #34 head `1436564`; moving the default identity capture inside
   the queue also fails the direct replacement and initially empty cases.
+- `test/meal_tap_context_test.dart`: EN/DE fast scrolls, secondary clicks and
+  subtree disposal when a restore empties a pressed slot, followed by week
+  navigation and removal or cookbook assignment. Checks exact memory/reloaded
+  plans, accessibility taps and additional pointers during an active tap.
+- `test/meal_week_rollover_test.dart`: EN/DE removal and cookbook/search picking
+  across Sunday/Monday midnight, with same-week controls and reload checks.
+  Changing assignment back to recomputing the current week fails all four new
+  rollover picker cases while the four same-week picker controls pass.
 - `test/collection_failure_feedback_test.dart`: EN/DE shopping toggle/clear,
   meal assignment/removal/move/export, recipe additions, cooking completion,
   failure feedback, retry/reload, truthful completion text and navigation.

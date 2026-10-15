@@ -5,6 +5,7 @@ import 'package:morphcook/data/store.dart';
 import 'package:morphcook/models/profile.dart';
 import 'package:morphcook/ui/screens/meal_plan_screen.dart';
 import 'package:morphcook/ui/strings.dart';
+import 'package:morphcook/ui/widgets/recipe_row.dart';
 import 'helpers.dart';
 import 'widget_smoke_test.dart' show app;
 
@@ -56,6 +57,64 @@ void main() {
         }
         await tester.pumpWidget(const SizedBox());
       });
+    }
+  }
+  for (final lang in ['en', 'de']) {
+    for (final source in ['cookbook', 'search']) {
+      for (final rollover in [false, true]) {
+        testWidgets(
+          '$lang $source assignment keeps selected week (rollover=$rollover)',
+          (tester) async {
+            const slot = 'mon.breakfast';
+            const original = 'doener-classic';
+            final state = (await tester.runAsync(() async {
+              final state = AppState(
+                store: MemoryStore(),
+                corpus: await loadRealCorpus(),
+              );
+              await state.load();
+              await state.completeOnboarding(Profile(lang: lang));
+              await state.assignMeal('2026-W42', slot, original);
+              await state.assignMeal('2026-W43', slot, original);
+              await state.toggleSaved('doener-vegan');
+              return state;
+            }))!;
+            addTearDown(state.dispose);
+            var now = DateTime(2026, 10, 18, 23, 59, 50);
+            await tester.pumpWidget(
+              app(state, Scaffold(body: MealPlanScreen(now: () => now))),
+            );
+            await tester.pumpAndSettle();
+            await tester.tap(find.byType(DragTarget<MealPlanDrag>).first);
+            await tester.pumpAndSettle();
+            await tester.tap(
+              find.text(
+                S(lang)(source == 'cookbook' ? 'fromCookbook' : 'fromSearch'),
+              ),
+            );
+            await tester.pumpAndSettle();
+            // Cross midnight while the picker is open, after the slot menu closes.
+            now = rollover
+                ? DateTime(2026, 10, 19, 0, 0, 10)
+                : DateTime(2026, 10, 18, 23, 59, 55);
+            final row = find.byType(RecipeRow).first;
+            final picked = tester.widget<RecipeRow>(row).recipe.id;
+            expect(picked, isNot(original));
+            await tester.tap(row);
+            await tester.pumpAndSettle();
+            final reloaded = AppState(store: state.store, corpus: state.corpus);
+            addTearDown(reloaded.dispose);
+            await reloaded.load();
+            for (final snapshot in [state, reloaded]) {
+              expect(snapshot.mealPlan, {
+                '2026-W42': {slot: picked},
+                '2026-W43': {slot: original},
+              });
+            }
+            await tester.pumpWidget(const SizedBox());
+          },
+        );
+      }
     }
   }
 }
