@@ -14,6 +14,15 @@ class _FailingBackupStore extends MemoryStore {
   String? failure;
 
   @override
+  Future<void> setOnboardingComplete(bool value) async {
+    await super.setOnboardingComplete(value);
+    if (failure == 'after onboarding write') {
+      failure = null;
+      throw StateError('injected import failure after onboarding');
+    }
+  }
+
+  @override
   Future<void> putRecipeImageBytesBatch(Map<String, Uint8List> images) async {
     if (failure == 'before any collection write') {
       failure = null;
@@ -35,6 +44,73 @@ class _FailingBackupStore extends MemoryStore {
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   for (final merge in [false, true]) {
+    test(
+      'late backup failure restores raw non-photo collections: merge=$merge',
+      () async {
+        const rawCollections = {
+          'saved':
+              '[ {"recipe_id":"doener-vegan",'
+              '"saved_at":"2026-10-01T12:00:00.000","future_field":42} ]',
+          'history':
+              '[ {"recipe_id":"doener-vegan",'
+              '"cooked_at":"2026-10-01T12:00:00.000","future_field":42} ]',
+          'meal_plan': '{ "2026-W40": {"mon.dinner": 42} }',
+          'shopping_list': '[ {"future_field":42}, null ]',
+          'shopping_history': '[ {"future_field":42}, null ]',
+          'content_requests': '[ "legacy", 42 ]',
+          'personal_recipes': '[ {"future_field":42} ]',
+          'expert_assessments': '[ {"future_field":42} ]',
+          'cook_progress': '{ "future_field":42 }',
+        };
+        final store = _FailingBackupStore();
+        await store.putCollections(rawCollections);
+        const original = Profile(name: 'Before', lang: 'de');
+        await store.saveProfile(original);
+        final state = AppState(store: store, corpus: await loadRealCorpus());
+        addTearDown(state.dispose);
+        await state.load();
+        expect(state.saved, hasLength(1));
+        expect(state.history, hasLength(1));
+        final before = state.buildBackup().toJson(DateTime.utc(2026));
+        var notifications = 0;
+        state.addListener(() => notifications++);
+        const incoming = BackupData(
+          profile: Profile(name: 'Incoming'),
+          saved: [],
+          mealPlan: {},
+          history: [],
+        );
+        store.failure = 'after onboarding write';
+        await expectLater(
+          state.applyBackup(incoming, merge: merge),
+          throwsStateError,
+        );
+        for (final entry in rawCollections.entries) {
+          expect(
+            store.getCollection(entry.key),
+            entry.value,
+            reason: entry.key,
+          );
+        }
+        expect(notifications, 0);
+        expect(state.buildBackup().toJson(DateTime.utc(2026)), before);
+        expect(store.loadProfile()!.toJson(), original.toJson());
+        expect(store.onboardingComplete, isFalse);
+        final reloaded = AppState(store: store, corpus: state.corpus);
+        addTearDown(reloaded.dispose);
+        await reloaded.load();
+        expect(reloaded.buildBackup().toJson(DateTime.utc(2026)), before);
+        expect(reloaded.onboarded, isFalse);
+
+        await state.applyBackup(incoming, merge: merge);
+        expect(notifications, 1);
+        expect(state.profile.name, 'Incoming');
+        expect(store.onboardingComplete, isTrue);
+        expect(state.saved, hasLength(merge ? 1 : 0));
+        expect(state.history, hasLength(merge ? 1 : 0));
+      },
+    );
+
     for (final stage in [
       'before any collection write',
       'after collection write',
