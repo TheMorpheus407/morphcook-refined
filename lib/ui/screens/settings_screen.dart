@@ -1001,7 +1001,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
       },
     );
     if (confirmed == true && mounted && !_restoringBackup) {
-      await state.resetEverything();
+      try {
+        await state.resetEverything();
+      } catch (_) {
+        _toast(s('resetFailed'));
+        return;
+      }
       await _clearMorphCookTemporaryFiles(reset: true);
     }
   }

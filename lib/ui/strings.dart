@@ -294,6 +294,7 @@ class S {
     'supportPatreon': 'support on patreon',
     'supportWebsite': 'the-morpheus.de',
     'resetApp': 'start over (erase everything)',
+    'resetFailed': 'Could not erase your data. Please try again.',
     'resetConfirm':
         'erase profile, cookbook, personal recipes, photos, plans and history? bundled recipes stay.',
     'cancel': 'cancel',
@@ -628,6 +629,8 @@ class S {
     'supportPatreon': 'auf Patreon unterstützen',
     'supportWebsite': 'the-morpheus.de',
     'resetApp': 'neu anfangen (alles löschen)',
+    'resetFailed':
+        'Deine Daten konnten nicht gelöscht werden. Bitte versuche es erneut.',
     'resetConfirm':
         'Profil, Kochbuch, eigene Rezepte, Fotos, Pläne und Historie löschen? App-Rezepte bleiben.',
     'cancel': 'abbrechen',
