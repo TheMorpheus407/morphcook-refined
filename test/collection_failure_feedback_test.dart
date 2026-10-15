@@ -91,13 +91,20 @@ void main() {
         await tester.pumpAndSettle();
         Future<void> edit() async {
           final targets = find.byWidgetPredicate(
-            (w) => w is DragTarget<String>,
+            (w) => w is DragTarget<MealPlanDrag>,
           );
           if (action == 'move') {
             tester
-                .widget<DragTarget<String>>(targets.first)
+                .widget<DragTarget<MealPlanDrag>>(targets.first)
                 .onAcceptWithDetails!(
-              DragTargetDetails(data: 'mon.dinner', offset: Offset.zero),
+              DragTargetDetails(
+                data: (
+                  weekKey: week,
+                  slotKey: 'mon.dinner',
+                  recipeId: 'doener-classic',
+                ),
+                offset: Offset.zero,
+              ),
             );
           } else {
             await tester.tap(targets.at(action == 'remove' ? 2 : 0));
