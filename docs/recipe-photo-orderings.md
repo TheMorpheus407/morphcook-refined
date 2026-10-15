@@ -21,6 +21,20 @@ unexpected extra pop; `back-500` and `stay` pass as controls. The current-route
 check in PR #28 fixes both failures. These are widget navigation checks; native
 Android/iOS Back gesture acceptance has not been exercised here.
 
+## Unicode search queries
+
+Photo queries collapse whitespace and keep at most 100 Unicode code points.
+Supplementary characters stay intact when a query is shortened. This limit
+counts code points; a multi-code-point grapheme may still be shortened.
+`test/recipe_photo_search_test.dart` checks boundary normalization and the actual
+query received by a loopback HTTP server. The English/German `Unicode query
+survives prefill and submission ($lang)` cases in
+`test/recipe_photo_search_widget_test.dart` check the prefilled text, automatic
+search and keyboard submission of edited words. All four cases fail with the
+pre-fix normalizer from `eb22bf5` and pass with the Unicode fix. These checks
+cover Flutter input and local HTTP encoding; native keyboard input and a live
+Wikimedia search were not exercised.
+
 ## Accessible photo selection
 
 The English and German `screen reader selects only decoded idle photos ($lang)` widget cases in `test/recipe_photo_search_widget_test.dart` perform the tile's semantic tap action and check its localized credit, selected state and enabled save button. Pending previews have no tap action. Saving removes the action; a failed save restores it without publishing a photo. Both cases fail on the pre-fix base `56cf59d` because the decoded tile has no semantic tap action. These are Flutter semantics checks; TalkBack and VoiceOver device acceptance remains unverified.
