@@ -19,6 +19,14 @@ but a restart can expose the partially persisted edit. The double-failure test
 explicitly demonstrates this limit and subsequent queue/retry behavior. These
 checks do not promise transaction atomicity or recovery from a device crash.
 
+Full reset snapshots preferences, raw collections and photo bytes before clearing
+any store. An unreadable box fails before deletion. If a later clear fails, each
+affected store is restored independently and the original error is reported;
+AppState keeps its previous published snapshot. `test/native_reset_rollback_test.dart`
+closes each real Hive box before reset or after preference deletion and checks
+raw data, reload, notifications and a successful retry. The same best-effort
+rollback limits apply if recovery itself fails.
+
 Shopping, meal-plan, recipe-add, cook-progress and cooking-completion controls report a failed
 save in English or German and allow retry. Success feedback and leaving the
 cooking completion screen happen only after confirmation. The completion note
