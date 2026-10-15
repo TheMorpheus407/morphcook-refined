@@ -112,6 +112,13 @@ that logging succeeded or that anything was sent to the developer.
 
 Targeted checks:
 
+- `test/detail_initial_removal_test.dart`: real cookbook taps followed by a
+  confirmed reset before the detail route's first frame, starting from EN/DE
+  profiles. Successful resets show unavailable content instead of a persistent
+  skeleton and allow Back to onboarding; failed resets retain recipe actions.
+  Reset restores the default English profile. Separate deletion-before-first-frame
+  cases retain each language and check the English/German unavailable message,
+  absent recipe actions and Back to the empty cookbook.
 - `test/personal_detail_reset_test.dart`: EN/DE navigation from a pending Settings
   reset into a personal recipe, confirmed removal versus failed reset, Back to
   onboarding, direct deletion, and open-page backup replacement/removal. Checks
