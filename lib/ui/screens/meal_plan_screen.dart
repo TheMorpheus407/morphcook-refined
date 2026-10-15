@@ -11,6 +11,9 @@ import '../widgets/recipe_row.dart';
 import 'search_screen.dart';
 import 'shopping_list_screen.dart';
 
+/// The assignment visible when a meal drag starts.
+typedef MealPlanDrag = ({String weekKey, String slotKey, String recipeId});
+
 /// Weekly meal plan: Mon–Sun × breakfast/lunch/dinner. Tap a slot to assign
 /// from cookbook/search, long-press-drag between slots, one-tap export of
 /// the week to the shopping list. Weekly pagination, ±4 weeks window.
@@ -167,11 +170,20 @@ class _MealPlanScreenState extends State<MealPlanScreen> {
     final recipeId = week[slotKey];
     final recipe = recipeId == null ? null : state.loadedRecipeById(recipeId);
 
-    final cell = DragTarget<String>(
-      onAcceptWithDetails: (details) => saveCollectionEdit(
-        context,
-        () => state.moveMeal(_weekKey, details.data, slotKey),
-      ),
+    final cell = DragTarget<MealPlanDrag>(
+      onAcceptWithDetails: (details) {
+        final source = details.data;
+        if (source.weekKey != _weekKey) return;
+        saveCollectionEdit(
+          context,
+          () => state.moveMeal(
+            source.weekKey,
+            source.slotKey,
+            slotKey,
+            expectedRecipeId: source.recipeId,
+          ),
+        );
+      },
       builder: (context, candidates, _) {
         final highlighted = candidates.isNotEmpty;
         return GestureDetector(
@@ -211,9 +223,9 @@ class _MealPlanScreenState extends State<MealPlanScreen> {
     );
 
     if (recipeId == null) return cell;
-    // Drag carries the source slot key; drop target moves the assignment.
-    return LongPressDraggable<String>(
-      data: slotKey,
+    // Keep the displayed identity even if a restore finishes during the drag.
+    return LongPressDraggable<MealPlanDrag>(
+      data: (weekKey: _weekKey, slotKey: slotKey, recipeId: recipeId),
       feedback: Material(
         color: Colors.transparent,
         child: Container(

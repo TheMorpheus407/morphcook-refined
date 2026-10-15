@@ -862,18 +862,26 @@ class AppState extends ChangeNotifier {
         notifyListeners();
       });
 
-  Future<void> moveMeal(String weekKey, String fromSlot, String toSlot) =>
-      _queueMutation(() async {
-        final next = _copyMealPlan();
-        final week = next[weekKey];
-        if (week == null || !week.containsKey(fromSlot)) return;
-        final moving = week.remove(fromSlot)!;
-        final displaced = week[toSlot];
-        week[toSlot] = moving;
-        if (displaced != null) week[fromSlot] = displaced;
-        await _persistMealPlan(next);
-        notifyListeners();
-      });
+  Future<void> moveMeal(
+    String weekKey,
+    String fromSlot,
+    String toSlot, {
+    String? expectedRecipeId,
+  }) {
+    // Bind the intent before waiting for a restore or another collection edit.
+    final expected = expectedRecipeId ?? _mealPlan[weekKey]?[fromSlot];
+    return _queueMutation(() async {
+      final next = _copyMealPlan();
+      final week = next[weekKey];
+      if (expected == null || week?[fromSlot] != expected) return;
+      final moving = week!.remove(fromSlot)!;
+      final displaced = week[toSlot];
+      week[toSlot] = moving;
+      if (displaced != null) week[fromSlot] = displaced;
+      await _persistMealPlan(next);
+      notifyListeners();
+    });
+  }
 
   // ---- shopping ----
 
