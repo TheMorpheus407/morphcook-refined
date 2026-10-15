@@ -25,6 +25,21 @@ English and German widget cases check failure feedback and retry. The four
 original cases fail with the pre-fix store and settings code from `1779b5d`. Six
 after-write/rollback cases fail with the submitted PR #24 store from `a592271`.
 
+A confirmed reset may finish while recipe details opened from Home are still
+visible. Reset replaces the root shell with onboarding and disposes Home;
+returning from details then completes Home's pending navigation callback.
+Home checks `mounted` before reading `context` in `_recompute`, so this late
+callback safely returns. The existing checks after asynchronous variant loads
+still reject disposed state, stale generations and changed profiles.
+
+The English and German `returning from detail after pending reset is safe`
+cases in `test/reset_confirmation_test.dart` use the real reset dialog, Home
+tab, recipe route and back navigation, pausing only the store's clear. They
+verify Home is removed before returning and onboarding is visible afterward.
+Both fail with `State.context → _recompute` when the entry guard is removed
+from PR #33's submitted head `09359f7`, and pass with it present. These are
+Flutter widget checks with injected storage timing.
+
 `test/profile_write_ordering_test.dart` covers these boundaries with paused
 storage calls and checks notifications, memory, storage and a fresh AppState:
 
