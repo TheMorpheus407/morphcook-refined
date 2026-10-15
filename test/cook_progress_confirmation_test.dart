@@ -7,6 +7,7 @@ import 'package:morphcook/data/app_state.dart';
 import 'package:morphcook/data/store.dart';
 import 'package:morphcook/logic/cook/cook_controller.dart';
 import 'package:morphcook/models/profile.dart';
+import 'package:morphcook/models/personal_recipe.dart';
 import 'package:morphcook/ui/screens/cook_mode_screen.dart';
 import 'package:morphcook/ui/strings.dart';
 
@@ -170,6 +171,58 @@ void main() {
     expect(state.cookProgress?.toJson(), _old.toJson());
     expect(store.getCollection('cook_progress'), raw);
   });
+
+  testWidgets(
+    'finishing another recipe preserves confirmed resume through reload',
+    (tester) async {
+      final store = _ProgressStore();
+      final state = (await tester.runAsync(() async {
+        final state = await _load(store);
+        await state.savePersonalRecipe(
+          PersonalRecipe(
+            id: 'personal-0123456789abcdef0123456789abcdef',
+            title: 'One step recipe',
+            timeMinutes: 1,
+            servings: 2,
+            ingredients: [
+              PersonalRecipeIngredient(name: 'Water', qty: 1, unit: 'ml'),
+            ],
+            steps: [PersonalRecipeStep(text: 'Drink.')],
+            createdAt: DateTime.utc(2026),
+            updatedAt: DateTime.utc(2026),
+          ),
+        );
+        await state.persistCookProgress(
+          const CookProgress(
+            recipeId: 'doener-classic',
+            stepIndex: 2,
+            servings: 4,
+            remainingTimerSeconds: 37,
+          ),
+        );
+        return state;
+      }))!;
+      addTearDown(state.dispose);
+      final before = state.cookProgress!.toJson();
+      final raw = store.getCollection('cook_progress');
+      await tester.pumpWidget(
+        app(
+          state,
+          CookModeScreen(recipe: state.personalRecipes.single.asRecipe()),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.byType(FilledButton)); // Finish, before Done.
+      await tester.pumpAndSettle();
+      expect(state.history, isEmpty);
+      expect(state.cookProgress?.toJson(), before);
+      expect(store.getCollection('cook_progress'), raw);
+      final reloaded = (await tester.runAsync(() => _load(store)))!;
+      addTearDown(reloaded.dispose);
+      expect(reloaded.cookProgress?.toJson(), before);
+      await tester.pumpWidget(const SizedBox());
+    },
+  );
 
   for (final lang in ['en', 'de']) {
     for (final action in ['servings', 'complete']) {
