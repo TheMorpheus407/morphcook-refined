@@ -45,6 +45,47 @@ PersonalRecipe _recipe() => PersonalRecipe.create(
 void main() {
   WidgetController.hitTestWarningShouldBeFatal = true;
   for (final lang in ['en', 'de']) {
+    testWidgets('$lang personal details follow confirmed deletion', (
+      tester,
+    ) async {
+      final recipe = _recipe();
+      final state = (await tester.runAsync(() async {
+        final state = AppState(
+          store: MemoryStore(),
+          corpus: await loadRealCorpus(),
+        );
+        await state.load();
+        await state.completeOnboarding(Profile(lang: lang));
+        await state.savePersonalRecipe(recipe);
+        return state;
+      }))!;
+      addTearDown(state.dispose);
+      await tester.pumpWidget(
+        app(state, DishDetailScreen(dishId: recipe.dishId)),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text(recipe.title), findsWidgets);
+
+      await state.deletePersonalRecipe(recipe.id);
+      await tester.pumpAndSettle();
+      expect(find.text(S(lang)('recipeUnavailable')), findsOneWidget);
+      expect(find.text(recipe.title), findsNothing);
+      expect(find.text(S(lang)('bundledRecipeOrigin')), findsNothing);
+      expect(
+        find.text('${S(lang)('sourceAuthor')}: Grandmother'),
+        findsNothing,
+      );
+      expect(find.byKey(const ValueKey('share-detail-recipe')), findsNothing);
+      expect(find.byKey(const ValueKey('edit-personal-recipe')), findsNothing);
+      expect(
+        find.byKey(const ValueKey('delete-personal-recipe')),
+        findsNothing,
+      );
+      expect(find.byKey(const ValueKey('set-recipe-image')), findsNothing);
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox());
+    });
+
     for (final fail in [false, true]) {
       testWidgets('$lang personal details follow confirmed reset fail=$fail', (
         tester,
@@ -154,9 +195,12 @@ void main() {
           final replacement = original.copyWith(
             title: 'Replacement recipe',
             sourceAuthor: 'Replacement author',
+            timeMinutes: 45,
+            servings: 3,
             ingredients: [
               PersonalRecipeIngredient(name: 'potatoes', qty: 200, unit: 'g'),
             ],
+            steps: [PersonalRecipeStep(text: 'Roast the potatoes.')],
           );
           await state.applyBackup(
             BackupData(
@@ -201,6 +245,13 @@ void main() {
                 .first,
           );
           expect(find.text('potatoes'), findsOneWidget);
+          expect(find.text('rice'), findsNothing);
+          expect(find.text('45 ${S(lang)('minutes')}'), findsOneWidget);
+          expect(find.text('3 ${S(lang)('servings')}'), findsOneWidget);
+          await tester.tap(find.text(S(lang)('method')));
+          await tester.pumpAndSettle();
+          expect(find.text('Roast the potatoes.'), findsOneWidget);
+          expect(find.text('Cook it.'), findsNothing);
           await tester.pumpWidget(const SizedBox());
         },
       );

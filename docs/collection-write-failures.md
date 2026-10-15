@@ -112,8 +112,9 @@ Targeted checks:
 
 - `test/personal_detail_reset_test.dart`: EN/DE navigation from a pending Settings
   reset into a personal recipe, confirmed removal versus failed reset, Back to
-  onboarding, and open-page backup replacement/removal. Checks private content,
-  authorship, available actions and current ingredients.
+  onboarding, direct deletion, and open-page backup replacement/removal. Checks
+  private content, authorship, available actions, current ingredients, instructions,
+  cooking time and servings.
 - `test/meal_gesture_week_test.dart`: EN/DE long-press source replacement
   before the drag starts, adjacent-week navigation across midnight, and an
   export press held through a midnight restore/rebuild. Unchanged-source/clock
