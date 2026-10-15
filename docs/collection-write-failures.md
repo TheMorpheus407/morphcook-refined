@@ -25,6 +25,13 @@ cooking completion screen happen only after confirmation. The completion note
 asks the user to save the meal rather than claiming it is already recorded.
 Navigating away during a failed save does not show feedback on a disposed page.
 
+Meal-plan drags retain the displayed week, source slot and recipe ID. The queued
+move checks that the source still contains that recipe after earlier mutations
+settle. A backup replacement that changes or removes the source makes the drop
+a no-op. If the source still matches, the move uses the current destination and
+swaps an occupied destination back to the source. Save failures keep the previous
+assignments and allow another drag to retry.
+
 Opening cook mode reads resume progress through the mutation queue, after earlier
 edits and their recovery settle. While waiting, the screen shows a progress
 indicator with an English/German accessibility label; Close and Back remain
@@ -95,6 +102,11 @@ Targeted checks:
 - `test/collection_queue_widget_test.dart`: EN/DE search failures and retry,
   consecutive distinct empty queries, results while logging waits in the
   mutation queue, stale-query protection and shopping row identity.
+- `test/meal_drag_identity_test.dart`: sixteen real RootShell EN/DE long-press
+  drags, with empty/occupied destinations and unchanged/replaced sources.
+  Restore completes before or after drop; exact plan snapshots are checked in
+  memory and after reload. The original four cases yield two passing controls
+  and two replacement failures with the pre-fix production code.
 - `test/collection_failure_feedback_test.dart`: EN/DE shopping toggle/clear,
   meal assignment/removal/move/export, recipe additions, cooking completion,
   failure feedback, retry/reload, truthful completion text and navigation.
